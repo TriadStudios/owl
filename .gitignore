@@ -1,0 +1,46 @@
+# agents and editors
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.aider*
+.copilot/
+.vscode/
+.idea/
+*.swp
+
+# secrets and local config
+.env
+.env.*
+!.env.example
+owl.yaml
+owl.local.yaml
+*.pem
+*.key
+*.token
+
+# evidence, data, models
+data/
+!data/fixtures/
+!data/fixtures/**
+perception/models/
+*.safetensors
+*.bin
+*.pt
+*.onnx
+docs/
+# build and runtime
+bin/
+dist/
+*.log
+__pycache__/
+*.pyc
+.venv/
+.uv/
+node_modules/
+coverage.out
+
+# os
+.DS_Store
+Thumbs.db

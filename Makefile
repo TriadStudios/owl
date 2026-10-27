@@ -1,0 +1,6 @@
+.PHONY: check
+
+check:
+	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
+	go vet ./...
+	go test ./...
