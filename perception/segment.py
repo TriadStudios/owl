@@ -23,7 +23,7 @@ LOCAL_MODEL = "unsloth/sam3.1"
 SOCKET_PROMPTS = ("ethernet port", "network port")
 CABLE_PROMPT = "ethernet cable"
 PROMPTS = (*SOCKET_PROMPTS, CABLE_PROMPT)
-MIN_ALIGNED_PORTS = 6
+COPPER_PORTS = 8
 PORT_PALETTE = (
     (75, 25, 230), (75, 180, 60), (25, 225, 255), (200, 130, 0), (48, 130, 245), (180, 30, 145),
     (240, 240, 70), (230, 50, 240), (60, 245, 210), (190, 190, 250), (128, 128, 0), (255, 190, 220),
@@ -213,8 +213,8 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         else:
             runs.append([candidate])
     row = max(runs, key=len, default=[])
-    if len(row) < MIN_ALIGNED_PORTS:
-        raise ValueError(f"only {len(row)} port/plug boxes align in the port row, need {MIN_ALIGNED_PORTS}")
+    if len(row) != COPPER_PORTS:
+        raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
     return row
 
 

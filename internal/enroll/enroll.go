@@ -21,6 +21,8 @@ const (
 const (
 	matchTolerance = 0.3
 	swapMargin     = 0.15
+	minExcessBytes = 512 << 10
+	excessRatio    = 3.0
 )
 
 type Port struct {
@@ -37,6 +39,9 @@ type Port struct {
 	Reason     string    `json:"reason"`
 	Source     string    `json:"source"`
 	VerifiedAt time.Time `json:"verified_at,omitzero"`
+	Window     int       `json:"window,omitempty"`
+	BaseRate   float64   `json:"base_rate_bps"`
+	BaseEnergy float64   `json:"base_activity_energy"`
 	CableTo    string    `json:"cable_to,omitempty"`
 }
 
@@ -142,4 +147,81 @@ func Classify(cam *perception.Result, prev, cur *discovery.SwitchState, now time
 		}
 	}
 	return ports, nil
+}
+
+type Window struct {
+	LEDs      []perception.LED
+	Prev, Cur *discovery.SwitchState
+}
+
+func Best(cam *perception.Result, windows []Window, now time.Time) ([]Port, error) {
+	rank := map[Status]int{Unknown: 0, Inferred: 1, Verified: 2}
+	var best []Port
+	var rate, energy []float64
+	for w, win := range windows {
+		frame := *cam
+		frame.LEDs = win.LEDs
+		ports, err := Classify(&frame, win.Prev, win.Cur, now)
+		if err != nil {
+			return nil, err
+		}
+		seconds := win.Cur.Polled.Sub(win.Prev.Polled).Seconds()
+		if seconds <= 0 {
+			return nil, fmt.Errorf("window %d has no duration", w+1)
+		}
+		if best == nil {
+			best, rate, energy = make([]Port, len(ports)), make([]float64, len(ports)), make([]float64, len(ports))
+		}
+		for i, p := range ports {
+			p.Window = w + 1
+			rate[i] += float64(p.DeltaBytes) / seconds
+			energy[i] += p.Energy
+			if w == 0 || rank[p.Status] > rank[best[i].Status] {
+				best[i] = p
+			}
+		}
+	}
+	for i := range best {
+		best[i].BaseRate = rate[i] / float64(len(windows))
+		best[i].BaseEnergy = energy[i] / float64(len(windows))
+	}
+	return best, nil
+}
+
+type Probe struct {
+	Target    int
+	LEDs      []perception.LED
+	Prev, Cur *discovery.SwitchState
+}
+
+func Induced(ports []Port, probe Probe, others []int) (bool, string) {
+	seconds := probe.Cur.Polled.Sub(probe.Prev.Polled).Seconds()
+	measure := func(num int) (excess, rise float64) {
+		after, before := probe.Cur.Ports[num], probe.Prev.Ports[num]
+		if after == nil || before == nil {
+			return 0, 0
+		}
+		delta := (after.InOctets-before.InOctets)&0xffffffff + (after.OutOctets-before.OutOctets)&0xffffffff
+		for _, p := range ports {
+			if p.Num == num {
+				excess = float64(delta) - p.BaseRate*seconds
+				rise = -p.BaseEnergy
+			}
+		}
+		for _, l := range probe.LEDs {
+			if l.Num == num {
+				rise += l.ActivityEnergy
+			}
+		}
+		return excess, rise
+	}
+	excess, rise := measure(probe.Target)
+	var otherExcess, otherRise float64
+	for _, n := range others {
+		e, r := measure(n)
+		otherExcess, otherRise = math.Max(otherExcess, e), math.Max(otherRise, r)
+	}
+	ok := excess >= minExcessBytes && excess >= excessRatio*otherExcess && rise > 0 && rise >= otherRise
+	return ok, fmt.Sprintf("ping spike on port %d: +%.0f KiB, LED +%.2f; largest elsewhere +%.0f KiB, LED +%.2f",
+		probe.Target, excess/1024, rise, otherExcess/1024, otherRise)
 }

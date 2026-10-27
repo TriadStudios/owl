@@ -15,6 +15,7 @@ import segment
 
 MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
+CAMERA_ATTEMPTS = 3
 POLYGON_EPSILON_PX = 1.5
 FRAMES = segment.ROOT / "data" / "frames"
 
@@ -71,10 +72,16 @@ def describe_upload(image_bytes: bytes) -> dict[str, object]:
 
 def describe_camera(burst: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
-        ok, encoded = cv2.imencode(".png", next(capture.frames(mini, 0)))
-        if not ok:
-            raise ValueError("failed to encode the camera frame")
-        result = describe(encoded.tobytes())
+        for attempt in range(1, CAMERA_ATTEMPTS + 1):
+            ok, encoded = cv2.imencode(".png", next(capture.frames(mini, 0)))
+            if not ok:
+                raise ValueError("failed to encode the camera frame")
+            try:
+                result = describe(encoded.tobytes())
+                break
+            except ValueError as error:
+                if attempt == CAMERA_ATTEMPTS:
+                    raise ValueError(f"{CAMERA_ATTEMPTS} camera frames rejected, last: {error}") from error
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
         result["leds"] = leds.leds(capture.frames(mini, burst), [port["box"] for port in result["ports"]])
@@ -93,6 +100,11 @@ def watch(regions: list[list[int]], seconds: float) -> dict[str, object]:
             for i, (x0, y0, x1, y1) in enumerate(regions):
                 changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
     return {"changes": [round(c, 2) for c in changes]}
+
+
+def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
+    with camera_lock, capture.connect(segment.load_env()) as mini:
+        return {"leds": leds.leds(capture.frames(mini, seconds), boxes)}
 
 
 async def run(fn, *args) -> dict[str, object]:
@@ -127,6 +139,19 @@ async def motion(request: Request) -> dict[str, object]:
     ):
         raise HTTPException(400, f"want {{regions: [[x0, y0, x1, y1], ...] as non-negative ints, seconds: (0, {MAX_BURST_S}]}}")
     return await run(watch, regions, float(seconds))
+
+
+@app.post("/leds")
+async def leds_burst(request: Request) -> dict[str, object]:
+    body = await request.json()
+    boxes, seconds = body.get("boxes"), body.get("seconds")
+    if (
+        not isinstance(boxes, list) or not boxes
+        or not all(isinstance(b, list) and len(b) == 4 and all(isinstance(v, (int, float)) and v >= 0 for v in b) and b[0] < b[2] and b[1] < b[3] for b in boxes)
+        or not isinstance(seconds, (int, float)) or not 0 < seconds <= MAX_BURST_S
+    ):
+        raise HTTPException(400, f"want {{boxes: [[x0, y0, x1, y1], ...] in frame pixels, seconds: (0, {MAX_BURST_S}]}}")
+    return await run(watch_leds, boxes, float(seconds))
 
 
 def main() -> None:

@@ -59,6 +59,33 @@ func (c *Client) SegmentCamera(ctx context.Context, burst time.Duration) (*Resul
 	return Decode(io.LimitReader(body, maxResponseBytes))
 }
 
+func (c *Client) LEDs(ctx context.Context, boxes [][4]float64, window time.Duration) ([]LED, error) {
+	req, err := json.Marshal(map[string]any{"boxes": boxes, "seconds": window.Seconds()})
+	if err != nil {
+		return nil, err
+	}
+	body, err := c.post(ctx, "/leds", req, "application/json")
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	var res struct {
+		LEDs []LED `json:"leds"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, maxResponseBytes)).Decode(&res); err != nil {
+		return nil, fmt.Errorf("perception: decode leds: %w", err)
+	}
+	if len(res.LEDs) != len(boxes) {
+		return nil, fmt.Errorf("perception: %d LED readings for %d boxes", len(res.LEDs), len(boxes))
+	}
+	for i, l := range res.LEDs {
+		if l.Num != i+1 || l.ActivityEnergy < 0 {
+			return nil, fmt.Errorf("perception: bad LED entry at position %d", i+1)
+		}
+	}
+	return res.LEDs, nil
+}
+
 func (c *Client) Motion(ctx context.Context, regions [][4]int, window time.Duration) ([]float64, error) {
 	req, err := json.Marshal(map[string]any{"regions": regions, "seconds": window.Seconds()})
 	if err != nil {

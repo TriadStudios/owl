@@ -11,7 +11,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -28,6 +31,10 @@ import (
 )
 
 const (
+	passiveWindows = 3
+	inducedWindow  = 5 * time.Second
+	maxPingTargets = 4
+	pingersPerIP   = 4
 	enrollBurst    = 10 * time.Second
 	touchWindow    = 8 * time.Second
 	touchMinChange = 12.0
@@ -181,21 +188,140 @@ func run(args []string) error {
 		}
 		cam := perception.Client{BaseURL: *perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
 		ctx := context.Background()
-		prev, err := discovery.Poll(cfg)
+		frame, err := cam.SegmentCamera(ctx, time.Second)
 		if err != nil {
 			return err
 		}
-		frame, err := cam.SegmentCamera(ctx, enrollBurst)
+		boxes := make([][4]float64, len(frame.Ports))
+		for i, c := range frame.Ports {
+			boxes[i] = c.Box
+		}
+		var windows []enroll.Window
+		for range passiveWindows {
+			prev, err := discovery.Poll(cfg)
+			if err != nil {
+				return err
+			}
+			leds, err := cam.LEDs(ctx, boxes, enrollBurst)
+			if err != nil {
+				return err
+			}
+			cur, err := discovery.Poll(cfg)
+			if err != nil {
+				return err
+			}
+			windows = append(windows, enroll.Window{LEDs: leds, Prev: prev, Cur: cur})
+		}
+		ports, err := enroll.Best(frame, windows, time.Now())
 		if err != nil {
 			return err
 		}
-		cur, err := discovery.Poll(cfg)
+		cur := windows[len(windows)-1].Cur
+
+		local := map[string]bool{}
+		ifaces, err := net.Interfaces()
 		if err != nil {
 			return err
 		}
-		ports, err := enroll.Classify(frame, prev, cur, time.Now())
-		if err != nil {
-			return err
+		for _, ifc := range ifaces {
+			if len(ifc.HardwareAddr) == 6 {
+				local[ifc.HardwareAddr.String()] = true
+			}
+		}
+		self := 0
+		for n, sp := range cur.Ports {
+			if slices.ContainsFunc(sp.MACs, func(m string) bool { return local[m] }) {
+				self = n
+			}
+		}
+		var ids *discovery.Identities
+		if *leases != "" {
+			lf, err := os.Open(*leases)
+			if err != nil {
+				return err
+			}
+			ids, err = discovery.LoadIdentities(lf)
+			lf.Close()
+			if err != nil {
+				return fmt.Errorf("%s: %w", *leases, err)
+			}
+		}
+		var lit []int
+		for _, p := range ports {
+			if p.Occupied && p.OperUp && p.LinkOn && p.Num != self {
+				lit = append(lit, p.Num)
+			}
+		}
+		for i := range ports {
+			p := &ports[i]
+			if p.Status == enroll.Verified || !p.Occupied {
+				continue
+			}
+			if p.Num == self {
+				p.Reason += "; the closet box's own port, pinging cannot isolate it"
+				continue
+			}
+			if !slices.Contains(lit, p.Num) || ids == nil {
+				continue
+			}
+			var macs []string
+			if sp := cur.Ports[p.Num]; sp.LLDP != nil {
+				macs = append(macs, sp.LLDP.PortID)
+			}
+			var ips []string
+			for _, mac := range append(macs, p.MACs...) {
+				if d := ids.Lookup(mac); d.Online && !slices.Contains(ips, d.IP) && len(ips) < maxPingTargets {
+					ips = append(ips, d.IP)
+				}
+			}
+			if len(ips) == 0 {
+				p.Reason += "; no known IP to ping"
+				continue
+			}
+			prev, err := discovery.Poll(cfg)
+			if err != nil {
+				return err
+			}
+			pingCtx, cancel := context.WithTimeout(ctx, inducedWindow+2*time.Second)
+			pings := make(chan error, len(ips)*pingersPerIP)
+			for _, ip := range ips {
+				for range pingersPerIP {
+					go func() {
+						count := strconv.Itoa(int(inducedWindow.Seconds()))
+						args := []string{"-c", count, "-s", "65000", "-W", "1", ip}
+						if runtime.GOOS == "windows" {
+							args = []string{"-n", count, "-l", "65000", "-w", "1000", ip}
+						}
+						err := exec.CommandContext(pingCtx, "ping", args...).Run()
+						var exit *exec.ExitError
+						if errors.As(err, &exit) {
+							err = nil
+						}
+						pings <- err
+					}()
+				}
+			}
+			leds, ledErr := cam.LEDs(ctx, boxes, inducedWindow)
+			for range len(ips) * pingersPerIP {
+				if err := <-pings; err != nil && ledErr == nil {
+					ledErr = fmt.Errorf("ping: %w", err)
+				}
+			}
+			cancel()
+			if ledErr != nil {
+				return ledErr
+			}
+			after, err := discovery.Poll(cfg)
+			if err != nil {
+				return err
+			}
+			others := slices.DeleteFunc(slices.Clone(lit), func(n int) bool { return n == p.Num })
+			ok, why := enroll.Induced(ports, enroll.Probe{Target: p.Num, LEDs: leds, Prev: prev, Cur: after}, others)
+			if ok {
+				p.Status, p.Source, p.VerifiedAt, p.Reason = enroll.Verified, "camera+snmp+ping", time.Now(), why
+			} else {
+				p.Reason += "; " + why
+			}
 		}
 
 		var regions [][4]int
