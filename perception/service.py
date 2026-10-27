@@ -81,6 +81,7 @@ def describe_upload(image_bytes: bytes) -> dict[str, object]:
 
 def describe_camera(burst: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
+        capture.home(mini)
         for attempt in range(1, CAMERA_ATTEMPTS + 1):
             ok, encoded = cv2.imencode(".png", next(capture.frames(mini, 0)))
             if not ok:
@@ -102,6 +103,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
     state["changes"] = changes
     try:
         with camera_lock, capture.connect(segment.load_env()) as mini:
+            capture.home(mini)
             base = None
             for frame in capture.frames(mini, MAX_RECORD_S):
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
@@ -147,6 +149,7 @@ def stop_recording() -> dict[str, object]:
 
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
+        capture.home(mini)
         return {"leds": leds.leds(capture.frames(mini, seconds), boxes)}
 
 

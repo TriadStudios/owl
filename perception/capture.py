@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 from collections.abc import Iterator
@@ -11,6 +12,8 @@ from reachy_mini import ReachyMini
 import segment
 
 ROOT = Path(__file__).resolve().parent.parent
+HOME_POSE = ROOT / "data" / "home-pose.json"
+HOME_MOVE_S = 1.0
 FIRST_FRAME_TIMEOUT_S = 10
 FRAME_INTERVAL_S = 1 / 30
 
@@ -20,6 +23,17 @@ def connect(env: dict[str, str]) -> ReachyMini:
     if not host:
         raise RuntimeError("OWL_REACHY_HOST missing from .env.local")
     return ReachyMini(host=host, connection_mode="network")
+
+
+def home(mini: ReachyMini) -> None:
+    if not HOME_POSE.exists():
+        return
+    head = np.array(json.loads(HOME_POSE.read_text())["head"], dtype=float)
+    if head.shape != (4, 4):
+        raise RuntimeError(f"{HOME_POSE.name} must hold a 4x4 head pose")
+    mini.enable_motors()
+    mini.goto_target(head, duration=HOME_MOVE_S)
+    time.sleep(HOME_MOVE_S + 0.3)
 
 
 def frames(mini: ReachyMini, seconds: float) -> Iterator[np.ndarray]:
@@ -43,6 +57,7 @@ def frames(mini: ReachyMini, seconds: float) -> Iterator[np.ndarray]:
 def main() -> None:
     try:
         with connect(segment.load_env()) as mini:
+            home(mini)
             undistorted = next(frames(mini, 0))
     except RuntimeError as error:
         sys.exit(str(error))
