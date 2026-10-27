@@ -1,6 +1,6 @@
 # Read by internal/policy. Flat keys only: scalars and one-line [lists].
 liveness_window_seconds: 10
 liveness_active_bytes: 10240
-# LLDP calls a switch a "bridge"; APs that route advertise "router" too.
-uplink_capabilities: [router, bridge]
+# The router path is the uplink; APs and switches are "aggregation" in code (OWL_AGGREGATION_MIN).
+uplink_capabilities: [router]
 critical_names: []

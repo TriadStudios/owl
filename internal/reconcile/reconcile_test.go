@@ -56,7 +56,7 @@ func TestJoinFixtureFrameAllCopperConsistent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ports, err := Join(blast.Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: 0.6, IDs: ids, Rules: rules})
+	ports, err := Join(blast.Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: 0.6, AggregationMin: 3, IDs: ids, Rules: rules})
 	if err != nil {
 		t.Fatal(err)
 	}

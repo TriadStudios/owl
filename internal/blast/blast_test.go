@@ -63,12 +63,13 @@ func TestAssessFixtureVerdicts(t *testing.T) {
 		unknown        bool
 	}{
 		{"uplink neighbor", 2, 0.6, DoNotTouch, false},
+		{"access point behind the port", 1, 0.6, DoNotTouch, false},
 		{"idle single host", 3, 0.6, Safe, false},
 		{"sfp cage the camera cannot see", 9, 0.6, "", true},
 		{"attribution below minimum", 1, 0.7, "", true},
 	}
 	for _, c := range cases {
-		card, err := Assess(c.port, Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: c.attributionMin, IDs: ids, Rules: rules})
+		card, err := Assess(c.port, Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: c.attributionMin, AggregationMin: 3, IDs: ids, Rules: rules})
 		if err != nil {
 			t.Fatal(err)
 		}

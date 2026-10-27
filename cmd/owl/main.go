@@ -392,13 +392,20 @@ func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPa
 	if image == "" || leasesPath == "" {
 		return blast.Inputs{}, errors.New("need -image and -leases (or OWL_DHCP_LEASES)")
 	}
-	in := blast.Inputs{AttributionMin: 0.6}
+	in := blast.Inputs{AttributionMin: 0.6, AggregationMin: 3}
 	if v := os.Getenv("OWL_ATTRIBUTION_MIN"); v != "" {
 		min, err := strconv.ParseFloat(v, 64)
 		if err != nil || min < 0 || min > 1 {
 			return blast.Inputs{}, fmt.Errorf("OWL_ATTRIBUTION_MIN %q: want a number in [0, 1]", v)
 		}
 		in.AttributionMin = min
+	}
+	if v := os.Getenv("OWL_AGGREGATION_MIN"); v != "" {
+		min, err := strconv.Atoi(v)
+		if err != nil || min < 1 {
+			return blast.Inputs{}, fmt.Errorf("OWL_AGGREGATION_MIN %q: want a positive integer", v)
+		}
+		in.AggregationMin = min
 	}
 	frame, err := os.ReadFile(image)
 	if err != nil {

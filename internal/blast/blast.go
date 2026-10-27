@@ -36,6 +36,7 @@ type Inputs struct {
 	Prev, Cur      *discovery.SwitchState
 	Camera         *perception.Result
 	AttributionMin float64
+	AggregationMin int
 	IDs            *discovery.Identities
 	Tags           Tagger
 	Rules          policy.Rules
@@ -197,6 +198,20 @@ func Assess(num int, in Inputs) (Card, error) {
 		} else {
 			card.Inputs = append(card.Inputs, fmt.Sprintf("no name matches critical_names %v", in.Rules.CriticalNames))
 		}
+	}
+
+	var aggregation string
+	switch {
+	case card.Behind > in.AggregationMin:
+		aggregation = fmt.Sprintf("%d MACs behind the port > OWL_AGGREGATION_MIN %d (snmp fdb)", card.Behind, in.AggregationMin)
+	case slices.Contains(caps, "wlan-access-point") || slices.Contains(caps, "bridge"):
+		aggregation = fmt.Sprintf("LLDP neighbor %s advertises %v, an AP or switch (lldp)", card.Neighbor, caps)
+	}
+	if aggregation != "" {
+		card.Criticality = append(card.Criticality, "aggregation")
+		card.Inputs = append(card.Inputs, "aggregation: "+aggregation)
+	} else {
+		card.Inputs = append(card.Inputs, fmt.Sprintf("not aggregation: %d MAC(s) <= OWL_AGGREGATION_MIN %d and no AP or switch neighbor", card.Behind, in.AggregationMin))
 	}
 
 	switch {
