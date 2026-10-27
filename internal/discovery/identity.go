@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"slices"
 	"strings"
 )
 
@@ -93,4 +94,13 @@ func (ids *Identities) Lookup(mac string) Device {
 		}
 	}
 	return d
+}
+
+func (ids *Identities) Leased() []Device {
+	out := make([]Device, 0, len(ids.leases))
+	for _, d := range ids.leases {
+		out = append(out, d)
+	}
+	slices.SortFunc(out, func(a, b Device) int { return strings.Compare(a.MAC, b.MAC) })
+	return out
 }

@@ -1,0 +1,69 @@
+name: owl-netbox
+
+services:
+  netbox: &netbox
+    image: docker.io/netboxcommunity/netbox:v4.7.3-5.1.1
+    depends_on:
+      - postgres
+      - redis
+      - redis-cache
+    env_file: .env.local
+    user: "netbox:root"
+    ports:
+      - "127.0.0.1:8000:8080"
+    healthcheck:
+      test: /opt/netbox/health.sh
+      start_period: 90s
+      timeout: 3s
+      interval: 15s
+    volumes:
+      - netbox-media-files:/opt/netbox/netbox/media:rw
+  netbox-worker:
+    <<: *netbox
+    ports: []
+    depends_on:
+      netbox:
+        condition: service_healthy
+    command:
+      - /opt/netbox/venv/bin/python
+      - /opt/netbox/netbox/manage.py
+      - rqworker
+    healthcheck:
+      test: ps -aux | grep -v grep | grep -q rqworker || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+
+  postgres:
+    image: docker.io/postgres:18-alpine
+    env_file: .env.local
+    healthcheck:
+      test: pg_isready -q -t 2 -d $$POSTGRES_DB -U $$POSTGRES_USER
+      start_period: 20s
+      timeout: 30s
+      interval: 10s
+      retries: 5
+    volumes:
+      - netbox-postgres:/var/lib/postgresql
+
+  redis:
+    image: docker.io/valkey/valkey:9.1-alpine
+    env_file: .env.local
+    command:
+      - sh
+      - -c
+      - valkey-server --appendonly yes --requirepass $$REDIS_PASSWORD
+    volumes:
+      - netbox-redis-data:/data
+  redis-cache:
+    image: docker.io/valkey/valkey:9.1-alpine
+    env_file: .env.local
+    command:
+      - sh
+      - -c
+      - valkey-server --requirepass $$REDIS_PASSWORD
+
+volumes:
+  netbox-media-files:
+  netbox-postgres:
+  netbox-redis-data:
