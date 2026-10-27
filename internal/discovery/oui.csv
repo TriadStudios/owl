@@ -1,0 +1,6638 @@
+prefix,vendor
+00000C,"Cisco Systems, Inc"
+000095,Sony Tektronix Corp.
+000097,Dell EMC
+0000F0,"Samsung Electronics Co.,Ltd"
+000142,"Cisco Systems, Inc"
+000143,"Cisco Systems, Inc"
+000144,Dell EMC
+00014A,Sony Corporation
+000163,"Cisco Systems, Inc"
+000164,"Cisco Systems, Inc"
+000196,"Cisco Systems, Inc"
+000197,"Cisco Systems, Inc"
+0001C7,"Cisco Systems, Inc"
+0001C9,"Cisco Systems, Inc"
+0001E6,Hewlett Packard
+0001E7,Hewlett Packard
+000216,"Cisco Systems, Inc"
+000217,"Cisco Systems, Inc"
+00023D,"Cisco Systems, Inc"
+00024A,"Cisco Systems, Inc"
+00024B,"Cisco Systems, Inc"
+00027D,"Cisco Systems, Inc"
+00027E,"Cisco Systems, Inc"
+0002A5,Hewlett Packard
+0002B9,"Cisco Systems, Inc"
+0002BA,"Cisco Systems, Inc"
+0002FC,"Cisco Systems, Inc"
+0002FD,"Cisco Systems, Inc"
+000331,"Cisco Systems, Inc"
+000332,"Cisco Systems, Inc"
+00036B,"Cisco Systems, Inc"
+00036C,"Cisco Systems, Inc"
+000393,"Apple, Inc."
+00039F,"Cisco Systems, Inc"
+0003A0,"Cisco Systems, Inc"
+0003E3,"Cisco Systems, Inc"
+0003E4,"Cisco Systems, Inc"
+0003FD,"Cisco Systems, Inc"
+0003FE,"Cisco Systems, Inc"
+0003FF,Microsoft Corporation
+00041F,Sony Interactive Entertainment Inc.
+000427,"Cisco Systems, Inc"
+000428,"Cisco Systems, Inc"
+00043C,"SONOS Co., Ltd."
+00044D,"Cisco Systems, Inc"
+00044E,"Cisco Systems, Inc"
+00046D,"Cisco Systems, Inc"
+00046E,"Cisco Systems, Inc"
+00049A,"Cisco Systems, Inc"
+00049B,"Cisco Systems, Inc"
+0004C0,"Cisco Systems, Inc"
+0004C1,"Cisco Systems, Inc"
+0004DD,"Cisco Systems, Inc"
+0004DE,"Cisco Systems, Inc"
+0004EA,Hewlett Packard
+000500,"Cisco Systems, Inc"
+000501,"Cisco Systems, Inc"
+000502,"Apple, Inc."
+000531,"Cisco Systems, Inc"
+000532,"Cisco Systems, Inc"
+00055E,"Cisco Systems, Inc"
+00055F,"Cisco Systems, Inc"
+000573,"Cisco Systems, Inc"
+000574,"Cisco Systems, Inc"
+00059A,"Cisco Systems, Inc"
+00059B,"Cisco Systems, Inc"
+0005DC,"Cisco Systems, Inc"
+0005DD,"Cisco Systems, Inc"
+000628,"Cisco Systems, Inc"
+00062A,"Cisco Systems, Inc"
+000652,"Cisco Systems, Inc"
+000653,"Cisco Systems, Inc"
+00065B,Dell Inc.
+00067C,"Cisco Systems, Inc"
+0006C1,"Cisco Systems, Inc"
+0006D6,"Cisco Systems, Inc"
+0006D7,"Cisco Systems, Inc"
+0006F6,"Cisco Systems, Inc"
+00070D,"Cisco Systems, Inc"
+00070E,"Cisco Systems, Inc"
+00074F,"Cisco Systems, Inc"
+000750,"Cisco Systems, Inc"
+00077D,"Cisco Systems, Inc"
+000784,"Cisco Systems, Inc"
+000785,"Cisco Systems, Inc"
+0007AB,"Samsung Electronics Co.,Ltd"
+0007B3,"Cisco Systems, Inc"
+0007B4,"Cisco Systems, Inc"
+0007EB,"Cisco Systems, Inc"
+0007EC,"Cisco Systems, Inc"
+000802,Hewlett Packard
+000820,"Cisco Systems, Inc"
+000821,"Cisco Systems, Inc"
+00082F,"Cisco Systems, Inc"
+000830,"Cisco Systems, Inc"
+000831,"Cisco Systems, Inc"
+000832,"Cisco Systems, Inc"
+000874,Dell Inc.
+00087C,"Cisco Systems, Inc"
+00087D,"Cisco Systems, Inc"
+000883,Hewlett Packard
+0008A3,"Cisco Systems, Inc"
+0008A4,"Cisco Systems, Inc"
+0008C2,"Cisco Systems, Inc"
+0008C7,Hewlett Packard
+0008E2,"Cisco Systems, Inc"
+0008E3,"Cisco Systems, Inc"
+0008FB,"SonoSite, Inc."
+000911,"Cisco Systems, Inc"
+000912,"Cisco Systems, Inc"
+000943,"Cisco Systems, Inc"
+000944,"Cisco Systems, Inc"
+00095B,Netgear
+00097B,"Cisco Systems, Inc"
+00097C,"Cisco Systems, Inc"
+0009B6,"Cisco Systems, Inc"
+0009B7,"Cisco Systems, Inc"
+0009E8,"Cisco Systems, Inc"
+0009E9,"Cisco Systems, Inc"
+000A27,"Apple, Inc."
+000A41,"Cisco Systems, Inc"
+000A42,"Cisco Systems, Inc"
+000A57,Hewlett Packard
+000A8A,"Cisco Systems, Inc"
+000A8B,"Cisco Systems, Inc"
+000A95,"Apple, Inc."
+000AB7,"Cisco Systems, Inc"
+000AB8,"Cisco Systems, Inc"
+000AD9,Sony Corporation
+000AEB,"Tp-Link Technologies Co.,Ltd."
+000AF3,"Cisco Systems, Inc"
+000AF4,"Cisco Systems, Inc"
+000B45,"Cisco Systems, Inc"
+000B46,"Cisco Systems, Inc"
+000B5F,"Cisco Systems, Inc"
+000B60,"Cisco Systems, Inc"
+000B85,"Cisco Systems, Inc"
+000B86,Hewlett Packard Enterprise
+000BBE,"Cisco Systems, Inc"
+000BBF,"Cisco Systems, Inc"
+000BCD,Hewlett Packard
+000BDB,Dell Inc.
+000BFC,"Cisco Systems, Inc"
+000BFD,"Cisco Systems, Inc"
+000C30,"Cisco Systems, Inc"
+000C31,"Cisco Systems, Inc"
+000C6E,ASUSTek COMPUTER INC.
+000C85,"Cisco Systems, Inc"
+000C86,"Cisco Systems, Inc"
+000CCE,"Cisco Systems, Inc"
+000CCF,"Cisco Systems, Inc"
+000D28,"Cisco Systems, Inc"
+000D29,"Cisco Systems, Inc"
+000D3A,Microsoft Corp.
+000D4B,"Roku, Inc."
+000D56,Dell Inc.
+000D65,"Cisco Systems, Inc"
+000D66,"Cisco Systems, Inc"
+000D93,"Apple, Inc."
+000D9D,Hewlett Packard
+000DBC,"Cisco Systems, Inc"
+000DBD,"Cisco Systems, Inc"
+000DEC,"Cisco Systems, Inc"
+000DED,"Cisco Systems, Inc"
+000E07,Sony Corporation
+000E38,"Cisco Systems, Inc"
+000E39,"Cisco Systems, Inc"
+000E58,"Sonos, Inc."
+000E7F,Hewlett Packard
+000E83,"Cisco Systems, Inc"
+000E84,"Cisco Systems, Inc"
+000EA6,ASUSTek COMPUTER INC.
+000EB3,Hewlett Packard
+000ED6,"Cisco Systems, Inc"
+000ED7,"Cisco Systems, Inc"
+000F1F,Dell Inc.
+000F20,Hewlett Packard
+000F23,"Cisco Systems, Inc"
+000F24,"Cisco Systems, Inc"
+000F34,"Cisco Systems, Inc"
+000F35,"Cisco Systems, Inc"
+000F61,Hewlett Packard
+000F8F,"Cisco Systems, Inc"
+000F90,"Cisco Systems, Inc"
+000FB5,Netgear
+000FDE,Sony Corporation
+000FF7,"Cisco Systems, Inc"
+000FF8,"Cisco Systems, Inc"
+001007,"Cisco Systems, Inc"
+00100B,"Cisco Systems, Inc"
+00100D,"Cisco Systems, Inc"
+001011,"Cisco Systems, Inc"
+001014,"Cisco Systems, Inc"
+00101F,"Cisco Systems, Inc"
+001029,"Cisco Systems, Inc"
+00102F,"Cisco Systems, Inc"
+001054,"Cisco Systems, Inc"
+001079,"Cisco Systems, Inc"
+00107B,"Cisco Systems, Inc"
+001083,Hewlett Packard
+0010A6,"Cisco Systems, Inc"
+0010E3,Hewlett Packard
+0010F6,"Cisco Systems, Inc"
+0010FA,"Apple, Inc."
+0010FF,"Cisco Systems, Inc"
+00110A,Hewlett Packard
+001120,"Cisco Systems, Inc"
+001121,"Cisco Systems, Inc"
+001124,"Apple, Inc."
+00112F,ASUSTek COMPUTER INC.
+001132,Synology Incorporated
+001143,Dell Inc.
+00115C,"Cisco Systems, Inc"
+00115D,"Cisco Systems, Inc"
+001185,Hewlett Packard
+001192,"Cisco Systems, Inc"
+001193,"Cisco Systems, Inc"
+0011BB,"Cisco Systems, Inc"
+0011BC,"Cisco Systems, Inc"
+0011D8,ASUSTek COMPUTER INC.
+001200,"Cisco Systems, Inc"
+001201,"Cisco Systems, Inc"
+00123F,Dell Inc.
+001243,"Cisco Systems, Inc"
+001244,"Cisco Systems, Inc"
+001247,"Samsung Electronics Co.,Ltd"
+001248,Dell EMC
+00125A,Microsoft Corporation
+001279,Hewlett Packard
+00127F,"Cisco Systems, Inc"
+001280,"Cisco Systems, Inc"
+0012D9,"Cisco Systems, Inc"
+0012DA,"Cisco Systems, Inc"
+0012EE,Sony Corporation
+0012F0,Intel Corporate
+0012FB,"Samsung Electronics Co.,Ltd"
+001302,Intel Corporate
+001315,Sony Interactive Entertainment Inc.
+001319,"Cisco Systems, Inc"
+00131A,"Cisco Systems, Inc"
+001320,Intel Corporate
+001321,Hewlett Packard
+00135F,"Cisco Systems, Inc"
+001360,"Cisco Systems, Inc"
+001372,Dell Inc.
+001377,"Samsung Electronics Co.,Ltd"
+00137F,"Cisco Systems, Inc"
+001380,"Cisco Systems, Inc"
+0013A9,Sony Corporation
+0013C3,"Cisco Systems, Inc"
+0013C4,"Cisco Systems, Inc"
+0013CE,Intel Corporate
+0013D4,ASUSTek COMPUTER INC.
+0013E8,Intel Corporate
+00141B,"Cisco Systems, Inc"
+00141C,"Cisco Systems, Inc"
+001422,Dell Inc.
+001438,Hewlett Packard Enterprise
+001451,"Apple, Inc."
+001469,"Cisco Systems, Inc"
+00146A,"Cisco Systems, Inc"
+00146C,Netgear
+001478,"Tp-Link Technologies Co.,Ltd."
+0014A8,"Cisco Systems, Inc"
+0014A9,"Cisco Systems, Inc"
+0014C2,Hewlett Packard
+0014F1,"Cisco Systems, Inc"
+0014F2,"Cisco Systems, Inc"
+001500,Intel Corporate
+001517,Intel Corporate
+00152B,"Cisco Systems, Inc"
+00152C,"Cisco Systems, Inc"
+001530,Dell EMC
+00155D,Microsoft Corporation
+001560,Hewlett Packard
+001562,"Cisco Systems, Inc"
+001563,"Cisco Systems, Inc"
+00156D,Ubiquiti Inc
+001599,"Samsung Electronics Co.,Ltd"
+0015B9,"Samsung Electronics Co.,Ltd"
+0015C1,Sony Interactive Entertainment Inc.
+0015C5,Dell Inc.
+0015C6,"Cisco Systems, Inc"
+0015C7,"Cisco Systems, Inc"
+0015F2,ASUSTek COMPUTER INC.
+0015F9,"Cisco Systems, Inc"
+0015FA,"Cisco Systems, Inc"
+001620,Sony Corporation
+001632,"Samsung Electronics Co.,Ltd"
+001635,Hewlett Packard
+001646,"Cisco Systems, Inc"
+001647,"Cisco Systems, Inc"
+00166B,"Samsung Electronics Co.,Ltd"
+00166C,"Samsung Electronics Co.,Ltd"
+00166F,Intel Corporate
+001676,Intel Corporate
+00169C,"Cisco Systems, Inc"
+00169D,"Cisco Systems, Inc"
+0016B8,Sony Corporation
+0016C7,"Cisco Systems, Inc"
+0016C8,"Cisco Systems, Inc"
+0016CB,"Apple, Inc."
+0016DB,"Samsung Electronics Co.,Ltd"
+0016EA,Intel Corporate
+0016EB,Intel Corporate
+0016F0,Dell
+001708,Hewlett Packard
+00170E,"Cisco Systems, Inc"
+00170F,"Cisco Systems, Inc"
+001731,ASUSTek COMPUTER INC.
+00173B,"Cisco Systems, Inc"
+001759,"Cisco Systems, Inc"
+00175A,"Cisco Systems, Inc"
+001794,"Cisco Systems, Inc"
+001795,"Cisco Systems, Inc"
+0017A4,Hewlett Packard
+0017C9,"Samsung Electronics Co.,Ltd"
+0017D5,"Samsung Electronics Co.,Ltd"
+0017DF,"Cisco Systems, Inc"
+0017E0,"Cisco Systems, Inc"
+0017F2,"Apple, Inc."
+0017FA,Microsoft Corporation
+001813,Sony Corporation
+001818,"Cisco Systems, Inc"
+001819,"Cisco Systems, Inc"
+00184D,Netgear
+001871,Hewlett Packard
+001873,"Cisco Systems, Inc"
+001874,"Cisco Systems, Inc"
+00188B,Dell Inc.
+0018AF,"Samsung Electronics Co.,Ltd"
+0018B9,"Cisco Systems, Inc"
+0018BA,"Cisco Systems, Inc"
+0018DE,Intel Corporate
+0018F3,ASUSTek COMPUTER INC.
+0018FE,Hewlett Packard
+001906,"Cisco Systems, Inc"
+001907,"Cisco Systems, Inc"
+00192F,"Cisco Systems, Inc"
+001930,"Cisco Systems, Inc"
+001955,"Cisco Systems, Inc"
+001956,"Cisco Systems, Inc"
+001963,Sony Corporation
+0019A9,"Cisco Systems, Inc"
+0019AA,"Cisco Systems, Inc"
+0019B9,Dell Inc.
+0019BB,Hewlett Packard
+0019C5,Sony Interactive Entertainment Inc.
+0019D1,Intel Corporate
+0019D2,Intel Corporate
+0019E0,"Tp-Link Technologies Co.,Ltd."
+0019E3,"Apple, Inc."
+0019E7,"Cisco Systems, Inc"
+0019E8,"Cisco Systems, Inc"
+001A11,"Google, Inc."
+001A1E,Hewlett Packard Enterprise
+001A2F,"Cisco Systems, Inc"
+001A30,"Cisco Systems, Inc"
+001A4B,Hewlett Packard
+001A6C,"Cisco Systems, Inc"
+001A6D,"Cisco Systems, Inc"
+001A75,Sony Corporation
+001A80,Sony Corporation
+001A8A,"Samsung Electronics Co.,Ltd"
+001A92,ASUSTek COMPUTER INC.
+001AA0,Dell Inc.
+001AA1,"Cisco Systems, Inc"
+001AA2,"Cisco Systems, Inc"
+001AE2,"Cisco Systems, Inc"
+001AE3,"Cisco Systems, Inc"
+001B0C,"Cisco Systems, Inc"
+001B0D,"Cisco Systems, Inc"
+001B21,Intel Corporate
+001B2A,"Cisco Systems, Inc"
+001B2B,"Cisco Systems, Inc"
+001B2F,Netgear
+001B53,"Cisco Systems, Inc"
+001B54,"Cisco Systems, Inc"
+001B59,Sony Corporation
+001B63,"Apple, Inc."
+001B67,Cisco Systems Inc
+001B77,Intel Corporate
+001B78,Hewlett Packard
+001B8F,"Cisco Systems, Inc"
+001B90,"Cisco Systems, Inc"
+001B98,"Samsung Electronics Co.,Ltd"
+001BD4,"Cisco Systems, Inc"
+001BD5,"Cisco Systems, Inc"
+001BFC,ASUSTek COMPUTER INC.
+001C0E,"Cisco Systems, Inc"
+001C0F,"Cisco Systems, Inc"
+001C23,Dell Inc.
+001C43,"Samsung Electronics Co.,Ltd"
+001C57,"Cisco Systems, Inc"
+001C58,"Cisco Systems, Inc"
+001C62,LG Electronics (Mobile Communications)
+001CA4,Sony Corporation
+001CB0,"Cisco Systems, Inc"
+001CB1,"Cisco Systems, Inc"
+001CB3,"Apple, Inc."
+001CBF,Intel Corporate
+001CC0,Intel Corporate
+001CC4,Hewlett Packard
+001CF6,"Cisco Systems, Inc"
+001CF9,"Cisco Systems, Inc"
+001D09,Dell Inc.
+001D0D,Sony Interactive Entertainment Inc.
+001D0F,"Tp-Link Technologies Co.,Ltd."
+001D25,"Samsung Electronics Co.,Ltd"
+001D28,Sony Corporation
+001D45,"Cisco Systems, Inc"
+001D46,"Cisco Systems, Inc"
+001D4F,"Apple, Inc."
+001D60,ASUSTek COMPUTER INC.
+001D70,"Cisco Systems, Inc"
+001D71,"Cisco Systems, Inc"
+001DA1,"Cisco Systems, Inc"
+001DA2,"Cisco Systems, Inc"
+001DBA,Sony Corporation
+001DD8,Microsoft Corporation
+001DE0,Intel Corporate
+001DE1,Intel Corporate
+001DE5,"Cisco Systems, Inc"
+001DE6,"Cisco Systems, Inc"
+001DF6,"Samsung Electronics Co.,Ltd"
+001E0B,Hewlett Packard
+001E13,"Cisco Systems, Inc"
+001E14,"Cisco Systems, Inc"
+001E2A,Netgear
+001E45,Sony Corporation
+001E49,"Cisco Systems, Inc"
+001E4A,"Cisco Systems, Inc"
+001E4F,Dell Inc.
+001E52,"Apple, Inc."
+001E64,Intel Corporate
+001E65,Intel Corporate
+001E67,Intel Corporate
+001E75,LG Electronics (Mobile Communications)
+001E79,"Cisco Systems, Inc"
+001E7A,"Cisco Systems, Inc"
+001E7D,"Samsung Electronics Co.,Ltd"
+001E8C,ASUSTek COMPUTER INC.
+001EBD,"Cisco Systems, Inc"
+001EBE,"Cisco Systems, Inc"
+001EC2,"Apple, Inc."
+001EC9,Dell Inc.
+001EDC,Sony Corporation
+001EE1,"Samsung Electronics Co.,Ltd"
+001EE2,"Samsung Electronics Co.,Ltd"
+001EF6,"Cisco Systems, Inc"
+001EF7,"Cisco Systems, Inc"
+001F26,"Cisco Systems, Inc"
+001F27,"Cisco Systems, Inc"
+001F29,Hewlett Packard
+001F33,Netgear
+001F3B,Intel Corporate
+001F3C,Intel Corporate
+001F5B,"Apple, Inc."
+001F6B,LG Electronics (Mobile Communications)
+001F6C,"Cisco Systems, Inc"
+001F6D,"Cisco Systems, Inc"
+001F9D,"Cisco Systems, Inc"
+001F9E,"Cisco Systems, Inc"
+001FA7,Sony Interactive Entertainment Inc.
+001FC6,ASUSTek COMPUTER INC.
+001FC9,"Cisco Systems, Inc"
+001FCA,"Cisco Systems, Inc"
+001FCC,"Samsung Electronics Co.,Ltd"
+001FCD,"Samsung Electronics Co.,Ltd"
+001FE3,LG Electronics (Mobile Communications)
+001FE4,Sony Corporation
+001FF3,"Apple, Inc."
+00211B,"Cisco Systems, Inc"
+00211C,"Cisco Systems, Inc"
+002127,"Tp-Link Technologies Co.,Ltd."
+00214C,"Samsung Electronics Co.,Ltd"
+002155,"Cisco Systems, Inc"
+002156,"Cisco Systems, Inc"
+00215A,Hewlett Packard
+00215C,Intel Corporate
+00215D,Intel Corporate
+00216A,Intel Corporate
+00216B,Intel Corporate
+002170,Dell Inc.
+00219B,Dell Inc.
+00219E,Sony Corporation
+0021A0,"Cisco Systems, Inc"
+0021A1,"Cisco Systems, Inc"
+0021D1,"Samsung Electronics Co.,Ltd"
+0021D2,"Samsung Electronics Co.,Ltd"
+0021D7,"Cisco Systems, Inc"
+0021D8,"Cisco Systems, Inc"
+0021E9,"Apple, Inc."
+0021FB,LG Electronics (Mobile Communications)
+00220C,"Cisco Systems, Inc"
+00220D,"Cisco Systems, Inc"
+002215,ASUSTek COMPUTER INC.
+002219,Dell Inc.
+00223F,Netgear
+002241,"Apple, Inc."
+002248,Microsoft Corporation
+002255,"Cisco Systems, Inc"
+002256,"Cisco Systems, Inc"
+002264,Hewlett Packard
+002290,"Cisco Systems, Inc"
+002291,"Cisco Systems, Inc"
+002298,Sony Corporation
+0022A6,Sony Computer Entertainment America
+0022A9,LG Electronics (Mobile Communications)
+0022BD,"Cisco Systems, Inc"
+0022BE,"Cisco Systems, Inc"
+0022FA,Intel Corporate
+0022FB,Intel Corporate
+002304,"Cisco Systems, Inc"
+002305,"Cisco Systems, Inc"
+002312,"Apple, Inc."
+002314,Intel Corporate
+002315,Intel Corporate
+002332,"Apple, Inc."
+002333,"Cisco Systems, Inc"
+002334,"Cisco Systems, Inc"
+002339,"Samsung Electronics Co.,Ltd"
+00233A,"Samsung Electronics Co.,Ltd"
+002345,Sony Corporation
+002354,ASUSTek COMPUTER INC.
+00235D,"Cisco Systems, Inc"
+00235E,"Cisco Systems, Inc"
+00236C,"Apple, Inc."
+00237D,Hewlett Packard
+002399,"Samsung Electronics Co.,Ltd"
+0023AB,"Cisco Systems, Inc"
+0023AC,"Cisco Systems, Inc"
+0023AE,Dell Inc.
+0023C2,SAMSUNG Electronics. Co. LTD
+0023CD,"Tp-Link Technologies Co.,Ltd."
+0023D6,"Samsung Electronics Co.,Ltd"
+0023D7,"Samsung Electronics Co.,Ltd"
+0023DF,"Apple, Inc."
+0023EA,"Cisco Systems, Inc"
+0023EB,"Cisco Systems, Inc"
+0023F1,Sony Corporation
+002413,"Cisco Systems, Inc"
+002414,"Cisco Systems, Inc"
+002436,"Apple, Inc."
+002450,"Cisco Systems, Inc"
+002451,"Cisco Systems, Inc"
+002454,"Samsung Electronics Co.,Ltd"
+00246C,Hewlett Packard Enterprise
+002481,Hewlett Packard
+002483,LG Electronics (Mobile Communications)
+00248C,ASUSTek COMPUTER INC.
+00248D,Sony Interactive Entertainment Inc.
+002490,"Samsung Electronics Co.,Ltd"
+002491,"Samsung Electronics Co.,Ltd"
+002497,"Cisco Systems, Inc"
+002498,"Cisco Systems, Inc"
+0024B2,Netgear
+0024BE,Sony Corporation
+0024C3,"Cisco Systems, Inc"
+0024C4,"Cisco Systems, Inc"
+0024D6,Intel Corporate
+0024D7,Intel Corporate
+0024E8,Dell Inc.
+0024E9,"Samsung Electronics Co.,Ltd"
+0024EF,Sony Corporation
+0024F7,"Cisco Systems, Inc"
+0024F9,"Cisco Systems, Inc"
+002500,"Apple, Inc."
+002538,"Samsung Electronics Co., Ltd., Memory Division"
+002545,"Cisco Systems, Inc"
+002546,"Cisco Systems, Inc"
+00254B,"Apple, Inc."
+002564,Dell Inc.
+002566,"Samsung Electronics Co.,Ltd"
+002567,"Samsung Electronics Co.,Ltd"
+002583,"Cisco Systems, Inc"
+002584,"Cisco Systems, Inc"
+002586,"Tp-Link Technologies Co.,Ltd."
+0025AE,Microsoft Corporation
+0025B3,Hewlett Packard
+0025B4,"Cisco Systems, Inc"
+0025B5,"Cisco Systems, Inc"
+0025BC,"Apple, Inc."
+0025E5,LG Electronics (Mobile Communications)
+0025E7,Sony Corporation
+002608,"Apple, Inc."
+00260A,"Cisco Systems, Inc"
+00260B,"Cisco Systems, Inc"
+002618,ASUSTek COMPUTER INC.
+00264A,"Apple, Inc."
+002651,"Cisco Systems, Inc"
+002652,"Cisco Systems, Inc"
+002655,Hewlett Packard
+00265D,"Samsung Electronics Co.,Ltd"
+00265F,"Samsung Electronics Co.,Ltd"
+002698,"Cisco Systems, Inc"
+002699,"Cisco Systems, Inc"
+0026B0,"Apple, Inc."
+0026B9,Dell Inc.
+0026BB,"Apple, Inc."
+0026C6,Intel Corporate
+0026C7,Intel Corporate
+0026CA,"Cisco Systems, Inc"
+0026CB,"Cisco Systems, Inc"
+0026E2,LG Electronics (Mobile Communications)
+0026F2,Netgear
+00270C,"Cisco Systems, Inc"
+00270D,"Cisco Systems, Inc"
+00270E,Intel Corporate
+002710,Intel Corporate
+002719,"Tp-Link Technologies Co.,Ltd."
+002722,Ubiquiti Inc
+002790,"Cisco Systems, Inc"
+0027E3,"Cisco Systems, Inc"
+0028F8,Intel Corporate
+0029C2,"Cisco Systems, Inc"
+002A10,"Cisco Systems, Inc"
+002A6A,"Cisco Systems, Inc"
+002B70,"Samsung Electronics Co.,Ltd"
+002CC8,"Cisco Systems, Inc"
+002F5C,"Cisco Systems, Inc"
+003019,"Cisco Systems, Inc"
+003024,"Cisco Systems, Inc"
+003040,"Cisco Systems, Inc"
+003065,"Apple, Inc."
+00306E,Hewlett Packard
+003071,"Cisco Systems, Inc"
+003078,"Cisco Systems, Inc"
+00307B,"Cisco Systems, Inc"
+003080,"Cisco Systems, Inc"
+003085,"Cisco Systems, Inc"
+003094,"Cisco Systems, Inc"
+003096,"Cisco Systems, Inc"
+0030A3,"Cisco Systems, Inc"
+0030B6,"Cisco Systems, Inc"
+0030C1,Hewlett Packard
+0030F2,"Cisco Systems, Inc"
+003192,TP-Link Systems Inc
+003217,"Cisco Systems, Inc"
+0034DA,LG Electronics (Mobile Communications)
+00351A,"Cisco Systems, Inc"
+0038DF,"Cisco Systems, Inc"
+003A7D,"Cisco Systems, Inc"
+003A98,"Cisco Systems, Inc"
+003A99,"Cisco Systems, Inc"
+003A9A,"Cisco Systems, Inc"
+003A9B,"Cisco Systems, Inc"
+003A9C,"Cisco Systems, Inc"
+003C10,"Cisco Systems, Inc"
+003DE8,LG Electronics (Mobile Communications)
+003EE1,"Apple, Inc."
+00400B,"Cisco Systems, Inc"
+004096,"Cisco Systems, Inc"
+0041D2,"Cisco Systems, Inc"
+004238,Intel Corporate
+00425A,"Cisco Systems, Inc"
+004268,"Cisco Systems, Inc"
+00451D,"Cisco Systems, Inc"
+004B12,Espressif Inc.
+004E01,Dell Inc.
+004E35,Hewlett Packard Enterprise
+00500B,"Cisco Systems, Inc"
+00500F,"Cisco Systems, Inc"
+005014,"Cisco Systems, Inc"
+00502A,"Cisco Systems, Inc"
+00503E,"Cisco Systems, Inc"
+005050,"Cisco Systems, Inc"
+005053,"Cisco Systems, Inc"
+005054,"Cisco Systems, Inc"
+005073,"Cisco Systems, Inc"
+005080,"Cisco Systems, Inc"
+00508B,Hewlett Packard
+0050A2,"Cisco Systems, Inc"
+0050A7,"Cisco Systems, Inc"
+0050BD,"Cisco Systems, Inc"
+0050D1,"Cisco Systems, Inc"
+0050E2,"Cisco Systems, Inc"
+0050E4,"Apple, Inc."
+0050F0,"Cisco Systems, Inc"
+0050F2,Microsoft Corp.
+00562B,"Cisco Systems, Inc"
+0056CD,"Apple, Inc."
+0057C1,LG Electronics (Mobile Communications)
+0057D2,"Cisco Systems, Inc"
+00596C,"Cisco Systems, Inc"
+0059DC,"Cisco Systems, Inc"
+005B94,"Apple, Inc."
+005D73,"Cisco Systems, Inc"
+005F67,TP-Link Systems Inc
+005F86,"Cisco Systems, Inc"
+006009,"Cisco Systems, Inc"
+00602F,"Cisco Systems, Inc"
+00603E,"Cisco Systems, Inc"
+006047,"Cisco Systems, Inc"
+006048,Dell EMC
+00605C,"Cisco Systems, Inc"
+006070,"Cisco Systems, Inc"
+006083,"Cisco Systems, Inc"
+0060B0,Hewlett Packard
+006171,"Apple, Inc."
+0062EC,"Cisco Systems, Inc"
+006440,"Cisco Systems, Inc"
+0066DC,"Apple, Inc."
+0068EB,HP Inc.
+006BF1,"Cisco Systems, Inc"
+006CBC,"Cisco Systems, Inc"
+006D52,"Apple, Inc."
+006F64,"Samsung Electronics Co.,Ltd"
+007007,Espressif Inc.
+007147,Amazon Technologies Inc.
+007204,"Samsung Electronics Co., Ltd. ARTIK"
+007278,"Cisco Systems, Inc"
+0072EE,Intel Corporate
+0073E0,"Samsung Electronics Co.,Ltd"
+007686,"Cisco Systems, Inc"
+00778D,"Cisco Systems, Inc"
+007888,"Cisco Systems, Inc"
+007C2D,"Samsung Electronics Co.,Ltd"
+007D3B,"Samsung Electronics Co.,Ltd"
+007D60,"Apple, Inc."
+007E95,"Cisco Systems, Inc"
+00805F,Hewlett Packard
+0080A0,Hewlett Packard
+00812A,"Apple, Inc."
+0081C4,"Cisco Systems, Inc"
+008621,Amazon Technologies Inc.
+008701,"Samsung Electronics Co.,Ltd"
+008731,"Cisco Systems, Inc"
+008764,"Cisco Systems, Inc"
+008865,"Apple, Inc."
+008A76,"Apple, Inc."
+008A96,"Cisco Systems, Inc"
+008E73,"Cisco Systems, Inc"
+008EF2,Netgear
+00900C,"Cisco Systems, Inc"
+009021,"Cisco Systems, Inc"
+00902B,"Cisco Systems, Inc"
+00905F,"Cisco Systems, Inc"
+00906D,"Cisco Systems, Inc"
+00906F,"Cisco Systems, Inc"
+009086,"Cisco Systems, Inc"
+009092,"Cisco Systems, Inc"
+0090A6,"Cisco Systems, Inc"
+0090AB,"Cisco Systems, Inc"
+0090B1,"Cisco Systems, Inc"
+0090BF,"Cisco Systems, Inc"
+0090D9,"Cisco Systems, Inc"
+0090F2,"Cisco Systems, Inc"
+00919E,Intel Corporate
+009235,"Apple, Inc."
+009337,Intel Corporate
+0097F1,"Apple, Inc."
+009AD2,"Cisco Systems, Inc"
+009C02,Hewlett Packard
+009E1E,"Cisco Systems, Inc"
+00A040,"Apple, Inc."
+00A159,LG Electronics
+00A289,"Cisco Systems, Inc"
+00A2EE,"Cisco Systems, Inc"
+00A38E,"Cisco Systems, Inc"
+00A3D1,"Cisco Systems, Inc"
+00A554,Intel Corporate
+00A5BF,"Cisco Systems, Inc"
+00A6CA,"Cisco Systems, Inc"
+00A742,"Cisco Systems, Inc"
+00AA6E,"Cisco Systems, Inc"
+00AA70,LG Electronics (Mobile Communications)
+00AF1F,"Cisco Systems, Inc"
+00B04A,"Cisco Systems, Inc"
+00B064,"Cisco Systems, Inc"
+00B08E,"Cisco Systems, Inc"
+00B0C2,"Cisco Systems, Inc"
+00B0D0,Dell Inc.
+00B0E1,"Cisco Systems, Inc"
+00B1E3,"Cisco Systems, Inc"
+00B362,"Apple, Inc."
+00B5D0,"Samsung Electronics Co.,Ltd"
+00B670,"Cisco Systems, Inc"
+00B771,"Cisco Systems, Inc"
+00B8B3,"Cisco Systems, Inc"
+00BB3A,Amazon Technologies Inc.
+00BB60,Intel Corporate
+00BC60,"Cisco Systems, Inc"
+00BE43,Dell Inc.
+00BE75,"Cisco Systems, Inc"
+00BF61,"Samsung Electronics Co.,Ltd"
+00BF77,"Cisco Systems, Inc"
+00C04F,Dell Inc.
+00C164,"Cisco Systems, Inc"
+00C1B1,"Cisco Systems, Inc"
+00C2C6,Intel Corporate
+00C3F4,"Samsung Electronics Co.,Ltd"
+00C585,"Apple, Inc."
+00C610,"Apple, Inc."
+00C84E,Hewlett Packard Enterprise
+00C88B,"Cisco Systems, Inc"
+00CAE5,"Cisco Systems, Inc"
+00CCFC,"Cisco Systems, Inc"
+00CDFE,"Apple, Inc."
+00D006,"Cisco Systems, Inc"
+00D058,"Cisco Systems, Inc"
+00D063,"Cisco Systems, Inc"
+00D079,"Cisco Systems, Inc"
+00D090,"Cisco Systems, Inc"
+00D097,"Cisco Systems, Inc"
+00D0BA,"Cisco Systems, Inc"
+00D0BB,"Cisco Systems, Inc"
+00D0BC,"Cisco Systems, Inc"
+00D0C0,"Cisco Systems, Inc"
+00D0D3,"Cisco Systems, Inc"
+00D0E4,"Cisco Systems, Inc"
+00D0FF,"Cisco Systems, Inc"
+00D49E,Intel Corporate
+00D6FE,"Cisco Systems, Inc"
+00D76D,Intel Corporate
+00D78F,"Cisco Systems, Inc"
+00D9D1,Sony Interactive Entertainment Inc.
+00DA55,"Cisco Systems, Inc"
+00DB70,"Apple, Inc."
+00DBDF,Intel Corporate
+00DEFB,"Cisco Systems, Inc"
+00DF1D,"Cisco Systems, Inc"
+00E014,"Cisco Systems, Inc"
+00E018,ASUSTek COMPUTER INC.
+00E01E,"Cisco Systems, Inc"
+00E034,"Cisco Systems, Inc"
+00E04F,"Cisco Systems, Inc"
+00E064,Samsung Electronics
+00E08F,"Cisco Systems, Inc"
+00E091,LG Electronics
+00E0A3,"Cisco Systems, Inc"
+00E0B0,"Cisco Systems, Inc"
+00E0F7,"Cisco Systems, Inc"
+00E0F9,"Cisco Systems, Inc"
+00E0FE,"Cisco Systems, Inc"
+00E16D,"Cisco Systems, Inc"
+00E18C,Intel Corporate
+00E3B2,"Samsung Electronics Co.,Ltd"
+00E421,Sony Interactive Entertainment Inc.
+00EABD,"Cisco Systems, Inc"
+00EB2D,Sony Corporation
+00EBD5,"Cisco Systems, Inc"
+00EEAB,"Cisco Systems, Inc"
+00F28B,"Cisco Systems, Inc"
+00F361,Amazon Technologies Inc.
+00F39F,"Apple, Inc."
+00F46F,"Samsung Electronics Co.,Ltd"
+00F4B9,"Apple, Inc."
+00F620,"Google, Inc."
+00F663,"Cisco Systems, Inc"
+00F76F,"Apple, Inc."
+00F82C,"Cisco Systems, Inc"
+00FA21,"Samsung Electronics Co.,Ltd"
+00FB4A,Espressif Inc.
+00FC8B,Amazon Technologies Inc.
+00FCBA,"Cisco Systems, Inc"
+00FD22,"Cisco Systems, Inc"
+00FD45,Hewlett Packard Enterprise
+00FEC8,"Cisco Systems, Inc"
+04006E,"Google, Inc."
+040973,Hewlett Packard Enterprise
+040CCE,"Apple, Inc."
+040E3C,HP Inc.
+040F66,TP-Link Systems Inc.
+04137A,"Apple, Inc."
+041552,"Apple, Inc."
+04180F,"Samsung Electronics Co.,Ltd"
+0418D6,Ubiquiti Inc
+041B6D,LG Electronics (Mobile Communications)
+041BBA,"Samsung Electronics Co.,Ltd"
+041C6C,Intel Corporate
+041E64,"Apple, Inc."
+042665,"Apple, Inc."
+042728,Microsoft Corporation
+04292E,"Samsung Electronics Co.,Ltd"
+042AE2,"Cisco Systems, Inc"
+042EC1,"Apple, Inc."
+0430FA,"Cisco Systems, Inc"
+0433C2,Intel Corporate
+0434CF,"Apple, Inc."
+0441A5,"Apple, Inc."
+04421A,ASUSTek COMPUTER INC.
+04489A,"Apple, Inc."
+044BED,"Apple, Inc."
+0452F3,"Apple, Inc."
+045453,"Apple, Inc."
+0456E5,Intel Corporate
+045D4B,Sony Corporation
+045FB9,"Cisco Systems, Inc"
+046273,"Cisco Systems, Inc"
+0464FA,Dell Inc.
+046865,"Apple, Inc."
+0469F8,"Apple, Inc."
+046C59,Intel Corporate
+046C9D,"Cisco Systems, Inc"
+046F00,LG Electronics
+047179,Hewlett Packard Enterprise
+047295,"Apple, Inc."
+0472EF,"Apple, Inc."
+0476B0,"Cisco Systems, Inc"
+048308,Espressif Inc.
+049226,ASUSTek COMPUTER INC.
+0499B9,"Apple, Inc."
+0499BB,"Apple, Inc."
+049D05,"Apple, Inc."
+04A151,Netgear
+04A6C8,Intel Corporate
+04A741,"Cisco Systems, Inc"
+04B1A1,"Samsung Electronics Co.,Ltd"
+04B247,Espressif Inc.
+04B429,"Samsung Electronics Co.,Ltd"
+04B5B2,"Apple, Inc."
+04B9E3,"Samsung Electronics Co.,Ltd"
+04BA8D,"Samsung Electronics Co.,Ltd"
+04BC6D,"Apple, Inc."
+04BD88,Hewlett Packard Enterprise
+04BD97,"Cisco Systems, Inc"
+04BDBF,"Samsung Electronics Co.,Ltd"
+04BF1B,Dell Inc.
+04BFD5,"Apple, Inc."
+04C5A4,"Cisco Systems, Inc"
+04C845,TP-Link Systems Inc.
+04C8B0,"Google, Inc."
+04CB01,"Samsung Electronics Co.,Ltd"
+04CF4B,Intel Corporate
+04D3B0,Intel Corporate
+04D3CF,"Apple, Inc."
+04D4C4,ASUSTek COMPUTER INC.
+04D9F5,ASUSTek COMPUTER INC.
+04DAD2,"Cisco Systems, Inc"
+04DB56,"Apple, Inc."
+04E387,"Cisco Systems, Inc"
+04E4B6,"Samsung Electronics Co.,Ltd"
+04E536,"Apple, Inc."
+04E8B9,Intel Corporate
+04EA56,Intel Corporate
+04EB40,"Cisco Systems, Inc"
+04ECD8,Intel Corporate
+04ED33,Intel Corporate
+04EF61,Dell Inc.
+04F0EE,Intel Corporate
+04F13E,"Apple, Inc."
+04F778,Sony Interactive Entertainment Inc.
+04F7E4,"Apple, Inc."
+04F9F8,"Tp-Link Technologies Co.,Ltd."
+04FE31,"Samsung Electronics Co.,Ltd"
+04FE7F,"Cisco Systems, Inc"
+080007,"Apple, Inc."
+080009,Hewlett Packard
+08001B,Dell EMC
+080046,Sony Corporation
+08023C,"Samsung Electronics Co.,Ltd"
+08028E,Netgear
+080581,"Roku, Inc."
+0808C2,"Samsung Electronics Co.,Ltd"
+080FE5,"Cisco Systems, Inc"
+081093,"Samsung Electronics Co.,Ltd"
+081196,Intel Corporate
+0812A5,Amazon Technologies Inc.
+08152F,"Samsung Electronics Co., Ltd. ARTIK"
+081735,"Cisco Systems, Inc"
+081814,Hewlett Packard Enterprise
+081F71,"Tp-Link Technologies Co.,Ltd."
+081FF3,"Cisco Systems, Inc"
+0821EF,"Samsung Electronics Co.,Ltd"
+08240B,"Apple, Inc."
+082573,"Apple, Inc."
+082CB6,"Apple, Inc."
+082E5F,Hewlett Packard
+08357D,Microsoft Corporation
+0836C9,Netgear
+08373D,"Samsung Electronics Co.,Ltd"
+083A8D,Espressif Inc.
+083AF2,Espressif Inc.
+083D88,"Samsung Electronics Co.,Ltd"
+0845D1,"Cisco Systems, Inc"
+084FA9,"Cisco Systems, Inc"
+084FF9,"Cisco Systems, Inc"
+085700,"Tp-Link Technologies Co.,Ltd."
+0857FB,Amazon Technologies Inc.
+085BD6,Intel Corporate
+085D53,"Apple, Inc."
+08606E,ASUSTek COMPUTER INC.
+086202,"Apple, Inc."
+086266,ASUSTek COMPUTER INC.
+08638A,"Cisco Systems, Inc"
+086518,"Apple, Inc."
+086698,"Apple, Inc."
+086AC5,Intel Corporate
+086AE5,Amazon Technologies Inc.
+086D41,"Apple, Inc."
+087045,"Apple, Inc."
+087190,Intel Corporate
+087402,"Apple, Inc."
+087808,"Samsung Electronics Co.,Ltd"
+087B0F,Amazon Technologies Inc.
+087B87,"Cisco Systems, Inc"
+087C39,Amazon Technologies Inc.
+08849D,Amazon Technologies Inc.
+0887C7,"Apple, Inc."
+088BC8,"Google, Inc."
+088C2C,"Samsung Electronics Co.,Ltd"
+088E90,Intel Corporate
+088EDC,"Apple, Inc."
+089115,Amazon Technologies Inc.
+0891A3,Amazon Technologies Inc.
+089204,Dell Inc.
+089272,Espressif Inc.
+089542,"Apple, Inc."
+0896AD,"Cisco Systems, Inc"
+089707,"Cisco Systems, Inc"
+089734,Hewlett Packard Enterprise
+089DF4,Intel Corporate
+089E08,"Google, Inc."
+08A5DF,"Samsung Electronics Co.,Ltd"
+08A6BC,Amazon Technologies Inc.
+08A6F7,Espressif Inc.
+08AD0A,Espressif Inc.
+08AED6,"Samsung Electronics Co.,Ltd"
+08B4B1,"Google, Inc."
+08B4D2,Intel Corporate
+08B61F,Espressif Inc.
+08BD43,Netgear
+08BFA0,"Samsung Electronics Co.,Ltd"
+08BFB8,ASUSTek COMPUTER INC.
+08C224,Amazon Technologies Inc.
+08C729,"Apple, Inc."
+08C7B5,"Apple, Inc."
+08CC68,"Cisco Systems, Inc"
+08CCA7,"Cisco Systems, Inc"
+08D09F,"Cisco Systems, Inc"
+08D1F9,Espressif Inc.
+08D23E,Intel Corporate
+08D40C,Intel Corporate
+08D42B,"Samsung Electronics Co.,Ltd"
+08D46A,LG Electronics (Mobile Communications)
+08E64B,"Apple, Inc."
+08E689,"Apple, Inc."
+08EB21,Intel Corporate
+08ECA9,"Samsung Electronics Co.,Ltd"
+08ECF5,"Cisco Systems, Inc"
+08EE8B,"Samsung Electronics Co.,Ltd"
+08F1EA,Hewlett Packard Enterprise
+08F3FB,"Cisco Systems, Inc"
+08F4AB,"Apple, Inc."
+08F4F0,"Cisco Systems, Inc"
+08F69C,"Apple, Inc."
+08F8BC,"Apple, Inc."
+08F9E0,Espressif Inc.
+08FC88,"Samsung Electronics Co.,Ltd"
+08FD0E,"Samsung Electronics Co.,Ltd"
+08FF44,"Apple, Inc."
+0ACD8F,Cisco Systems Norway
+0C02BD,"Samsung Electronics Co.,Ltd"
+0C1167,"Cisco Systems, Inc"
+0C12AD,Hewlett Packard Enterprise
+0C1420,"Samsung Electronics Co.,Ltd"
+0C1539,"Apple, Inc."
+0C1563,"Apple, Inc."
+0C19F8,"Apple, Inc."
+0C1B7B,Microsoft Corporation
+0C2643,"Cisco Systems, Inc"
+0C2724,"Cisco Systems, Inc"
+0C29EF,Dell Inc.
+0C2D71,"Apple, Inc."
+0C2FB0,"Samsung Electronics Co.,Ltd"
+0C3021,"Apple, Inc."
+0C323A,"Samsung Electronics Co.,Ltd"
+0C3526,Microsoft Corporation
+0C37F7,HP Inc.
+0C3B50,"Apple, Inc."
+0C3E9F,"Apple, Inc."
+0C413E,Microsoft Corporation
+0C43F9,Amazon Technologies Inc.
+0C47C9,Amazon Technologies Inc.
+0C4885,LG Electronics (Mobile Communications)
+0C4B54,"Tp-Link Technologies Co.,Ltd."
+0C4DE9,"Apple, Inc."
+0C4EA0,Espressif Inc.
+0C5101,"Apple, Inc."
+0C517E,"Apple, Inc."
+0C53B7,"Apple, Inc."
+0C5415,Intel Corporate
+0C6803,"Cisco Systems, Inc"
+0C6AC4,"Apple, Inc."
+0C6F8B,"Apple, Inc."
+0C7043,Sony Interactive Entertainment Inc.
+0C715D,"Samsung Electronics Co.,Ltd"
+0C722C,"Tp-Link Technologies Co.,Ltd."
+0C72FB,"Cisco Systems, Inc"
+0C74C2,"Apple, Inc."
+0C75BD,"Cisco Systems, Inc"
+0C771A,"Apple, Inc."
+0C7A15,Intel Corporate
+0C8063,"Tp-Link Technologies Co.,Ltd."
+0C8268,"Tp-Link Technologies Co.,Ltd."
+0C8525,"Cisco Systems, Inc"
+0C85E1,"Apple, Inc."
+0C8910,"Samsung Electronics Co.,Ltd"
+0C8B95,Espressif Inc.
+0C8BFD,Intel Corporate
+0C8DCA,"Samsung Electronics Co.,Ltd"
+0C9192,Intel Corporate
+0C975F,Hewlett Packard Enterprise
+0C9A3C,Intel Corporate
+0C9D92,ASUSTek COMPUTER INC.
+0CA3B2,"Apple, Inc."
+0CA8A7,"Samsung Electronics Co.,Ltd"
+0CAE39,Intel Corporate
+0CAF31,"Cisco Systems, Inc"
+0CB319,"Samsung Electronics Co.,Ltd"
+0CB815,Espressif Inc.
+0CBC9F,"Apple, Inc."
+0CC413,"Google, Inc."
+0CC56C,"Apple, Inc."
+0CC98A,Intel Corporate
+0CCC5D,"Apple, Inc."
+0CCE6B,"Apple, Inc."
+0CD0F8,"Cisco Systems, Inc"
+0CD292,Intel Corporate
+0CD5D3,"Cisco Systems, Inc"
+0CD746,"Apple, Inc."
+0CD996,"Cisco Systems, Inc"
+0CDBEA,"Apple, Inc."
+0CDC7E,Espressif Inc.
+0CDC91,Amazon Technologies Inc.
+0CDD24,Intel Corporate
+0CDFA4,"Samsung Electronics Co.,Ltd"
+0CE0DC,"Samsung Electronics Co.,Ltd"
+0CE441,"Apple, Inc."
+0CE5A1,"Apple, Inc."
+0CE725,Microsoft Corporation
+0CEA14,Ubiquiti Inc
+0CEE99,Amazon Technologies Inc.
+0CEF15,TP-Link Systems Inc.
+0CF5A4,"Cisco Systems, Inc"
+0CFBCF,"Apple, Inc."
+0CFE45,Sony Interactive Entertainment Inc.
+100020,"Apple, Inc."
+10003B,Espressif Inc.
+1002B5,Intel Corporate
+1005CA,"Cisco Systems, Inc"
+10061C,Espressif Inc.
+1006ED,"Cisco Systems, Inc"
+1007B6,"Samsung Electronics Co.,Ltd"
+1009F9,Amazon Technologies Inc.
+100BA9,Intel Corporate
+100C6B,Netgear
+100D7F,Netgear
+101C0C,"Apple, Inc."
+101D6E,Hewlett Packard Enterprise
+101DC0,"Samsung Electronics Co.,Ltd"
+101F74,Hewlett Packard
+1020BA,Espressif Inc.
+1027F5,TP-Link Systems Inc
+102959,"Apple, Inc."
+1029AB,"Samsung Electronics Co.,Ltd"
+102B41,"Samsung Electronics Co.,Ltd"
+102E00,Intel Corporate
+102F6B,Microsoft Corporation
+102FCA,"Apple, Inc."
+103025,"Apple, Inc."
+103047,"Samsung Electronics Co.,Ltd"
+103917,"Samsung Electronics Co.,Ltd"
+103B59,"Samsung Electronics Co.,Ltd"
+103D1C,Intel Corporate
+1040F3,"Apple, Inc."
+10417F,"Apple, Inc."
+104210,"Apple, Inc."
+104A7D,Intel Corporate
+104F58,Hewlett Packard Enterprise
+104FA8,Sony Corporation
+105107,Intel Corporate
+1051DB,Espressif Inc.
+10521C,Espressif Inc.
+105725,"Cisco Systems, Inc"
+105932,"Roku, Inc"
+105A95,TP-Link Systems Inc.
+105FAD,Intel Corporate
+10604B,Hewlett Packard
+1062E5,Hewlett Packard
+106530,Dell Inc.
+10683F,LG Electronics (Mobile Communications)
+1077B1,"Samsung Electronics Co.,Ltd"
+107A2A,Microsoft Corporation
+107B44,ASUSTek COMPUTER INC.
+107C61,ASUSTek COMPUTER INC.
+107D1A,Dell Inc.
+107DC8,"Apple, Inc."
+1089FB,"Samsung Electronics Co.,Ltd"
+108CCF,"Cisco Systems, Inc"
+108EE0,"Samsung Electronics Co.,Ltd"
+1091A8,Espressif Inc.
+1091D1,Intel Corporate
+109266,"Samsung Electronics Co.,Ltd"
+1093E9,"Apple, Inc."
+1094BB,"Apple, Inc."
+109693,Amazon Technologies Inc.
+1096C6,"Cisco Systems, Inc"
+1097BD,Espressif Inc.
+109819,Dell Inc.
+109836,Dell Inc.
+109ABA,Intel Corporate
+109ADD,"Apple, Inc."
+109E6B,"Apple, Inc."
+109F41,"Apple, Inc."
+10A1DA,"Apple, Inc."
+10A2D3,"Apple, Inc."
+10A4C9,"Apple, Inc."
+10A51D,Intel Corporate
+10A829,"Cisco Systems, Inc"
+10A85B,Espressif Systems (Singapore) Pte. Ltd
+10A879,Intel Corporate
+10ABC9,"Samsung Electronics Co.,Ltd"
+10AE60,Amazon Technologies Inc.
+10B3C6,"Cisco Systems, Inc"
+10B3D5,"Cisco Systems, Inc"
+10B3D6,"Cisco Systems, Inc"
+10B41D,Espressif Inc.
+10B588,"Apple, Inc."
+10B676,HP Inc.
+10B9C4,"Apple, Inc."
+10BD18,"Cisco Systems, Inc"
+10BD3A,"Apple, Inc."
+10BDA3,Espressif Inc.
+10BF48,ASUSTek COMPUTER INC.
+10BF67,Amazon Technologies Inc.
+10C37B,ASUSTek COMPUTER INC.
+10C735,Microsoft Corporation
+10CE02,Amazon Technologies Inc.
+10CEE9,"Apple, Inc."
+10CF0F,"Apple, Inc."
+10D38A,"Samsung Electronics Co.,Ltd"
+10D542,"Samsung Electronics Co.,Ltd"
+10D9A2,"Google, Inc."
+10DA43,Netgear
+10DA63,"Apple, Inc."
+10DDB1,"Apple, Inc."
+10E2C9,"Apple, Inc."
+10E376,"Cisco Systems, Inc"
+10E4C2,"Samsung Electronics Co.,Ltd"
+10E676,"Cisco Systems, Inc"
+10E7C6,Hewlett Packard
+10EC81,"Samsung Electronics Co.,Ltd"
+10F005,Intel Corporate
+10F1F2,LG Electronics (Mobile Communications)
+10F311,"Cisco Systems, Inc"
+10F60A,Intel Corporate
+10F920,"Cisco Systems, Inc"
+10F96F,LG Electronics (Mobile Communications)
+10FEED,"Tp-Link Technologies Co.,Ltd."
+140152,"Samsung Electronics Co.,Ltd"
+1402EC,Hewlett Packard Enterprise
+140498,"Apple, Inc."
+140808,Espressif Inc.
+140AC5,Amazon Technologies Inc.
+140B9E,"Samsung Electronics Co.,Ltd"
+14109F,"Apple, Inc."
+14147D,"Apple, Inc."
+14169D,"Cisco Systems, Inc"
+141877,Dell Inc.
+1418C3,Intel Corporate
+141923,"Cisco Systems, Inc"
+141A97,"Apple, Inc."
+141BA0,"Apple, Inc."
+141F78,"Samsung Electronics Co.,Ltd"
+14205E,"Apple, Inc."
+14223B,"Google, Inc."
+142876,"Apple, Inc."
+142B2F,Espressif Inc.
+142D4D,"Apple, Inc."
+1432D1,"Samsung Electronics Co.,Ltd"
+14335C,Espressif Inc.
+1435B7,"Apple, Inc."
+143EC2,Intel Corporate
+143FA6,Sony Home Entertainment&Sound Products Inc
+144F8A,Intel Corporate
+14568E,"Samsung Electronics Co.,Ltd"
+1458D0,Hewlett Packard
+1459C0,Netgear
+145A05,"Apple, Inc."
+1460CB,"Apple, Inc."
+146393,Espressif Inc.
+14755B,Intel Corporate
+147590,"Tp-Link Technologies Co.,Ltd."
+147649,Hewlett Packard Enterprise
+147AE4,"Apple, Inc."
+147DDA,"Apple, Inc."
+147E19,Hewlett Packard Enterprise
+147FCE,"Apple, Inc."
+148473,"Cisco Systems, Inc"
+148509,"Apple, Inc."
+14857F,Intel Corporate
+148692,"Tp-Link Technologies Co.,Ltd."
+14876A,"Apple, Inc."
+1488E6,"Apple, Inc."
+1489FD,"Samsung Electronics Co.,Ltd"
+148F79,"Apple, Inc."
+148FC6,"Apple, Inc."
+149138,Amazon Technologies Inc.
+14946C,"Apple, Inc."
+1495CE,"Apple, Inc."
+1496E5,"Samsung Electronics Co.,Ltd"
+149877,"Apple, Inc."
+1499E2,"Apple, Inc."
+149A10,Microsoft Corporation
+149D99,"Apple, Inc."
+149ECF,Dell Inc.
+149F3C,"Samsung Electronics Co.,Ltd"
+14A2A0,"Cisco Systems, Inc"
+14A364,"Samsung Electronics Co.,Ltd"
+14A6B9,"Samsung Electronics Co.,Ltd"
+14ABC5,Intel Corporate
+14ABEC,Hewlett Packard Enterprise
+14B31F,Dell Inc.
+14B484,"Samsung Electronics Co.,Ltd"
+14B5CD,Liteon Technology Corporation
+14B653,"Apple, Inc."
+14BB6E,"Samsung Electronics Co.,Ltd"
+14BC68,"Cisco Systems, Inc"
+14BD61,"Apple, Inc."
+14C14E,"Google, Inc."
+14C19F,Espressif Inc.
+14C213,"Apple, Inc."
+14C88B,"Apple, Inc."
+14C913,LG Electronics
+14CB19,HP Inc.
+14CB65,Microsoft Corporation
+14CC20,"Tp-Link Technologies Co.,Ltd."
+14CF92,"Tp-Link Technologies Co.,Ltd."
+14D00D,"Apple, Inc."
+14D19E,"Apple, Inc."
+14D55C,"Apple, Inc."
+14D864,"Tp-Link Technologies Co.,Ltd."
+14DAE9,ASUSTek COMPUTER INC.
+14DDA9,ASUSTek COMPUTER INC.
+14E01D,"Samsung Electronics Co.,Ltd"
+14E22A,"Cisco Systems, Inc"
+14E6E4,"Tp-Link Technologies Co.,Ltd."
+14EBB6,TP-Link Systems Inc
+14F287,"Apple, Inc."
+14F42A,"Samsung Electronics Co.,Ltd"
+14F6D8,Intel Corporate
+14FEB5,Dell Inc.
+18002D,Sony Corporation
+180373,Dell Inc.
+180B1B,Amazon Technologies Inc.
+1816C9,"Samsung Electronics Co.,Ltd"
+1819D6,"Samsung Electronics Co.,Ltd"
+181DEA,Intel Corporate
+181EB0,"Samsung Electronics Co.,Ltd"
+182032,"Apple, Inc."
+182195,"Samsung Electronics Co.,Ltd"
+18227E,"Samsung Electronics Co.,Ltd"
+182649,Intel Corporate
+182654,"Samsung Electronics Co.,Ltd"
+182666,"Samsung Electronics Co.,Ltd"
+1831BF,ASUSTek COMPUTER INC.
+1832DE,"Apple, Inc."
+18339D,"Cisco Systems, Inc"
+183451,"Apple, Inc."
+183A2D,"Samsung Electronics Co.,Ltd"
+183DA2,Intel Corporate
+183EEF,"Apple, Inc."
+183F47,"Samsung Electronics Co.,Ltd"
+183F70,"Apple, Inc."
+184617,"Samsung Electronics Co.,Ltd"
+1848BE,Amazon Technologies Inc.
+184A53,"Apple, Inc."
+184E16,"Samsung Electronics Co.,Ltd"
+184ECB,"Samsung Electronics Co.,Ltd"
+1854CF,"Samsung Electronics Co.,Ltd"
+1855E3,"Apple, Inc."
+185680,Intel Corporate
+1856C3,"Apple, Inc."
+1859F5,"Cisco Systems, Inc"
+185A58,Dell Inc.
+185BB3,"Samsung Electronics Co.,Ltd"
+185E0F,Intel Corporate
+186024,Hewlett Packard
+186472,Hewlett Packard Enterprise
+186590,"Apple, Inc."
+1866DA,Dell Inc.
+1867B0,"Samsung Electronics Co.,Ltd"
+186945,TP-Link Systems Inc.
+1869D4,"Samsung Electronics Co.,Ltd"
+18742E,Amazon Technologies Inc.
+187A3B,Hewlett Packard Enterprise
+187EB9,"Apple, Inc."
+188090,"Cisco Systems, Inc"
+18810E,"Apple, Inc."
+188331,"Samsung Electronics Co.,Ltd"
+18895B,"Samsung Electronics Co.,Ltd"
+188B0E,Espressif Inc.
+188B45,"Cisco Systems, Inc"
+188B9D,"Cisco Systems, Inc"
+189341,Intel Corporate
+189C5D,"Cisco Systems, Inc"
+189EFC,"Apple, Inc."
+18A084,"Apple, Inc."
+18A6F7,"Tp-Link Technologies Co.,Ltd."
+18A905,Hewlett Packard
+18A99B,Dell Inc.
+18AB1D,"Samsung Electronics Co.,Ltd"
+18AF61,"Apple, Inc."
+18AF8F,"Apple, Inc."
+18B83D,"Samsung Electronics Co.,Ltd"
+18B842,"Apple, Inc."
+18BFB3,"Samsung Electronics Co., Ltd., Memory Division"
+18CC18,Intel Corporate
+18CE94,"Samsung Electronics Co.,Ltd"
+18D3CF,Hewlett Packard Enterprise
+18D6C7,"Tp-Link Technologies Co.,Ltd."
+18DB88,Hewlett Packard Enterprise
+18DBF2,Dell Inc.
+18E2C2,"Samsung Electronics Co.,Ltd"
+18E671,"Apple, Inc."
+18E728,"Cisco Systems, Inc"
+18E7B0,"Apple, Inc."
+18E7F4,"Apple, Inc."
+18E829,Ubiquiti Inc
+18EE69,"Apple, Inc."
+18EF63,"Cisco Systems, Inc"
+18F1D8,"Apple, Inc."
+18F22C,"Tp-Link Technologies Co.,Ltd."
+18F643,"Apple, Inc."
+18F935,"Cisco Systems, Inc"
+18FAB7,"Apple, Inc."
+18FB7B,Dell Inc.
+18FE34,Espressif Inc.
+18FF0F,Intel Corporate
+1C0B8B,Ubiquiti Inc
+1C0D7D,"Apple, Inc."
+1C0EC2,"Apple, Inc."
+1C12B0,Amazon Technologies Inc.
+1C17D3,"Cisco Systems, Inc"
+1C1AC0,"Apple, Inc."
+1C1ADF,Microsoft Corporation
+1C1BB5,Intel Corporate
+1C1D86,"Cisco Systems, Inc"
+1C1DD3,"Apple, Inc."
+1C2226,"Cisco Systems, Inc"
+1C232C,"Samsung Electronics Co.,Ltd"
+1C28AF,Hewlett Packard Enterprise
+1C2904,Espressif Inc.
+1C3003,Hewlett Packard Enterprise
+1C3576,"Samsung Electronics Co.,Ltd"
+1C36BB,"Apple, Inc."
+1C3ADE,"Samsung Electronics Co.,Ltd"
+1C3BF3,"Tp-Link Technologies Co.,Ltd."
+1C3C78,"Apple, Inc."
+1C4024,Dell Inc.
+1C4419,"Tp-Link Technologies Co.,Ltd."
+1C4D66,Amazon Technologies Inc.
+1C4D70,Intel Corporate
+1C53F9,"Google, Inc."
+1C57DC,"Apple, Inc."
+1C5A3E,"Samsung Electronics Co.,Ltd"
+1C5CF2,"Apple, Inc."
+1C61B4,TP-Link Systems Inc
+1C61BF,"Apple, Inc."
+1C62B8,"Samsung Electronics Co.,Ltd"
+1C6465,Espressif Inc.
+1C66AA,"Samsung Electronics Co.,Ltd"
+1C6920,Espressif Inc.
+1C6A1B,Ubiquiti Inc
+1C6A76,"Apple, Inc."
+1C6A7A,"Cisco Systems, Inc"
+1C7125,"Apple, Inc."
+1C721D,Dell Inc.
+1C76F2,"Samsung Electronics Co.,Ltd"
+1C7754,"Apple, Inc."
+1C7B21,Sony Corporation
+1C84A6,"Cisco Systems, Inc"
+1C8682,"Apple, Inc."
+1C869A,"Samsung Electronics Co.,Ltd"
+1C872C,ASUSTek COMPUTER INC.
+1C8B84,Espressif Systems (Singapore) Pte. Ltd
+1C8E2A,"Apple, Inc."
+1C8F0C,Microsoft Corporation
+1C8F57,Espressif Inc.
+1C9148,"Apple, Inc."
+1C9180,"Apple, Inc."
+1C93C4,Amazon Technologies Inc.
+1C98EC,Hewlett Packard Enterprise
+1C9957,Intel Corporate
+1C9DC2,Espressif Inc.
+1C9E46,"Apple, Inc."
+1CAA07,"Cisco Systems, Inc"
+1CABA7,"Apple, Inc."
+1CAF05,"Samsung Electronics Co.,Ltd"
+1CAF4A,"Samsung Electronics Co.,Ltd"
+1CB3C9,"Apple, Inc."
+1CB72C,ASUSTek COMPUTER INC.
+1CC10C,Intel Corporate
+1CC1DE,Hewlett Packard
+1CC3AB,Espressif Inc.
+1CD1E0,"Cisco Systems, Inc"
+1CDBD4,Espressif Inc.
+1CDEA7,"Cisco Systems, Inc"
+1CDF0F,"Cisco Systems, Inc"
+1CE209,"Apple, Inc."
+1CE4CB,Espressif Systems (Singapore) Pte. Ltd
+1CE57F,"Samsung Electronics Co.,Ltd"
+1CE61D,"Samsung Electronics Co.,Ltd"
+1CE62B,"Apple, Inc."
+1CE6C7,"Cisco Systems, Inc"
+1CE85D,"Cisco Systems, Inc"
+1CF29A,"Google, Inc."
+1CF64C,"Apple, Inc."
+1CF8D0,"Samsung Electronics Co.,Ltd"
+1CF9D5,"Apple, Inc."
+1CFA68,"Tp-Link Technologies Co.,Ltd."
+1CFC17,"Cisco Systems, Inc"
+1CFE2B,Amazon Technologies Inc.
+20040F,Dell Inc.
+200484,"Apple, Inc."
+200BC5,"Cisco Systems, Inc"
+200CC8,Netgear
+200E2B,"Apple, Inc."
+2010B1,Amazon Technologies Inc.
+2013E0,"Samsung Electronics Co.,Ltd"
+201582,"Apple, Inc."
+2015DE,"Samsung Electronics Co.,Ltd"
+201642,Microsoft Corporation
+2016B9,Intel Corporate
+201742,LG Electronics
+201A94,"Apple, Inc."
+201E88,Intel Corporate
+201F3B,"Google, Inc."
+2021A5,LG Electronics (Mobile Communications)
+202351,TP-Link Systems Inc
+202565,Espressif Inc.
+202680,"Samsung Electronics Co.,Ltd"
+202D07,"Samsung Electronics Co.,Ltd"
+202DF6,"Apple, Inc."
+20326C,"Samsung Electronics Co.,Ltd"
+2032C6,"Apple, Inc."
+203389,"Google, Inc."
+203626,TP-Link Systems Inc
+203706,"Cisco Systems, Inc"
+2037A5,"Apple, Inc."
+203A07,"Cisco Systems, Inc"
+203A43,Intel Corporate
+203B67,"Samsung Electronics Co.,Ltd"
+203CAE,"Apple, Inc."
+2043A8,Espressif Inc.
+20463A,"Apple, Inc."
+204747,Dell Inc.
+204C03,Hewlett Packard Enterprise
+204C9E,"Cisco Systems, Inc"
+204E7F,Netgear
+20500D,Espressif Inc.
+20521D,"Apple, Inc."
+205476,Sony Corporation
+205531,"Samsung Electronics Co.,Ltd"
+205EF7,"Samsung Electronics Co.,Ltd"
+206274,Microsoft Corporation
+20677C,Hewlett Packard Enterprise
+206980,"Apple, Inc."
+206BE7,"Tp-Link Technologies Co.,Ltd."
+206E9C,"Samsung Electronics Co.,Ltd"
+206EF1,Espressif Inc.
+20768F,"Apple, Inc."
+2078CD,"Apple, Inc."
+2078F0,"Apple, Inc."
+207918,Intel Corporate
+207D74,"Apple, Inc."
+20845F,"Apple, Inc."
+208810,Dell Inc.
+208C0A,"Apple, Inc."
+2091DF,"Apple, Inc."
+209BA9,Espressif Inc.
+209BCD,"Apple, Inc."
+209CB4,Hewlett Packard Enterprise
+20A171,Amazon Technologies Inc.
+20A2E4,"Apple, Inc."
+20A5CB,"Apple, Inc."
+20A6CD,Hewlett Packard Enterprise
+20A99B,Microsoft Corporation
+20AB37,"Apple, Inc."
+20BBC0,"Cisco Systems, Inc"
+20BD1D,Intel Corporate
+20BEB8,Amazon Technologies Inc.
+20C19B,Intel Corporate
+20C9D0,"Apple, Inc."
+20CC27,"Cisco Systems, Inc"
+20CC73,"Samsung Electronics Co.,Ltd"
+20CF30,ASUSTek COMPUTER INC.
+20CFAE,"Cisco Systems, Inc"
+20D390,"Samsung Electronics Co.,Ltd"
+20D476,Amazon Technologies Inc.
+20D5BF,"Samsung Electronics Co.,Ltd"
+20D5C2,Espressif Systems (Singapore) Pte. Ltd
+20DBAB,"Samsung Electronics Co., Ltd."
+20DBEA,"Cisco Systems, Inc"
+20DCE6,"Tp-Link Technologies Co.,Ltd."
+20DFB9,"Google, Inc."
+20E15D,TP-Link Systems Inc.
+20E2A8,"Apple, Inc."
+20E52A,Netgear
+20E5A4,Espressif Systems (Singapore) Pte. Ltd
+20E7C8,Espressif Inc.
+20E874,"Apple, Inc."
+20EE28,"Apple, Inc."
+20EFBD,"Roku, Inc"
+20F094,"Google, Inc."
+20F120,"Cisco Systems, Inc"
+20F4D4,"Apple, Inc."
+20FA85,"Apple, Inc."
+20FE00,Amazon Technologies Inc.
+2401C7,"Cisco Systems, Inc"
+240588,"Google, Inc."
+240935,"Samsung Electronics Co.,Ltd"
+240A3F,"Samsung Electronics Co.,Ltd"
+240AC4,Espressif Inc.
+241153,"Samsung Electronics Co.,Ltd"
+24161B,"Cisco Systems, Inc"
+24169D,"Cisco Systems, Inc"
+241B7A,"Apple, Inc."
+241EEB,"Apple, Inc."
+2421AB,Sony Corporation
+24240E,"Apple, Inc."
+2424B7,"Samsung Electronics Co.,Ltd"
+242934,"Google, Inc."
+242A04,"Cisco Systems, Inc"
+242AEA,"Apple, Inc."
+242FD0,TP-Link Systems Inc
+2436DA,"Cisco Systems, Inc"
+24418C,Intel Corporate
+244B03,"Samsung Electronics Co.,Ltd"
+244B81,"Samsung Electronics Co.,Ltd"
+244BFE,ASUSTek COMPUTER INC.
+244CAB,Espressif Inc.
+244CE3,Amazon Technologies Inc.
+2453ED,Dell Inc.
+24559A,"Apple, Inc."
+24587C,Espressif Inc.
+245A4C,Ubiquiti Inc
+245A5F,"Tp-Link Technologies Co.,Ltd."
+245AB5,"Samsung Electronics Co.,Ltd"
+245BA7,"Apple, Inc."
+245E48,"Apple, Inc."
+245EBE,"QNAP Systems, Inc."
+2460B3,"Samsung Electronics Co.,Ltd"
+2462AB,Espressif Inc.
+2462CE,Hewlett Packard Enterprise
+246800,"Samsung Electronics Co.,Ltd"
+2468B0,"Samsung Electronics Co.,Ltd"
+246968,"Tp-Link Technologies Co.,Ltd."
+246A0E,HP Inc.
+246C84,"Cisco Systems, Inc"
+246D10,"Apple, Inc."
+246E96,Dell Inc.
+246F28,Espressif Inc.
+247121,"Cisco Systems, Inc"
+247152,Dell Inc.
+247703,Intel Corporate
+247E12,"Cisco Systems, Inc"
+24813B,"Cisco Systems, Inc"
+24920E,"Samsung Electronics Co.,Ltd"
+24952F,"Google, Inc."
+24A074,"Apple, Inc."
+24A160,Espressif Inc.
+24A2E1,"Apple, Inc."
+24A43C,Ubiquiti Inc
+24A452,"Samsung Electronics Co.,Ltd"
+24AB81,"Apple, Inc."
+24B2DE,Espressif Inc.
+24B339,"Apple, Inc."
+24B657,"Cisco Systems, Inc"
+24B6FD,Dell Inc.
+24BA23,"Cisco Systems, Inc"
+24BE05,Hewlett Packard
+24C613,"Samsung Electronics Co.,Ltd"
+24C696,"Samsung Electronics Co.,Ltd"
+24CE33,Amazon Technologies Inc.
+24D0DF,"Apple, Inc."
+24D5E4,"Cisco Systems, Inc"
+24D79C,"Cisco Systems, Inc"
+24D7EB,Espressif Inc.
+24DBED,"Samsung Electronics Co.,Ltd"
+24DCC3,Espressif Inc.
+24DEC6,Hewlett Packard Enterprise
+24E314,"Apple, Inc."
+24E50F,"Google, Inc."
+24E9B3,"Cisco Systems, Inc"
+24EB16,Intel Corporate
+24EC4A,Espressif Inc.
+24EE9A,Intel Corporate
+24F094,"Apple, Inc."
+24F0D3,"Samsung Electronics Co.,Ltd"
+24F27F,Hewlett Packard Enterprise
+24F40A,"Samsung Electronics Co.,Ltd"
+24F5AA,"Samsung Electronics Co.,Ltd"
+24F677,"Apple, Inc."
+24FBE3,HP Inc.
+24FCE5,"Samsung Electronics Co.,Ltd"
+2800AF,Dell Inc.
+28022E,"Apple, Inc."
+280244,"Apple, Inc."
+2802D8,"Samsung Electronics Co.,Ltd"
+2805A5,Espressif Inc.
+280708,"Samsung Electronics Co.,Ltd"
+280B5C,"Apple, Inc."
+280C50,Intel Corporate
+280DFC,Sony Interactive Entertainment Inc.
+2811A8,Intel Corporate
+2816A8,Microsoft Corporation
+2816AD,Intel Corporate
+281878,Microsoft Corporation
+2824C9,Amazon Technologies Inc.
+2827BF,"Samsung Electronics Co.,Ltd"
+282CB2,"Tp-Link Technologies Co.,Ltd."
+282D7F,"Apple, Inc."
+2834A2,"Cisco Systems, Inc"
+2834FF,"Apple, Inc."
+28372F,Espressif Inc.
+283737,"Apple, Inc."
+28395E,"Samsung Electronics Co.,Ltd"
+283DC2,"Samsung Electronics Co.,Ltd"
+283F69,Sony Corporation
+2840DD,Sony Interactive Entertainment Inc.
+2849E9,"Apple, Inc."
+284B54,"Apple, Inc."
+285261,"Cisco Systems, Inc"
+28562F,Espressif Inc.
+28575D,"Apple, Inc."
+285AEB,"Apple, Inc."
+286AB8,"Apple, Inc."
+286ABA,"Apple, Inc."
+286B35,Intel Corporate
+286B5C,"Cisco Systems, Inc"
+286F7F,"Cisco Systems, Inc"
+28704E,Ubiquiti Inc
+2872C6,"Samsung Electronics Co.,Ltd"
+2873F6,Amazon Technologies Inc.
+2877F1,"Apple, Inc."
+287FCF,Intel Corporate
+288023,Hewlett Packard
+288088,Netgear
+288335,"Samsung Electronics Co.,Ltd"
+2883C9,"Apple, Inc."
+288485,Espressif Inc.
+2887BA,TP-Link Systems Inc
+288EEC,"Apple, Inc."
+288FF6,"Apple, Inc."
+289104,TP-Link Systems Inc.
+289200,Intel Corporate
+28924A,Hewlett Packard
+2893FE,"Cisco Systems, Inc"
+289401,Netgear
+28940F,"Cisco Systems, Inc"
+289529,Intel Corporate
+28987B,"Samsung Electronics Co.,Ltd"
+289F04,"Samsung Electronics Co.,Ltd"
+28A02B,"Apple, Inc."
+28A06B,Intel Corporate
+28A44A,Intel Corporate
+28AC9E,"Cisco Systems, Inc"
+28AF42,"Samsung Electronics Co.,Ltd"
+28AFFD,"Cisco Systems, Inc"
+28B2BD,Intel Corporate
+28B591,"Cisco Systems, Inc"
+28BAB5,"Samsung Electronics Co.,Ltd"
+28BD89,"Google, Inc."
+28C1A0,"Apple, Inc."
+28C538,"Apple, Inc."
+28C5C8,HP Inc.
+28C5D2,Intel Corporate
+28C63F,Intel Corporate
+28C68E,Netgear
+28C709,"Apple, Inc."
+28C7CE,"Cisco Systems, Inc"
+28C825,"DellKing Industrial Co., Ltd"
+28CC01,"Samsung Electronics Co.,Ltd"
+28CDC1,Raspberry Pi Trading Ltd
+28CFDA,"Apple, Inc."
+28CFE9,"Apple, Inc."
+28D0EA,Intel Corporate
+28D5B1,"Apple, Inc."
+28DE1C,"Samsung Electronics Co.,Ltd"
+28DE65,Hewlett Packard Enterprise
+28DFEB,Intel Corporate
+28E02C,"Apple, Inc."
+28E14C,"Apple, Inc."
+28E6A9,"Samsung Electronics Co.,Ltd"
+28E7CF,"Apple, Inc."
+28EA0B,Microsoft Corporation
+28EA2D,"Apple, Inc."
+28EC95,"Apple, Inc."
+28ED6A,"Apple, Inc."
+28EE52,"Tp-Link Technologies Co.,Ltd."
+28EF01,Amazon Technologies Inc.
+28F033,"Apple, Inc."
+28F076,"Apple, Inc."
+28F10E,Dell Inc.
+28FF3C,"Apple, Inc."
+2C01B5,"Cisco Systems, Inc"
+2C0BE9,"Cisco Systems, Inc"
+2C0DA7,Intel Corporate
+2C15BF,"Samsung Electronics Co.,Ltd"
+2C1809,"Apple, Inc."
+2C1A05,"Cisco Systems, Inc"
+2C1CF7,"Apple, Inc."
+2C1F23,"Apple, Inc."
+2C200B,"Apple, Inc."
+2C233A,Hewlett Packard
+2C27D7,Hewlett Packard
+2C2997,Microsoft Corporation
+2C3033,Netgear
+2C3124,"Cisco Systems, Inc"
+2C326A,"Apple, Inc."
+2C3311,"Cisco Systems, Inc"
+2C3358,Intel Corporate
+2C3361,"Apple, Inc."
+2C36F8,"Cisco Systems, Inc"
+2C3AE8,Espressif Inc.
+2C3ECF,"Cisco Systems, Inc"
+2C3F38,"Cisco Systems, Inc"
+2C4053,"Samsung Electronics Co.,Ltd"
+2C4138,Hewlett Packard
+2C4401,"Samsung Electronics Co.,Ltd"
+2C44FD,Hewlett Packard
+2C4D54,ASUSTek COMPUTER INC.
+2C4F52,"Cisco Systems, Inc"
+2C542D,"Cisco Systems, Inc"
+2C5491,Microsoft Corporation
+2C54CF,LG Electronics (Mobile Communications)
+2C56DC,ASUSTek COMPUTER INC.
+2C5741,"Cisco Systems, Inc"
+2C57CE,"Apple, Inc."
+2C58B9,HP Inc.
+2C598A,LG Electronics (Mobile Communications)
+2C59E5,Hewlett Packard
+2C5A0F,"Cisco Systems, Inc"
+2C61F6,"Apple, Inc."
+2C658D,"Cisco Systems, Inc"
+2C6DC1,Intel Corporate
+2C6E85,Intel Corporate
+2C71FF,Amazon Technologies Inc.
+2C73A0,"Cisco Systems, Inc"
+2C7600,"Apple, Inc."
+2C768A,Hewlett Packard
+2C79BE,"Tp-Link Technologies Co.,Ltd."
+2C7BA0,Intel Corporate
+2C7CF2,"Apple, Inc."
+2C81BF,"Apple, Inc."
+2C8217,"Apple, Inc."
+2C86D2,"Cisco Systems, Inc"
+2C8DB1,Intel Corporate
+2C9520,"Apple, Inc."
+2C97ED,Sony Imaging Products & Solutions Inc.
+2C9975,"Samsung Electronics Co.,Ltd"
+2C9E00,Sony Interactive Entertainment Inc.
+2CA2E5,"Cisco Systems, Inc"
+2CABEB,"Cisco Systems, Inc"
+2CAE2B,"Samsung Electronics Co.,Ltd"
+2CB05D,Netgear
+2CB43A,"Apple, Inc."
+2CBABA,"Samsung Electronics Co.,Ltd"
+2CBC87,"Apple, Inc."
+2CBCBB,Espressif Inc.
+2CBE08,"Apple, Inc."
+2CC253,"Apple, Inc."
+2CCA16,"Apple, Inc."
+2CCC44,Sony Interactive Entertainment Inc.
+2CCF67,Raspberry Pi (Trading) Ltd
+2CD02D,"Cisco Systems, Inc"
+2CDA46,"Samsung Electronics Co.,Ltd"
+2CDB07,Intel Corporate
+2CDF68,"Apple, Inc."
+2CE38E,"Cisco Systems, Inc"
+2CE5BD,Ubiquiti Inc
+2CEA7F,Dell Inc.
+2CEAFC,Intel Corporate
+2CF0A2,"Apple, Inc."
+2CF0EE,"Apple, Inc."
+2CF432,Espressif Inc.
+2CF814,"Cisco Systems, Inc"
+2CF89B,"Cisco Systems, Inc"
+2CFDA1,ASUSTek COMPUTER INC.
+3001AF,"Cisco Systems, Inc"
+300505,Intel Corporate
+300916,"Apple, Inc."
+300D43,Microsoft Mobile Oy
+300E43,"Apple, Inc."
+300EB8,LG Electronics
+3010E4,"Apple, Inc."
+30138B,HP Inc.
+3017C8,Sony Corporation
+301966,"Samsung Electronics Co.,Ltd"
+301C22,Hewlett Packard Enterprise
+302432,Intel Corporate
+3024A9,HP Inc.
+3030F9,Espressif Inc.
+3035AD,"Apple, Inc."
+3037A6,"Cisco Systems, Inc"
+303926,Sony Corporation
+303A64,Intel Corporate
+303B7C,"Apple, Inc."
+303EA7,Intel Corporate
+303FBB,Hewlett Packard Enterprise
+30469A,Netgear
+304D1F,Amazon Technologies Inc.
+305714,"Apple, Inc."
+3059B7,Microsoft
+305A3A,ASUSTek COMPUTER INC.
+306222,"Samsung Electronics Co.,Ltd"
+30636B,"Apple, Inc."
+306893,TP-Link Systems Inc.
+306A4F,"Roku, Inc"
+306A85,"Samsung Electronics Co.,Ltd"
+307467,"Samsung Electronics Co.,Ltd"
+307512,Sony Corporation
+30766F,LG Electronics (Mobile Communications)
+3076F5,Espressif Inc.
+307AD2,"Apple, Inc."
+308216,"Apple, Inc."
+308398,Espressif Inc.
+3085A9,ASUSTek COMPUTER INC.
+30894A,Intel Corporate
+308BB2,"Cisco Systems, Inc"
+308D99,Hewlett Packard
+309048,"Apple, Inc."
+3090AB,"Apple, Inc."
+3096FB,"Samsung Electronics Co.,Ltd"
+30A033,"Apple, Inc."
+30A7F5,"Apple, Inc."
+30A8DB,Sony Corporation
+30AEA4,Espressif Inc.
+30B49E,"Tp-Link Technologies Co.,Ltd."
+30B4B8,LG Electronics
+30B5C2,"Tp-Link Technologies Co.,Ltd."
+30C0AE,"Apple, Inc."
+30C599,ASUSTek COMPUTER INC.
+30C6F7,Espressif Inc.
+30C7AE,"Samsung Electronics Co.,Ltd"
+30C922,Espressif Inc.
+30C9CC,"Samsung Electronics Co.,Ltd"
+30CBF8,"Samsung Electronics Co.,Ltd"
+30CDA7,"Samsung Electronics Co.,Ltd"
+30D042,Dell Inc.
+30D53E,"Apple, Inc."
+30D587,"Samsung Electronics Co.,Ltd"
+30D6C9,"Samsung Electronics Co.,Ltd"
+30D7A1,"Apple, Inc."
+30D875,"Apple, Inc."
+30D9D9,"Apple, Inc."
+30DE4B,TP-Link Systems Inc
+30DE52,"Samsung Electronics Co.,Ltd"
+30E044,"Google, Inc."
+30E04F,"Apple, Inc."
+30E171,Hewlett Packard
+30E226,"Apple, Inc."
+30E37A,Intel Corporate
+30E3A4,Intel Corporate
+30E4DB,"Cisco Systems, Inc"
+30EDA0,Espressif Inc.
+30F65D,Hewlett Packard Enterprise
+30F6EF,Intel Corporate
+30F70D,"Cisco Systems, Inc"
+30F7C5,"Apple, Inc."
+30F9ED,Sony Corporation
+30FC68,"Tp-Link Technologies Co.,Ltd."
+30FCEB,LG Electronics (Mobile Communications)
+30FD38,"Google, Inc."
+30FE6C,"Apple, Inc."
+30FEFA,"Cisco Systems, Inc"
+340286,Intel Corporate
+34033D,HP Inc.
+3408BC,"Apple, Inc."
+340E22,"Apple, Inc."
+3410BE,"Apple, Inc."
+341298,"Apple, Inc."
+3413E8,Intel Corporate
+34145F,"Samsung Electronics Co.,Ltd"
+34159E,"Apple, Inc."
+3417EB,Dell Inc.
+341B2D,"Cisco Systems, Inc"
+3425BE,Amazon Technologies Inc.
+342840,"Apple, Inc."
+342B6E,"Apple, Inc."
+342D0D,"Samsung Electronics Co.,Ltd"
+342EB7,Intel Corporate
+343111,"Samsung Electronics Co.,Ltd"
+34318F,"Apple, Inc."
+34363B,"Apple, Inc."
+343916,"Google, Inc."
+343A20,Hewlett Packard Enterprise
+34415D,Intel Corporate
+344262,"Apple, Inc."
+3448ED,Dell Inc.
+344DF7,LG Electronics (Mobile Communications)
+3451C9,"Apple, Inc."
+3454EF,"Cisco Systems, Inc"
+34588A,"Cisco Systems, Inc"
+345DA8,"Cisco Systems, Inc"
+345E08,"Roku, Inc"
+345F45,Espressif Inc.
+3460F9,TP-Link Systems Inc
+346288,"Cisco Systems, Inc"
+3464A9,Hewlett Packard
+346691,"Apple, Inc."
+346F90,"Cisco Systems, Inc"
+347069,"Cisco Systems, Inc"
+34732D,"Cisco Systems, Inc"
+34735A,Dell Inc.
+347C25,"Apple, Inc."
+347DF6,Intel Corporate
+347E5C,"Sonos, Inc."
+348296,"Apple, Inc."
+3482C5,"Samsung Electronics Co.,Ltd"
+348518,Espressif Inc.
+34865D,Espressif Inc.
+348818,"Cisco Systems, Inc"
+348A12,Hewlett Packard Enterprise
+348A7B,"Samsung Electronics Co.,Ltd"
+348C5E,"Apple, Inc."
+349454,Espressif Inc.
+349672,"Tp-Link Technologies Co.,Ltd."
+3497F6,ASUSTek COMPUTER INC.
+34987A,Espressif Inc.
+3498B5,Netgear
+34A395,"Apple, Inc."
+34A84E,"Cisco Systems, Inc"
+34A8EB,"Apple, Inc."
+34AA8B,"Samsung Electronics Co.,Ltd"
+34AB37,"Apple, Inc."
+34AB95,Espressif Inc.
+34AFB3,Amazon Technologies Inc.
+34B126,TP-Link Systems Inc.
+34B1EB,"Apple, Inc."
+34B472,Espressif Inc.
+34B7DA,Espressif Inc.
+34B883,"Cisco Systems, Inc"
+34BDC8,"Cisco Systems, Inc"
+34BE00,"Samsung Electronics Co.,Ltd"
+34C059,"Apple, Inc."
+34C232,"Samsung Electronics Co.,Ltd"
+34C386,"Apple, Inc."
+34C3AC,"Samsung Electronics Co.,Ltd"
+34C3FD,"Cisco Systems, Inc"
+34C515,Hewlett Packard Enterprise
+34C7E9,"Google, Inc."
+34C934,Espressif Inc.
+34C93D,Intel Corporate
+34CDB0,Espressif Inc.
+34CFF6,Intel Corporate
+34D270,Amazon Technologies Inc.
+34DAA1,"Apple, Inc."
+34DBFD,"Cisco Systems, Inc"
+34DDCC,"Google, Inc."
+34DE1A,Intel Corporate
+34E12D,Intel Corporate
+34E2FD,"Apple, Inc."
+34E3FB,"Samsung Electronics Co.,Ltd"
+34E6AD,Intel Corporate
+34E6D7,Dell Inc.
+34E894,"Tp-Link Technologies Co.,Ltd."
+34E8CB,"Apple, Inc."
+34ED1B,"Cisco Systems, Inc"
+34EE16,"Apple, Inc."
+34F043,"Samsung Electronics Co.,Ltd"
+34F084,"Samsung Electronics Co.,Ltd"
+34F39A,Intel Corporate
+34F64B,Intel Corporate
+34F68D,"Apple, Inc."
+34F716,"Tp-Link Technologies Co.,Ltd."
+34F8DD,"Apple, Inc."
+34F8E7,"Cisco Systems, Inc"
+34FCB9,Hewlett Packard Enterprise
+34FCEF,LG Electronics (Mobile Communications)
+34FD6A,"Apple, Inc."
+34FD70,Intel Corporate
+34FE77,"Apple, Inc."
+380025,Intel Corporate
+380195,"Samsung Electronics Co.,Ltd"
+380484,"Apple, Inc."
+3809FB,"Apple, Inc."
+380A94,"Samsung Electronics Co.,Ltd"
+380B40,"Samsung Electronics Co.,Ltd"
+380E4D,"Cisco Systems, Inc"
+380F4A,"Apple, Inc."
+3810F0,Hewlett Packard Enterprise
+381428,Dell Inc.
+3816B3,HP Inc.
+3816D1,"Samsung Electronics Co.,Ltd"
+3817C3,Hewlett Packard Enterprise
+38182B,Espressif Inc.
+38184C,Sony Home Entertainment&Sound Products Inc
+381868,Intel Corporate
+381C1A,"Cisco Systems, Inc"
+382056,"Cisco Systems, Inc"
+3821C7,Hewlett Packard Enterprise
+3822E2,HP Inc.
+38256B,Microsoft Mobile Oy
+382C4A,ASUSTek COMPUTER INC.
+382DD1,"Samsung Electronics Co.,Ltd"
+382DE8,"Samsung Electronics Co.,Ltd"
+3830F9,LG Electronics (Mobile Communications)
+3833C5,Microsoft Corporation
+383E51,Espressif Inc.
+38420B,"Sonos, Inc."
+3844BE,Espressif Inc.
+38484C,"Apple, Inc."
+384A80,"Samsung Electronics Co.,Ltd"
+38539C,"Apple, Inc."
+38563D,Microsoft Corporation
+386233,"Apple, Inc."
+3863BB,Hewlett Packard
+3865B2,"Apple, Inc."
+3866F0,"Apple, Inc."
+386893,Intel Corporate
+3868A4,"Samsung Electronics Co.,Ltd"
+386A77,"Samsung Electronics Co.,Ltd"
+386FF4,Amazon Technologies Inc.
+3871DE,"Apple, Inc."
+387862,Sony Corporation
+387A0E,Intel Corporate
+387F8B,"Apple, Inc."
+388345,"Tp-Link Technologies Co.,Ltd."
+3886F7,"Google, Inc."
+3887D5,Intel Corporate
+3888A4,"Apple, Inc."
+38892C,"Apple, Inc."
+388A06,"Samsung Electronics Co.,Ltd"
+388B59,"Google, Inc."
+388C50,LG Electronics
+388CEF,"Samsung Electronics Co.,Ltd"
+388F30,"Samsung Electronics Co.,Ltd"
+3890A5,"Cisco Systems, Inc"
+3891B7,"Cisco Systems, Inc"
+389496,"Samsung Electronics Co.,Ltd"
+3894ED,Netgear
+389AF6,"Samsung Electronics Co.,Ltd"
+389CB2,"Apple, Inc."
+389E4C,Hewlett Packard Enterprise
+38AA09,"Cisco Systems, Inc"
+38B54D,"Apple, Inc."
+38BAF8,Intel Corporate
+38BD7A,Hewlett Packard Enterprise
+38C43A,"Apple, Inc."
+38C986,"Apple, Inc."
+38CA84,HP Inc.
+38CADA,"Apple, Inc."
+38D40B,"Samsung Electronics Co.,Ltd"
+38D547,ASUSTek COMPUTER INC.
+38DEAD,Intel Corporate
+38E13D,"Apple, Inc."
+38EAA7,Hewlett Packard
+38EC0D,"Apple, Inc."
+38ECE4,"Samsung Electronics Co.,Ltd"
+38ED18,"Cisco Systems, Inc"
+38F23E,Microsoft Mobile Oy
+38F73D,Amazon Technologies Inc.
+38F9D3,"Apple, Inc."
+38FC98,Intel Corporate
+38FDF8,"Cisco Systems, Inc"
+38FF59,Dell Inc.
+3A3541,Raspberry Pi (Trading) Ltd
+3C01EF,Sony Corporation
+3C0518,"Samsung Electronics Co.,Ltd"
+3C0630,"Apple, Inc."
+3C06A7,"Tp-Link Technologies Co.,Ltd."
+3C0754,"Apple, Inc."
+3C0771,Sony Corporation
+3C07D7,"Apple, Inc."
+3C08F6,"Cisco Systems, Inc"
+3C0A7A,"Samsung Electronics Co.,Ltd"
+3C0D0D,Espressif Systems (Singapore) Pte. Ltd
+3C0E23,"Cisco Systems, Inc"
+3C0F02,Espressif Inc.
+3C13CC,"Cisco Systems, Inc"
+3C15C2,"Apple, Inc."
+3C195E,"Samsung Electronics Co.,Ltd"
+3C1EB5,"Apple, Inc."
+3C20F6,"Samsung Electronics Co.,Ltd"
+3C219C,Intel Corporate
+3C22FB,"Apple, Inc."
+3C25F8,Dell Inc.
+3C26E4,"Cisco Systems, Inc"
+3C286D,"Google, Inc."
+3C2983,"Samsung Electronics Co.,Ltd"
+3C2C30,Dell Inc.
+3C2CCD,"Apple, Inc."
+3C2EF9,"Apple, Inc."
+3C2EFF,"Apple, Inc."
+3C3174,"Google, Inc."
+3C318A,"Samsung Electronics Co.,Ltd"
+3C3464,"Apple, Inc."
+3C3786,Netgear
+3C38F4,Sony Corporation
+3C39C8,"Apple, Inc."
+3C3B77,"Apple, Inc."
+3C410E,"Cisco Systems, Inc"
+3C46D8,"Tp-Link Technologies Co.,Ltd."
+3C4A92,Hewlett Packard
+3C4DBE,"Apple, Inc."
+3C5002,"Apple, Inc."
+3C510E,"Cisco Systems, Inc"
+3C5282,Hewlett Packard
+3C52A1,TP-Link Systems Inc
+3C5731,"Cisco Systems, Inc"
+3C576C,"Samsung Electronics Co.,Ltd"
+3C58C2,Intel Corporate
+3C5A37,"Samsung Electronics Co.,Ltd"
+3C5AB4,"Google, Inc."
+3C5CC4,Amazon Technologies Inc.
+3C5EC3,"Cisco Systems, Inc"
+3C6105,Espressif Inc.
+3C6200,"Samsung Electronics Co.,Ltd"
+3C64CF,TP-Link Systems Inc
+3C6A48,"Tp-Link Technologies Co.,Ltd."
+3C6AA7,Intel Corporate
+3C6AD2,TP-Link Systems Inc.
+3C6D89,"Apple, Inc."
+3C71BF,Espressif Inc.
+3C7895,TP-Link Systems Inc.
+3C7C3F,ASUSTek COMPUTER INC.
+3C7D0A,"Apple, Inc."
+3C8375,Microsoft Corporation
+3C8427,Espressif Inc.
+3C846A,"Tp-Link Technologies Co.,Ltd."
+3C8A1F,Espressif Inc.
+3C8B7F,"Cisco Systems, Inc"
+3C8BFE,"Samsung Electronics Co.,Ltd"
+3C8D20,"Google, Inc."
+3C9C0F,Intel Corporate
+3CA10D,"Samsung Electronics Co.,Ltd"
+3CA6F6,"Apple, Inc."
+3CA82A,Hewlett Packard
+3CA9F4,Intel Corporate
+3CAB8E,"Apple, Inc."
+3CBBFD,"Samsung Electronics Co.,Ltd"
+3CBDD8,Lg Electronics Inc
+3CBF60,"Apple, Inc."
+3CBFD7,"Apple, Inc."
+3CCD36,"Apple, Inc."
+3CCD40,"Apple, Inc."
+3CCD93,Lg Electronics Inc
+3CCE73,"Cisco Systems, Inc"
+3CD0F8,"Apple, Inc."
+3CD92B,Hewlett Packard
+3CDC75,Espressif Inc.
+3CDCBC,"Samsung Electronics Co.,Ltd"
+3CDD57,"Apple, Inc."
+3CDF1E,"Cisco Systems, Inc"
+3CE072,"Apple, Inc."
+3CE255,Espressif Inc.
+3CE441,Amazon Technologies Inc.
+3CE86E,Hewlett Packard Enterprise
+3CE90E,Espressif Inc.
+3CE9F7,Intel Corporate
+3CF011,Intel Corporate
+3CF7A4,"Samsung Electronics Co.,Ltd"
+3CF862,Intel Corporate
+3CFA06,Microsoft Corporation
+3CFB02,"Apple, Inc."
+3CFDFE,Intel Corporate
+3CFEAC,"Cisco Systems, Inc"
+40017A,"Cisco Systems, Inc"
+4006D5,"Cisco Systems, Inc"
+400999,"Cisco Systems, Inc"
+4011C3,"Samsung Electronics Co.,Ltd"
+401277,Microsoft Corporation
+401482,"Cisco Systems, Inc"
+40163B,"Samsung Electronics Co.,Ltd"
+40167E,ASUSTek COMPUTER INC.
+40169F,"Tp-Link Technologies Co.,Ltd."
+401C83,Intel Corporate
+4022D8,Espressif Inc.
+4025C2,Intel Corporate
+402619,"Apple, Inc."
+402BA1,Sony Corporation
+402BD6,Espressif Inc.
+402F53,"Apple, Inc."
+403004,"Apple, Inc."
+40331A,"Apple, Inc."
+4035E6,"Samsung Electronics Co.,Ltd"
+403CFC,"Apple, Inc."
+403F8C,"Tp-Link Technologies Co.,Ltd."
+4040A7,Sony Corporation
+404244,"Cisco Systems, Inc"
+404CCA,Espressif Inc.
+404D7F,"Apple, Inc."
+404E9E,"Apple, Inc."
+40538C,LG Electronics
+405539,"Cisco Systems, Inc"
+405CFD,Dell Inc.
+405D82,Netgear
+405EF6,"Samsung Electronics Co.,Ltd"
+406792,"Cisco Systems, Inc"
+406C8F,"Apple, Inc."
+4070F5,"Apple, Inc."
+4074E0,Intel Corporate
+407911,"Apple, Inc."
+40831D,"Apple, Inc."
+4089C2,"Apple, Inc."
+4089C6,Amazon Technologies Inc.
+408E2C,Microsoft Corporation
+409151,Espressif Inc.
+40921A,"Apple, Inc."
+409595,TP-Link Systems Inc.
+4098AD,"Apple, Inc."
+409C28,"Apple, Inc."
+40A2DB,Amazon Technologies Inc.
+40A3CC,Intel Corporate
+40A44A,"Google, Inc."
+40A6B7,Intel Corporate
+40A6D9,"Apple, Inc."
+40A6E8,"Cisco Systems, Inc"
+40A8F0,Hewlett Packard
+40A9CF,Amazon Technologies Inc.
+40AE30,TP-Link Systems Inc
+40B034,Hewlett Packard
+40B076,ASUSTek COMPUTER INC.
+40B0FA,LG Electronics (Mobile Communications)
+40B395,"Apple, Inc."
+40B3FA,"Apple, Inc."
+40B4CD,Amazon Technologies Inc.
+40B5C1,"Cisco Systems, Inc"
+40B837,Sony Corporation
+40B93C,Hewlett Packard Enterprise
+40BA09,Dell Inc.
+40BC60,"Apple, Inc."
+40C711,"Apple, Inc."
+40C73C,Intel Corporate
+40CBC0,"Apple, Inc."
+40CE24,"Cisco Systems, Inc"
+40D133,Intel Corporate
+40D160,"Apple, Inc."
+40D32D,"Apple, Inc."
+40D3AE,"Samsung Electronics Co.,Ltd"
+40DA5C,"Apple, Inc."
+40DE24,"Samsung Electronics Co.,Ltd"
+40E3D6,Hewlett Packard Enterprise
+40E64B,"Apple, Inc."
+40EC99,Intel Corporate
+40ECBD,Intel Corporate
+40ED00,TP-Link Systems Inc
+40EDCF,"Apple, Inc."
+40F078,"Cisco Systems, Inc"
+40F49F,"Cisco Systems, Inc"
+40F4EC,"Cisco Systems, Inc"
+40F520,Espressif Inc.
+40F6BC,Amazon Technologies Inc.
+40F946,"Apple, Inc."
+440010,"Apple, Inc."
+440049,Amazon Technologies Inc.
+44032C,Intel Corporate
+4403A7,"Cisco Systems, Inc"
+44070B,"Google, Inc."
+4409DA,"Apple, Inc."
+441030,"Google, Inc."
+441244,Hewlett Packard Enterprise
+441622,Microsoft Corporation
+4416FA,"Samsung Electronics Co.,Ltd"
+441793,Espressif Inc.
+4418FD,"Apple, Inc."
+441A5C,"Cisco Systems, Inc"
+441B88,"Apple, Inc."
+441BF6,Espressif Inc.
+441D64,Espressif Inc.
+441EA1,Hewlett Packard
+441EB0,"Apple, Inc."
+4425F4,"Apple, Inc."
+442A60,"Apple, Inc."
+442B03,"Cisco Systems, Inc"
+443192,Hewlett Packard
+443583,"Apple, Inc."
+4438E8,Intel Corporate
+443D54,Amazon Technologies Inc.
+444201,Amazon Technologies Inc.
+4448C1,Hewlett Packard Enterprise
+444988,Intel Corporate
+444ADB,"Apple, Inc."
+444C0C,"Apple, Inc."
+444E1A,"Samsung Electronics Co.,Ltd"
+44552B,"Samsung Electronics Co.,Ltd"
+445BED,Hewlett Packard Enterprise
+445CE9,"Samsung Electronics Co.,Ltd"
+4463B6,"Apple, Inc."
+44643C,"Cisco Systems, Inc"
+44650D,Amazon Technologies Inc.
+446690,"Tp-Link Technologies Co.,Ltd."
+446D6C,"Samsung Electronics Co.,Ltd"
+446D7F,Amazon Technologies Inc.
+44746C,Sony Corporation
+44783E,"Samsung Electronics Co.,Ltd"
+447B30,Espressif Inc.
+447B45,Amazon Technologies Inc.
+448500,Intel Corporate
+448816,"Cisco Systems, Inc"
+448DD5,"Cisco Systems, Inc"
+448F17,"Samsung Electronics Co., Ltd. ARTIK"
+4490BB,"Apple, Inc."
+4494FC,Netgear
+449D76,"Apple, Inc."
+449E8B,"Apple, Inc."
+44A10E,"Apple, Inc."
+44A3BB,Intel Corporate
+44A56E,Netgear
+44A7F4,"Apple, Inc."
+44A842,Dell Inc.
+44A8FC,"Apple, Inc."
+44ADD9,"Cisco Systems, Inc"
+44AE25,"Cisco Systems, Inc"
+44AF28,Intel Corporate
+44B176,Espressif Inc.
+44B32D,"Tp-Link Technologies Co.,Ltd."
+44B4B2,Amazon Technologies Inc.
+44B6BE,"Cisco Systems, Inc"
+44BB3B,"Google, Inc."
+44BD8D,Espressif Inc.
+44C20C,"Cisco Systems, Inc"
+44C63C,"Samsung Electronics Co.,Ltd"
+44C65D,"Apple, Inc."
+44D3CA,"Cisco Systems, Inc"
+44D4E0,Sony Corporation
+44D5CC,Amazon Technologies Inc.
+44D884,"Apple, Inc."
+44D9E7,Ubiquiti Inc
+44DA30,"Apple, Inc."
+44E4D9,"Cisco Systems, Inc"
+44E517,Intel Corporate
+44E66E,"Apple, Inc."
+44E853,"Apple, Inc."
+44EA30,"Samsung Electronics Co.,Ltd"
+44F09E,"Apple, Inc."
+44F21B,"Apple, Inc."
+44F459,"Samsung Electronics Co.,Ltd"
+44FB42,"Apple, Inc."
+480020,Hewlett Packard Enterprise
+4800B3,"Cisco Systems, Inc"
+480A28,"Apple, Inc."
+480EEC,"Tp-Link Technologies Co.,Ltd."
+480FCF,Hewlett Packard
+48137E,"Samsung Electronics Co.,Ltd"
+481BA4,"Cisco Systems, Inc"
+482254,TP-Link Systems Inc
+48262C,"Apple, Inc."
+4827E2,Espressif Inc.
+4827EA,"Samsung Electronics Co.,Ltd"
+482B75,"Apple, Inc."
+482E72,"Cisco Systems, Inc"
+482F6B,Hewlett Packard Enterprise
+4831B7,Espressif Inc.
+48352B,"Apple, Inc."
+4835AB,"Apple, Inc."
+483B38,"Apple, Inc."
+483F72,"Samsung Electronics Co.,Ltd"
+483FDA,Espressif Inc.
+4840D5,Intel Corporate
+48437C,"Apple, Inc."
+4843DD,Amazon Technologies Inc.
+4844F7,"Samsung Electronics Co.,Ltd"
+484520,Intel Corporate
+4849C7,"Samsung Electronics Co.,Ltd"
+484AE9,Hewlett Packard Enterprise
+484BAA,"Apple, Inc."
+484D7E,Dell Inc.
+485073,Microsoft Corporation
+485169,"Samsung Electronics Co.,Ltd"
+4851B7,Intel Corporate
+4851C5,Intel Corporate
+485519,Espressif Inc.
+485929,LG Electronics (Mobile Communications)
+485B39,ASUSTek COMPUTER INC.
+485F08,"Tp-Link Technologies Co.,Ltd."
+485F2D,Amazon Technologies Inc.
+48605F,LG Electronics (Mobile Communications)
+4860BC,"Apple, Inc."
+4861EE,"Samsung Electronics Co.,Ltd"
+48684A,Intel Corporate
+487410,"Cisco Systems, Inc"
+48746E,"Apple, Inc."
+48785E,Amazon Technologies Inc.
+48794D,"Samsung Electronics Co.,Ltd"
+487B2F,Microsoft Corporation
+487D2E,"Tp-Link Technologies Co.,Ltd."
+488002,"Cisco Systems, Inc"
+4886E8,Microsoft Corporation
+4889E7,Intel Corporate
+488B0A,"Cisco Systems, Inc"
+48902F,LG Electronics (Mobile Communications)
+4890F0,Dell Inc.
+4891D5,"Cisco Systems, Inc"
+489A58,"Samsung Electronics Co.,Ltd"
+489D31,Espressif Inc.
+489DD1,"Samsung Electronics Co.,Ltd"
+489EBD,HP Inc.
+489ECB,Hewlett Packard Enterprise
+48A170,"Cisco Systems, Inc"
+48A195,"Apple, Inc."
+48A472,Intel Corporate
+48A6B8,"Sonos, Inc."
+48A91C,"Apple, Inc."
+48AD9A,Intel Corporate
+48AFF3,Espressif Inc.
+48B423,Amazon Technologies Inc.
+48B4C3,Hewlett Packard Enterprise
+48B8A3,"Apple, Inc."
+48BA4E,Hewlett Packard
+48BCE1,"Samsung Electronics Co.,Ltd"
+48BF6B,"Apple, Inc."
+48C381,TP-Link Systems Inc.
+48C796,"Samsung Electronics Co.,Ltd"
+48CA43,Espressif Inc.
+48CA68,"Apple, Inc."
+48D6D5,"Google, Inc."
+48D705,"Apple, Inc."
+48DF37,Hewlett Packard Enterprise
+48E150,Intel Corporate
+48E15C,"Apple, Inc."
+48E1CA,"Apple, Inc."
+48E729,Espressif Inc.
+48E9F1,"Apple, Inc."
+48EA62,HP Inc.
+48EF1C,"Samsung Electronics Co.,Ltd"
+48F17F,Intel Corporate
+48F6EE,Espressif Inc.
+4C0082,"Cisco Systems, Inc"
+4C01F7,"Cisco Systems, Inc"
+4C034F,Intel Corporate
+4C091B,"Apple, Inc."
+4C0BBE,Microsoft
+4C0F3E,Intel Corporate
+4C10D5,"Tp-Link Technologies Co.,Ltd."
+4C11AE,Espressif Inc.
+4C1744,Amazon Technologies Inc.
+4C1D96,Intel Corporate
+4C20B8,"Apple, Inc."
+4C21D0,Sony Corporation
+4C2E5E,"Samsung Electronics Co.,Ltd"
+4C2EB4,"Apple, Inc."
+4C3275,"Apple, Inc."
+4C3488,Intel Corporate
+4C3946,"Samsung Electronics Co.,Ltd"
+4C3BDF,Microsoft Corporation
+4C3C16,"Samsung Electronics Co.,Ltd"
+4C421E,"Cisco Systems, Inc"
+4C445B,Intel Corporate
+4C496C,Intel Corporate
+4C4E35,"Cisco Systems, Inc"
+4C53FD,Amazon Technologies Inc.
+4C569D,"Apple, Inc."
+4C5739,"Samsung Electronics Co.,Ltd"
+4C57CA,"Apple, Inc."
+4C5D3C,"Cisco Systems, Inc"
+4C5D6A,"Apple, Inc."
+4C5F70,Intel Corporate
+4C60AD,Amazon Technologies Inc.
+4C60DE,Netgear
+4C66A6,"Samsung Electronics Co.,Ltd"
+4C6BE8,"Apple, Inc."
+4C710C,"Cisco Systems, Inc"
+4C710D,"Cisco Systems, Inc"
+4C74BF,"Apple, Inc."
+4C7525,Espressif Inc.
+4C7625,Dell Inc.
+4C776D,"Cisco Systems, Inc"
+4C77CB,Intel Corporate
+4C796E,Intel Corporate
+4C7975,"Apple, Inc."
+4C79BA,Intel Corporate
+4C7A88,"Cisco Systems, Inc"
+4C7C5F,"Apple, Inc."
+4C7CD9,"Apple, Inc."
+4C8093,Intel Corporate
+4C80FB,"Google, Inc."
+4C820C,"Apple, Inc."
+4C8421,Espressif Inc.
+4C8D79,"Apple, Inc."
+4C97CC,"Apple, Inc."
+4C9FF1,"Apple, Inc."
+4CA56D,"Samsung Electronics Co.,Ltd"
+4CA64D,"Cisco Systems, Inc"
+4CA954,Intel Corporate
+4CAB4F,"Apple, Inc."
+4CAD35,"Apple, Inc."
+4CAEA3,Hewlett Packard Enterprise
+4CB04A,Intel Corporate
+4CB199,"Apple, Inc."
+4CB910,"Apple, Inc."
+4CBC48,"Cisco Systems, Inc"
+4CBCA5,"Samsung Electronics Co.,Ltd"
+4CC382,Espressif Inc.
+4CC5D9,Dell Inc.
+4CC95E,"Samsung Electronics Co.,Ltd"
+4CCDB6,"Apple, Inc."
+4CCF7C,HP Inc.
+4CD012,"Apple, Inc."
+4CD0F9,"Cisco Systems, Inc"
+4CD546,Hewlett Packard Enterprise
+4CD587,Hewlett Packard Enterprise
+4CD717,Dell Inc.
+4CD98F,Dell Inc.
+4CDD31,"Samsung Electronics Co.,Ltd"
+4CE175,"Cisco Systems, Inc"
+4CE176,"Cisco Systems, Inc"
+4CE650,"Apple, Inc."
+4CE6C0,"Apple, Inc."
+4CEB42,Intel Corporate
+4CEBB0,"Samsung Electronics Co.,Ltd"
+4CEBD6,Espressif Inc.
+4CEC0F,"Cisco Systems, Inc"
+4CECEE,"Samsung Electronics Co.,Ltd"
+4CEDFB,ASUSTek COMPUTER INC.
+4CEFC0,Amazon Technologies Inc.
+5000E0,"Cisco Systems, Inc"
+5001BB,"Samsung Electronics Co.,Ltd"
+500291,Espressif Inc.
+500604,"Cisco Systems, Inc"
+5006AB,"Cisco Systems, Inc"
+5006F5,"Roku, Inc"
+5007C3,Amazon Technologies Inc.
+500F80,"Cisco Systems, Inc"
+50125C,Sony Corporation
+5017FF,"Cisco Systems, Inc"
+501AC5,Microsoft
+501CB0,"Cisco Systems, Inc"
+501CBF,"Cisco Systems, Inc"
+501FC6,"Apple, Inc."
+5023A2,"Apple, Inc."
+50284A,Intel Corporate
+502DA2,Intel Corporate
+502F9B,Intel Corporate
+502FA8,"Cisco Systems, Inc"
+503237,"Apple, Inc."
+503275,"Samsung Electronics Co.,Ltd"
+503B70,"Apple, Inc."
+503DA1,"Samsung Electronics Co.,Ltd"
+503DD1,TP-Link Systems Inc.
+503DE5,"Cisco Systems, Inc"
+503EAA,"Tp-Link Technologies Co.,Ltd."
+50465D,ASUSTek COMPUTER INC.
+504921,"Cisco Systems, Inc"
+5049B0,"Samsung Electronics Co.,Ltd"
+504A6E,Netgear
+5050A4,"Samsung Electronics Co.,Ltd"
+505527,LG Electronics (Mobile Communications)
+5056BF,"Samsung Electronics Co.,Ltd"
+50578A,"Apple, Inc."
+5057A8,"Cisco Systems, Inc"
+505C88,"Cisco Systems, Inc"
+5061BF,"Cisco Systems, Inc"
+5065F3,Hewlett Packard
+5067AE,"Cisco Systems, Inc"
+506A03,Netgear
+507164,"Cisco Systems, Inc"
+5076AF,Intel Corporate
+507705,"Samsung Electronics Co.,Ltd"
+50787D,Espressif Inc.
+507A55,"Apple, Inc."
+507AC5,"Apple, Inc."
+507C6F,Intel Corporate
+508114,"Apple, Inc."
+508140,HP Inc.
+5082D5,"Apple, Inc."
+508492,Intel Corporate
+508569,"Samsung Electronics Co.,Ltd"
+508789,"Cisco Systems, Inc"
+5091E3,TP-Link Systems Inc
+5092B9,"Samsung Electronics Co.,Ltd"
+50995A,Amazon Technologies Inc.
+509A4C,Dell Inc.
+509EA7,"Samsung Electronics Co.,Ltd"
+50A4C8,"Samsung Electronics Co.,Ltd"
+50A67F,"Apple, Inc."
+50A6D8,"Apple, Inc."
+50B03B,Sony Interactive Entertainment Inc.
+50B127,"Apple, Inc."
+50B7C3,"Samsung Electronics Co.,Ltd"
+50BA84,"Cisco Systems, Inc"
+50BC96,"Apple, Inc."
+50BD5F,"Tp-Link Technologies Co.,Ltd."
+50C7BF,"Tp-Link Technologies Co.,Ltd."
+50C8E5,"Samsung Electronics Co.,Ltd"
+50D45C,Amazon Technologies Inc.
+50D4F7,"Tp-Link Technologies Co.,Ltd."
+50DCE7,Amazon Technologies Inc.
+50DDAB,"Samsung Electronics Co.,Ltd"
+50DE06,"Apple, Inc."
+50E085,Intel Corporate
+50E4E0,Hewlett Packard Enterprise
+50EAD6,"Apple, Inc."
+50EB71,Intel Corporate
+50EBF6,ASUSTek COMPUTER INC.
+50ED3C,"Apple, Inc."
+50F0D3,"Samsung Electronics Co.,Ltd"
+50F265,"Apple, Inc."
+50F351,"Apple, Inc."
+50F4EB,"Apple, Inc."
+50F520,"Samsung Electronics Co.,Ltd"
+50F5DA,Amazon Technologies Inc.
+50F722,"Cisco Systems, Inc"
+50FA84,"Tp-Link Technologies Co.,Ltd."
+50FC9F,"Samsung Electronics Co.,Ltd"
+5404A6,ASUSTek COMPUTER INC.
+54077D,Netgear
+540910,"Apple, Inc."
+54104F,"Samsung Electronics Co.,Ltd"
+5414F3,Intel Corporate
+5416A5,Espressif Systems (Singapore) Pte. Ltd
+54219D,"Samsung Electronics Co.,Ltd"
+54263D,Sony Corporation
+542696,"Apple, Inc."
+542906,"Apple, Inc."
+542A1B,"Sonos, Inc."
+542A43,"Apple, Inc."
+542B1C,Amazon Technologies Inc.
+542B8D,"Apple, Inc."
+543204,Espressif Inc.
+5432C7,"Apple, Inc."
+5433CB,"Apple, Inc."
+543631,Intel Corporate
+543AD6,"Samsung Electronics Co.,Ltd"
+5440AD,"Samsung Electronics Co.,Ltd"
+544249,Sony Corporation
+5443B2,Espressif Inc.
+5444A3,"Samsung Electronics Co.,Ltd"
+544810,Dell Inc.
+544A00,"Cisco Systems, Inc"
+544C8A,Microsoft Corporation
+544E90,"Apple, Inc."
+544EF0,"Roku, Inc"
+5451DE,"Cisco Systems, Inc"
+5453ED,Sony Corporation
+545AA6,Espressif Inc.
+546009,"Google, Inc."
+5462E2,"Apple, Inc."
+546749,"Google, Inc."
+546CEB,Intel Corporate
+54724F,"Apple, Inc."
+547595,"Tp-Link Technologies Co.,Ltd."
+5475D0,"Cisco Systems, Inc"
+54778A,Hewlett Packard Enterprise
+54781A,"Cisco Systems, Inc"
+547C69,"Cisco Systems, Inc"
+547FEE,"Cisco Systems, Inc"
+548028,Hewlett Packard Enterprise
+5486BC,"Cisco Systems, Inc"
+5488DE,"Cisco Systems, Inc"
+548ABA,"Cisco Systems, Inc"
+548D5A,Intel Corporate
+5492BE,"Samsung Electronics Co.,Ltd"
+549963,"Apple, Inc."
+549B12,"Samsung Electronics Co.,Ltd"
+549DEA,Espressif Inc.
+549F13,"Apple, Inc."
+549F35,Dell Inc.
+549FC6,"Cisco Systems, Inc"
+54A050,ASUSTek COMPUTER INC.
+54A274,"Cisco Systems, Inc"
+54A703,"Tp-Link Technologies Co.,Ltd."
+54AE27,"Apple, Inc."
+54AF97,TP-Link Systems Inc
+54B802,"Samsung Electronics Co.,Ltd"
+54B8DB,"Apple, Inc."
+54BD79,"Samsung Electronics Co.,Ltd"
+54BF64,Dell Inc.
+54C80F,"Tp-Link Technologies Co.,Ltd."
+54D17D,"Samsung Electronics Co.,Ltd"
+54D299,TP-Link Systems Inc.
+54D7E3,Hewlett Packard Enterprise
+54DD4F,"Samsung Electronics Co.,Ltd"
+54E43A,"Apple, Inc."
+54E4ED,Intel Corporate
+54E61B,"Apple, Inc."
+54E6FC,"Tp-Link Technologies Co.,Ltd."
+54E6FD,Sony Interactive Entertainment Inc.
+54EAA8,"Apple, Inc."
+54EBE9,"Apple, Inc."
+54F0B1,Hewlett Packard Enterprise
+54F201,"Samsung Electronics Co.,Ltd"
+54FA3E,"Samsung Electronics Co.,Ltd"
+54FCF0,"Samsung Electronics Co.,Ltd"
+580205,AzureWave Technology Inc.
+58044F,TP-Link Systems Inc.
+580987,Amazon Technologies Inc.
+580A20,"Cisco Systems, Inc"
+580AD4,"Apple, Inc."
+580FA5,"Apple, Inc."
+581122,ASUSTek COMPUTER INC.
+58170C,Sony Corporation
+581862,Sony Corporation
+581CF8,Intel Corporate
+581FAA,"Apple, Inc."
+582071,"Samsung Electronics Co.,Ltd"
+5820B1,Hewlett Packard
+582429,"Google, Inc."
+582A93,"Apple, Inc."
+582ABD,Espressif Inc.
+582BD3,Espressif Inc.
+5835D9,"Cisco Systems, Inc"
+583653,"Apple, Inc."
+583F54,LG Electronics (Mobile Communications)
+58404E,"Apple, Inc."
+584120,"Tp-Link Technologies Co.,Ltd."
+584822,Sony Corporation
+5851A3,"Apple, Inc."
+585595,"Apple, Inc."
+5855CA,"Apple, Inc."
+58569F,"Cisco Systems, Inc"
+5856AA,"Apple, Inc."
+5864C4,"Apple, Inc."
+58666D,"Apple, Inc."
+586B14,"Apple, Inc."
+586C25,Intel Corporate
+586D0C,Hewlett Packard Enterprise
+586D67,Intel Corporate
+5873D8,"Apple, Inc."
+587961,Microsoft Corporation
+5879E0,"Samsung Electronics Co.,Ltd"
+587F57,"Apple, Inc."
+5882A8,Microsoft
+588A5A,Dell Inc.
+588B1C,"Cisco Systems, Inc"
+588C81,Espressif Inc.
+588D09,"Cisco Systems, Inc"
+5891CF,Intel Corporate
+5893E8,"Apple, Inc."
+58946B,Intel Corporate
+58960A,LG Electronics
+58961D,Intel Corporate
+58971E,"Cisco Systems, Inc"
+5897BD,"Cisco Systems, Inc"
+589A3E,Amazon Technologies Inc.
+58A023,Intel Corporate
+58A2B5,LG Electronics (Mobile Communications)
+58A639,"Samsung Electronics Co.,Ltd"
+58A839,Intel Corporate
+58A8E8,Amazon Technologies Inc.
+58AC78,"Cisco Systems, Inc"
+58AD12,"Apple, Inc."
+58B035,"Apple, Inc."
+58B10F,"Samsung Electronics Co.,Ltd"
+58B145,Espressif Systems (Singapore) Pte. Ltd
+58B965,"Apple, Inc."
+58BC27,"Cisco Systems, Inc"
+58BF25,Espressif Inc.
+58BFEA,"Cisco Systems, Inc"
+58C38B,"Samsung Electronics Co.,Ltd"
+58C5CB,"Samsung Electronics Co.,Ltd"
+58CB52,"Google, Inc."
+58CE2A,Intel Corporate
+58CF79,Espressif Inc.
+58D349,"Apple, Inc."
+58D61F,Ubiquiti Inc
+58D812,TP-Link Systems Inc.
+58DF59,"Cisco Systems, Inc"
+58E28F,"Apple, Inc."
+58E488,Amazon Technologies Inc.
+58E6BA,"Apple, Inc."
+58E6C5,Espressif Inc.
+58F39C,"Cisco Systems, Inc"
+58FB84,Intel Corporate
+58FDB1,LG Electronics
+5C013B,Espressif Inc.
+5C0947,"Apple, Inc."
+5C10C5,"Samsung Electronics Co.,Ltd"
+5C13AC,"Apple, Inc."
+5C13CC,"Apple, Inc."
+5C1BF4,"Apple, Inc."
+5C1DD9,"Apple, Inc."
+5C23C2,"Apple, Inc."
+5C260A,Dell Inc.
+5C2E59,"Samsung Electronics Co.,Ltd"
+5C3192,"Cisco Systems, Inc"
+5C337B,"Google, Inc."
+5C3C27,"Samsung Electronics Co.,Ltd"
+5C3E06,"Cisco Systems, Inc"
+5C3E1B,"Apple, Inc."
+5C497D,"Samsung Electronics Co.,Ltd"
+5C5015,"Cisco Systems, Inc"
+5C50D9,"Apple, Inc."
+5C5136,"Samsung Electronics Co.,Ltd"
+5C514F,Intel Corporate
+5C5181,"Samsung Electronics Co.,Ltd"
+5C5230,"Apple, Inc."
+5C5284,"Apple, Inc."
+5C5948,"Apple, Inc."
+5C5AC7,"Cisco Systems, Inc"
+5C5E0A,"Samsung Electronics Co.,Ltd"
+5C5F67,Intel Corporate
+5C60BA,HP Inc.
+5C628B,TP-Link Systems Inc
+5C63BF,"Tp-Link Technologies Co.,Ltd."
+5C64F1,"Cisco Systems, Inc"
+5C6783,Intel Corporate
+5C7017,"Apple, Inc."
+5C70A3,LG Electronics (Mobile Communications)
+5C710D,"Cisco Systems, Inc"
+5C80B6,Intel Corporate
+5C838F,"Cisco Systems, Inc"
+5C843C,Sony Interactive Entertainment Inc.
+5C865C,"Samsung Electronics Co.,Ltd"
+5C8730,"Apple, Inc."
+5C879C,Intel Corporate
+5C899A,"Tp-Link Technologies Co.,Ltd."
+5C89BC,"Apple, Inc."
+5C8A38,Hewlett Packard
+5C8B6B,Amazon Technologies Inc.
+5C8D4E,"Apple, Inc."
+5C9175,"Apple, Inc."
+5C95AE,"Apple, Inc."
+5C9666,Sony Interactive Entertainment Inc.
+5C969D,"Apple, Inc."
+5C97F3,"Apple, Inc."
+5C9960,"Samsung Electronics Co.,Ltd"
+5C9977,"Apple, Inc."
+5C9BA6,"Apple, Inc."
+5CA12E,"Apple, Inc."
+5CA47D,Hewlett Packard Enterprise
+5CA48A,"Cisco Systems, Inc"
+5CA62D,"Cisco Systems, Inc"
+5CA64F,TP-Link Systems Inc.
+5CA6E6,TP-Link Systems Inc
+5CAAFD,"Sonos, Inc."
+5CAC3D,"Samsung Electronics Co.,Ltd"
+5CADBA,"Apple, Inc."
+5CADCF,"Apple, Inc."
+5CAF06,LG Electronics (Mobile Communications)
+5CB12E,"Cisco Systems, Inc"
+5CB26D,Intel Corporate
+5CB47E,Intel Corporate
+5CB524,Sony Corporation
+5CB8B7,"Apple, Inc."
+5CB901,Hewlett Packard
+5CBA2C,Hewlett Packard Enterprise
+5CBA37,Microsoft Corporation
+5CC1D7,"Samsung Electronics Co.,Ltd"
+5CC5D4,Intel Corporate
+5CCA1A,Microsoft Mobile Oy
+5CCB99,"Samsung Electronics Co.,Ltd"
+5CCD5B,Intel Corporate
+5CCF7F,Espressif Inc.
+5CD2E4,Intel Corporate
+5CD33D,"Samsung Electronics Co.,Ltd"
+5CDC49,"Samsung Electronics Co.,Ltd"
+5CE0C5,Intel Corporate
+5CE176,"Cisco Systems, Inc"
+5CE42A,Intel Corporate
+5CE8EB,"Samsung Electronics Co.,Ltd"
+5CE91E,"Apple, Inc."
+5CE931,TP-Link Systems Inc
+5CED8C,Hewlett Packard Enterprise
+5CEDF4,"Samsung Electronics Co.,Ltd"
+5CF5DA,"Apple, Inc."
+5CF6DC,"Samsung Electronics Co.,Ltd"
+5CF7E6,"Apple, Inc."
+5CF938,"Apple, Inc."
+5CF9DD,Dell Inc.
+5CFC66,"Cisco Systems, Inc"
+600194,Espressif Inc.
+600308,"Apple, Inc."
+6006E3,"Apple, Inc."
+600F6B,"Apple, Inc."
+60156F,TP-Link Systems Inc.
+601895,Dell Inc.
+602232,Ubiquiti Inc
+6025ED,Hewlett Packard Enterprise
+6026AA,"Cisco Systems, Inc"
+6026EF,Hewlett Packard Enterprise
+60292B,"Tp-Link Technologies Co.,Ltd."
+602ED5,"Apple, Inc."
+6030D4,"Apple, Inc."
+6032B1,"Tp-Link Technologies Co.,Ltd."
+60334B,"Apple, Inc."
+6036DD,Intel Corporate
+603A7C,"Tp-Link Technologies Co.,Ltd."
+603AAF,"Samsung Electronics Co.,Ltd"
+603CEE,LG Electronics (Mobile Communications)
+603E5F,"Apple, Inc."
+60452E,Intel Corporate
+6045BD,Microsoft
+6045CB,ASUSTek COMPUTER INC.
+6055F9,Espressif Inc.
+605718,Intel Corporate
+6057C8,"Apple, Inc."
+605B30,Dell Inc.
+606525,"Apple, Inc."
+606720,Intel Corporate
+60684E,"Samsung Electronics Co.,Ltd"
+606944,"Apple, Inc."
+606BBD,"Samsung Electronics Co.,Ltd"
+606C66,Intel Corporate
+60706C,"Google, Inc."
+6070C0,"Apple, Inc."
+60735C,"Cisco Systems, Inc"
+60756C,LG Electronics
+6077E2,"Samsung Electronics Co.,Ltd"
+607EC9,"Apple, Inc."
+607EDD,Microsoft Mobile Oy
+607FCB,"Samsung Electronics Co.,Ltd"
+608110,"Apple, Inc."
+608246,"Apple, Inc."
+608373,"Apple, Inc."
+6083E7,TP-Link Systems Inc
+608B0E,"Apple, Inc."
+608C4A,"Apple, Inc."
+608E08,"Samsung Electronics Co.,Ltd"
+608F5C,"Samsung Electronics Co.,Ltd"
+609217,"Apple, Inc."
+6092C8,"Roku, Inc"
+609316,"Apple, Inc."
+609578,"Samsung Electronics Co.,Ltd"
+6095BD,"Apple, Inc."
+609AC1,"Apple, Inc."
+60A10A,"Samsung Electronics Co.,Ltd"
+60A37D,"Apple, Inc."
+60A3E3,"Tp-Link Technologies Co.,Ltd."
+60A44C,ASUSTek COMPUTER INC.
+60A4B7,TP-Link Systems Inc
+60A4D0,"Samsung Electronics Co.,Ltd"
+60A5E2,Intel Corporate
+60A954,"Cisco Systems, Inc"
+60AF6D,"Samsung Electronics Co.,Ltd"
+60B4A2,"Samsung Electronics Co.,Ltd"
+60B76E,"Google, Inc."
+60B9C0,"Cisco Systems, Inc"
+60BEC4,"Apple, Inc."
+60C547,"Apple, Inc."
+60C5AD,"Samsung Electronics Co.,Ltd"
+60C807,"Apple, Inc."
+60CA3A,"Apple, Inc."
+60CF84,ASUSTek COMPUTER INC.
+60D039,"Apple, Inc."
+60D0A9,"Samsung Electronics Co.,Ltd"
+60D178,"Cisco Systems, Inc"
+60D9C7,"Apple, Inc."
+60DD70,"Apple, Inc."
+60DD8E,Intel Corporate
+60DE18,"Apple, Inc."
+60E327,"Tp-Link Technologies Co.,Ltd."
+60E32B,Intel Corporate
+60E3AC,LG Electronics (Mobile Communications)
+60F262,Intel Corporate
+60F445,"Apple, Inc."
+60F549,"Apple, Inc."
+60F620,Sonos Inc.
+60F677,Intel Corporate
+60F81D,"Apple, Inc."
+60FACD,"Apple, Inc."
+60FB42,"Apple, Inc."
+60FDA6,"Apple, Inc."
+60FEC5,"Apple, Inc."
+60FF12,"Samsung Electronics Co.,Ltd"
+64006A,Dell Inc.
+6400F1,"Cisco Systems, Inc"
+64037F,"Samsung Electronics Co.,Ltd"
+6407F6,"Samsung Electronics Co.,Ltd"
+640864,"Cisco Systems, Inc"
+640BD7,"Apple, Inc."
+640C91,"Apple, Inc."
+640D22,LG Electronics (Mobile Communications)
+641225,"Cisco Systems, Inc"
+64168D,"Cisco Systems, Inc"
+6417CD,"Samsung Electronics Co.,Ltd"
+641B2F,"Samsung Electronics Co.,Ltd"
+641CAE,"Samsung Electronics Co.,Ltd"
+641CB0,"Samsung Electronics Co.,Ltd"
+64200C,"Apple, Inc."
+643135,"Apple, Inc."
+643150,Hewlett Packard
+6432A8,Intel Corporate
+643AEA,"Cisco Systems, Inc"
+6441E6,"Apple, Inc."
+644842,"Apple, Inc."
+64497D,Intel Corporate
+644A7D,Intel Corporate
+644C36,Intel Corporate
+644ED7,HP Inc.
+645106,Hewlett Packard
+645601,"Tp-Link Technologies Co.,Ltd."
+6456B5,"Samsung Electronics Co.,Ltd"
+6457BA,Intel Corporate
+645A36,"Apple, Inc."
+645AED,"Apple, Inc."
+645D86,Intel Corporate
+645DF4,"Samsung Electronics Co.,Ltd"
+6466B3,"Tp-Link Technologies Co.,Ltd."
+6466D8,"Samsung Electronics Co.,Ltd"
+646CB2,"Samsung Electronics Co.,Ltd"
+646D2F,"Apple, Inc."
+646E97,"Tp-Link Technologies Co.,Ltd."
+646EE0,Intel Corporate
+647002,"Tp-Link Technologies Co.,Ltd."
+647033,"Apple, Inc."
+6476BA,"Apple, Inc."
+647791,"Samsung Electronics Co.,Ltd"
+6479F0,Intel Corporate
+647BCE,"Samsung Electronics Co.,Ltd"
+648099,Intel Corporate
+648914,Espressif Inc.
+64899A,LG Electronics (Mobile Communications)
+6489F1,"Samsung Electronics Co.,Ltd"
+648F3E,"Cisco Systems, Inc"
+64956C,LG Electronics
+649ABE,"Apple, Inc."
+649D38,"Google, Inc."
+649EF3,"Cisco Systems, Inc"
+64A0E7,"Cisco Systems, Inc"
+64A3CB,"Apple, Inc."
+64A5C3,"Apple, Inc."
+64ACE0,"Samsung Electronics Co.,Ltd"
+64AE0C,"Cisco Systems, Inc"
+64B0A6,"Apple, Inc."
+64B310,"Samsung Electronics Co.,Ltd"
+64B5F2,"Samsung Electronics Co.,Ltd"
+64B708,Espressif Inc.
+64B853,"Samsung Electronics Co.,Ltd"
+64B94E,Dell Technologies
+64B9E8,"Apple, Inc."
+64BC0C,LG Electronics (Mobile Communications)
+64BC58,Intel Corporate
+64BD6D,"Apple, Inc."
+64C045,"Apple, Inc."
+64C2DE,LG Electronics (Mobile Communications)
+64C753,"Apple, Inc."
+64C905,"Apple, Inc."
+64C9F1,Amazon Technologies Inc.
+64CDC2,Amazon Technologies Inc.
+64D0D6,"Samsung Electronics Co.,Ltd"
+64D2C4,"Apple, Inc."
+64D4DA,Intel Corporate
+64D69A,Intel Corporate
+64D814,"Cisco Systems, Inc"
+64D989,"Cisco Systems, Inc"
+64DE6D,Intel Corporate
+64E4A5,LG Electronics
+64E682,"Apple, Inc."
+64E7D8,"Samsung Electronics Co.,Ltd"
+64E833,Espressif Inc.
+64E881,Hewlett Packard Enterprise
+64E950,"Cisco Systems, Inc"
+64F69D,"Cisco Systems, Inc"
+680125,Amazon Technologies Inc.
+680489,"Cisco Systems, Inc"
+680571,"Samsung Electronics Co.,Ltd"
+6805CA,Intel Corporate
+680715,Intel Corporate
+680927,"Apple, Inc."
+680947,Espressif Inc.
+6813F3,Amazon Technologies Inc.
+6815E4,"Cisco Systems, Inc"
+681729,Intel Corporate
+681A47,"Apple, Inc."
+681C52,"Cisco Systems, Inc"
+6825DD,Espressif Inc.
+682737,"Samsung Electronics Co.,Ltd"
+68286C,Sony Interactive Entertainment Inc.
+6828CF,Hewlett Packard Enterprise
+682C7B,"Cisco Systems, Inc"
+682E3C,Ubiquiti Inc
+682F67,"Apple, Inc."
+683036,"Apple, Inc."
+683421,Intel Corporate
+6837E9,Amazon Technologies Inc.
+683B09,"Apple, Inc."
+683B78,"Cisco Systems, Inc"
+683E26,Intel Corporate
+683EC0,"Apple, Inc."
+684465,"Apple, Inc."
+6845CC,"Apple, Inc."
+6847C5,Intel Corporate
+684898,"Samsung Electronics Co.,Ltd"
+684A5F,"Apple, Inc."
+684AE9,"Samsung Electronics Co.,Ltd"
+684F64,Dell Inc.
+685134,Hewlett Packard Enterprise
+68545A,Intel Corporate
+6854FD,Amazon Technologies Inc.
+685ACF,"Samsung Electronics Co.,Ltd"
+685B35,"Apple, Inc."
+685D43,Intel Corporate
+685EDD,"Apple, Inc."
+68644B,"Apple, Inc."
+686725,Espressif Inc.
+686CE6,Microsoft Corporation
+687161,"Cisco Systems, Inc"
+687251,Ubiquiti Inc
+6872C3,"Samsung Electronics Co.,Ltd"
+68764F,Sony Corporation
+687724,"Tp-Link Technologies Co.,Ltd."
+687909,"Cisco Systems, Inc"
+687A64,Intel Corporate
+687D6B,"Samsung Electronics Co.,Ltd"
+687DAC,"Samsung Electronics Co.,Ltd"
+687DB4,"Cisco Systems, Inc"
+687FF0,TP-Link Systems Inc
+6883CB,"Apple, Inc."
+6886A7,"Cisco Systems, Inc"
+6887C6,"Cisco Systems, Inc"
+68967B,"Apple, Inc."
+6899CD,"Cisco Systems, Inc"
+689A87,Amazon Technologies Inc.
+689C70,"Apple, Inc."
+689CE2,"Cisco Systems, Inc"
+689DD2,Espressif Inc.
+689E0B,"Cisco Systems, Inc"
+689FD4,Amazon Technologies Inc.
+68A593,"Apple, Inc."
+68A729,"Apple, Inc."
+68A86D,"Apple, Inc."
+68AB1E,"Apple, Inc."
+68AE20,"Apple, Inc."
+68B599,Hewlett Packard
+68B691,Amazon Technologies Inc.
+68B6B3,Espressif Inc.
+68BC0C,"Cisco Systems, Inc"
+68BDAB,"Cisco Systems, Inc"
+68BFC4,"Samsung Electronics Co.,Ltd"
+68C63A,Espressif Inc.
+68C6AC,Intel Corporate
+68CAC4,"Apple, Inc."
+68CAE4,"Cisco Systems, Inc"
+68D79A,Ubiquiti Inc
+68D93C,"Apple, Inc."
+68D972,"Cisco Systems, Inc"
+68DBCA,"Apple, Inc."
+68DBF5,Amazon Technologies Inc.
+68DDB7,"Tp-Link Technologies Co.,Ltd."
+68DFE4,"Samsung Electronics Co.,Ltd"
+68E580,"Apple, Inc."
+68E59E,"Cisco Systems, Inc"
+68E7C2,"Samsung Electronics Co.,Ltd"
+68EBAE,"Samsung Electronics Co.,Ltd"
+68ECC5,Intel Corporate
+68EE8F,Espressif Inc.
+68EF43,"Apple, Inc."
+68EFBD,"Cisco Systems, Inc"
+68EFDC,"Apple, Inc."
+68F63B,Amazon Technologies Inc.
+68F7D8,Microsoft Corporation
+68F90F,Intel Corporate
+68FB7E,"Apple, Inc."
+68FCCA,"Samsung Electronics Co.,Ltd"
+68FE71,Espressif Inc.
+68FEF7,"Apple, Inc."
+68FF7B,"Tp-Link Technologies Co.,Ltd."
+6C006B,"Samsung Electronics Co.,Ltd"
+6C02E0,HP Inc.
+6C0309,"Cisco Systems, Inc"
+6C03B5,"Cisco Systems, Inc"
+6C0B5E,HP Inc.
+6C0C9A,Amazon Technologies Inc.
+6C0E0D,Sony Corporation
+6C1270,"Apple, Inc."
+6C13D5,"Cisco Systems, Inc"
+6C1544,Microsoft Corporation
+6C19C0,"Apple, Inc."
+6C1F8A,"Apple, Inc."
+6C2056,"Cisco Systems, Inc"
+6C23B9,Sony Corporation
+6C2483,Microsoft Mobile Oy
+6C2779,Microsoft Mobile Oy
+6C2995,Intel Corporate
+6C29D2,"Cisco Systems, Inc"
+6C2B59,Dell Inc.
+6C2F2C,"Samsung Electronics Co.,Ltd"
+6C2F80,Intel Corporate
+6C2F8A,"Samsung Electronics Co.,Ltd"
+6C2FA0,Espressif Inc.
+6C310E,"Cisco Systems, Inc"
+6C3AFF,"Apple, Inc."
+6C3BE5,Hewlett Packard
+6C3C8C,Dell Inc.
+6C3DD8,Espressif Systems (Singapore) Pte. Ltd
+6C3E6D,"Apple, Inc."
+6C4008,"Apple, Inc."
+6C410E,"Cisco Systems, Inc"
+6C416A,"Cisco Systems, Inc"
+6C4A85,"Apple, Inc."
+6C4CBC,TP-Link Systems Inc.
+6C4CE2,Intel Corporate
+6C4D73,"Apple, Inc."
+6C4EF6,"Cisco Systems, Inc"
+6C4FA1,"Cisco Systems, Inc"
+6C504D,"Cisco Systems, Inc"
+6C5563,"Samsung Electronics Co.,Ltd"
+6C55B1,Amazon Technologies Inc.
+6C5697,Amazon Technologies Inc.
+6C5AB0,TP-Link Systems Inc
+6C5D3A,Microsoft Corporation
+6C5E3B,"Cisco Systems, Inc"
+6C63F8,Ubiquiti Inc
+6C688A,Amazon Technologies Inc.
+6C6A77,Intel Corporate
+6C6CD3,"Cisco Systems, Inc"
+6C709F,"Apple, Inc."
+6C70CB,"Samsung Electronics Co.,Ltd"
+6C710D,"Cisco Systems, Inc"
+6C72E7,"Apple, Inc."
+6C7E67,"Apple, Inc."
+6C8336,"Samsung Electronics Co.,Ltd"
+6C8814,Intel Corporate
+6C8BD3,"Cisco Systems, Inc"
+6C8D77,"Cisco Systems, Inc"
+6C8DC1,"Apple, Inc."
+6C8FB5,Microsoft Mobile Oy
+6C9466,Intel Corporate
+6C94F8,"Apple, Inc."
+6C96CF,"Apple, Inc."
+6C9989,"Cisco Systems, Inc"
+6C999D,Amazon Technologies Inc.
+6C9CED,"Cisco Systems, Inc"
+6CA100,Intel Corporate
+6CAB05,"Cisco Systems, Inc"
+6CAB31,"Apple, Inc."
+6CACC2,"Samsung Electronics Co.,Ltd"
+6CB0CE,Netgear
+6CB133,"Apple, Inc."
+6CB158,"Tp-Link Technologies Co.,Ltd."
+6CB227,Sony Video & Sound Products Inc.
+6CB2AE,"Cisco Systems, Inc"
+6CB456,Espressif Inc.
+6CB7F4,"Samsung Electronics Co.,Ltd"
+6CC217,Hewlett Packard
+6CC26B,"Apple, Inc."
+6CC49F,Hewlett Packard Enterprise
+6CC4AF,Espressif Systems (Singapore) Pte. Ltd
+6CC840,Espressif Inc.
+6CCDD6,Netgear
+6CD032,LG Electronics
+6CD68A,LG Electronics (Mobile Communications)
+6CD6E3,"Cisco Systems, Inc"
+6CDD30,"Cisco Systems, Inc"
+6CDDBC,"Samsung Electronics Co.,Ltd"
+6CE210,Espressif Systems (Singapore) Pte. Ltd
+6CE5C9,"Apple, Inc."
+6CE85C,"Apple, Inc."
+6CE873,"Tp-Link Technologies Co.,Ltd."
+6CF373,"Samsung Electronics Co.,Ltd"
+6CF37F,Hewlett Packard Enterprise
+6CF6DA,Intel Corporate
+6CFA89,"Cisco Systems, Inc"
+6CFE54,Intel Corporate
+7001B5,"Cisco Systems, Inc"
+70039F,Espressif Inc.
+70041D,Espressif Inc.
+700514,LG Electronics (Mobile Communications)
+700810,Intel Corporate
+700971,"Samsung Electronics Co.,Ltd"
+700B4F,"Cisco Systems, Inc"
+700F6A,"Cisco Systems, Inc"
+70105C,"Cisco Systems, Inc"
+70106F,Hewlett Packard Enterprise
+701124,"Apple, Inc."
+701384,"Apple, Inc."
+7014A6,"Apple, Inc."
+7015FB,Intel Corporate
+7018A7,"Cisco Systems, Inc"
+701AB8,Intel Corporate
+701CE7,Intel Corporate
+701F3C,"Samsung Electronics Co.,Ltd"
+701F53,"Cisco Systems, Inc"
+7022FE,"Apple, Inc."
+702605,SONY Visual Products Inc.
+70287D,"Google, Inc."
+70288B,"Samsung Electronics Co.,Ltd"
+702AD5,"Samsung Electronics Co.,Ltd"
+70317F,"Apple, Inc."
+703217,Intel Corporate
+703509,"Cisco Systems, Inc"
+703A0E,Hewlett Packard Enterprise
+703ACB,"Google, Inc."
+703C69,"Apple, Inc."
+703EAC,"Apple, Inc."
+70480F,"Apple, Inc."
+704BCA,Espressif Inc.
+704CA2,"Apple, Inc."
+704D7B,ASUSTek COMPUTER INC.
+704EE0,"Samsung Electronics Co.,Ltd"
+704F57,"Tp-Link Technologies Co.,Ltd."
+705681,"Apple, Inc."
+705A0F,Hewlett Packard
+705AAC,"Samsung Electronics Co.,Ltd"
+70617B,"Cisco Systems, Inc"
+7062CB,"Apple, Inc."
+70662A,Sony Interactive Entertainment Inc.
+70695A,"Cisco Systems, Inc"
+706BB9,"Cisco Systems, Inc"
+706D15,"Cisco Systems, Inc"
+706E6D,"Cisco Systems, Inc"
+70700D,"Apple, Inc."
+70708B,"Cisco Systems, Inc"
+7070AA,Amazon Technologies Inc.
+7072FE,"Apple, Inc."
+7073CB,"Apple, Inc."
+7079B3,"Cisco Systems, Inc"
+707DB9,"Cisco Systems, Inc"
+708105,"Cisco Systems, Inc"
+7081EB,"Apple, Inc."
+708BCD,ASUSTek COMPUTER INC.
+708CF2,"Apple, Inc."
+709620,Hewlett Packard Enterprise
+709684,"Apple, Inc."
+709CD1,Intel Corporate
+709E29,Sony Interactive Entertainment Inc.
+70A04B,Intel Corporate
+70A2B3,"Apple, Inc."
+70A6CC,Intel Corporate
+70A741,Ubiquiti Inc
+70A8A5,Microsoft Corporation
+70A8D3,Intel Corporate
+70A983,"Cisco Systems, Inc"
+70AE2A,"Apple, Inc."
+70AED5,"Apple, Inc."
+70AF09,Espressif Inc.
+70B13D,"Samsung Electronics Co.,Ltd"
+70B306,"Apple, Inc."
+70B317,"Cisco Systems, Inc"
+70B5E8,Dell Inc.
+70B8F6,Espressif Inc.
+70BB5B,"Apple, Inc."
+70BC10,Microsoft Corporation
+70BC48,"Cisco Systems, Inc"
+70BD96,"Cisco Systems, Inc"
+70C288,Intel Corporate
+70C9C6,"Cisco Systems, Inc"
+70CA9B,"Cisco Systems, Inc"
+70CD0D,Intel Corporate
+70CD60,"Apple, Inc."
+70CE8C,"Samsung Electronics Co.,Ltd"
+70CF49,Intel Corporate
+70D379,"Cisco Systems, Inc"
+70D823,Intel Corporate
+70D8C2,Intel Corporate
+70DA48,"Cisco Systems, Inc"
+70DB98,"Cisco Systems, Inc"
+70DEE2,"Apple, Inc."
+70DF2F,"Cisco Systems, Inc"
+70E422,"Cisco Systems, Inc"
+70E72C,"Apple, Inc."
+70EA1A,"Cisco Systems, Inc"
+70EA5A,"Apple, Inc."
+70ECE4,"Apple, Inc."
+70EF00,"Apple, Inc."
+70F087,"Apple, Inc."
+70F096,"Cisco Systems, Inc"
+70F35A,"Cisco Systems, Inc"
+70F8AE,Microsoft Corporation
+70F927,"Samsung Electronics Co.,Ltd"
+70F94A,"Apple, Inc."
+70FD46,"Samsung Electronics Co.,Ltd"
+7404F1,Intel Corporate
+7405A5,"Tp-Link Technologies Co.,Ltd."
+740C2E,"Cisco Systems, Inc"
+740EA4,"Apple, Inc."
+7411B2,"Cisco Systems, Inc"
+7413EA,Intel Corporate
+7414D0,"Apple, Inc."
+7415F5,"Apple, Inc."
+74190A,"Samsung Electronics Co.,Ltd"
+741BB2,"Apple, Inc."
+741EB1,"Samsung Electronics Co.,Ltd"
+7426AC,"Cisco Systems, Inc"
+742917,"Apple, Inc."
+742959,"Apple, Inc."
+743174,"Apple, Inc."
+743989,"Tp-Link Technologies Co.,Ltd."
+743AF4,Intel Corporate
+743CDE,Hewlett Packard Enterprise
+743F8E,"Apple, Inc."
+744218,"Apple, Inc."
+74428B,"Apple, Inc."
+744401,Netgear
+74458A,"Samsung Electronics Co.,Ltd"
+7446A0,Hewlett Packard
+744DBD,Espressif Inc.
+7458F3,Amazon Technologies Inc.
+74650C,"Apple, Inc."
+746DFA,"Samsung Electronics Co.,Ltd"
+7470FD,Intel Corporate
+74718B,"Apple, Inc."
+7473B4,"Apple, Inc."
+747446,"Google, Inc."
+747548,Amazon Technologies Inc.
+74761F,Microsoft Corporation
+747786,"Apple, Inc."
+747827,Dell Inc.
+748114,"Apple, Inc."
+7483C2,Ubiquiti Inc
+74860B,"Cisco Systems, Inc"
+74867A,Dell Inc.
+7486E2,Dell Inc.
+7488BB,"Cisco Systems, Inc"
+748927,Espressif Inc.
+748B23,"Samsung Electronics Co.,Ltd"
+748D08,"Apple, Inc."
+748F3C,"Apple, Inc."
+748FC2,"Cisco Systems, Inc"
+749E75,Hewlett Packard Enterprise
+749EAF,"Apple, Inc."
+749EF5,"Samsung Electronics Co.,Ltd"
+74A02F,"Cisco Systems, Inc"
+74A2E6,"Cisco Systems, Inc"
+74A6CD,"Apple, Inc."
+74A722,LG Electronics (Mobile Communications)
+74A7EA,Amazon Technologies Inc.
+74ACB9,Ubiquiti Inc
+74AD98,"Cisco Systems, Inc"
+74B587,"Apple, Inc."
+74BC6B,Intel Corporate
+74C17E,LG Electronics
+74C246,Amazon Technologies Inc.
+74C412,Microsoft Corporation
+74CA60,"Sonos, Inc."
+74CC40,"Apple, Inc."
+74D02B,ASUSTek COMPUTER INC.
+74D423,Amazon Technologies Inc.
+74D5E8,"Apple, Inc."
+74D637,Amazon Technologies Inc.
+74D809,Microsoft Corporation
+74D83E,Intel Corporate
+74DA78,HP Inc.
+74DA88,"Tp-Link Technologies Co.,Ltd."
+74E1B6,"Apple, Inc."
+74E20C,Amazon Technologies Inc.
+74E28C,Microsoft Corporation
+74E2E7,"Cisco Systems, Inc"
+74E2F5,"Apple, Inc."
+74E50B,Intel Corporate
+74E517,Microsoft Corporation
+74E5F9,Intel Corporate
+74E6B8,LG Electronics
+74E6E2,Dell Inc.
+74E987,"Apple, Inc."
+74EA3A,"Tp-Link Technologies Co.,Ltd."
+74EB80,"Samsung Electronics Co.,Ltd"
+74ECB2,Amazon Technologies Inc.
+74F441,"Samsung Electronics Co.,Ltd"
+74F67A,"Samsung Electronics Co.,Ltd"
+74F92C,Ubiquiti Inc
+74FA29,Ubiquiti Inc
+74FECE,TP-Link Systems Inc
+78009E,"Samsung Electronics Co.,Ltd"
+78028B,"Apple, Inc."
+7802B1,"Cisco Systems, Inc"
+780CB8,Intel Corporate
+780CF0,"Cisco Systems, Inc"
+78119D,"Cisco Systems, Inc"
+781C3C,Espressif Inc.
+781FDB,"Samsung Electronics Co.,Ltd"
+782051,TP-Link Systems Inc.
+782184,Espressif Inc.
+782327,"Samsung Electronics Co.,Ltd"
+7824AF,ASUSTek COMPUTER INC.
+7824BE,"Cisco Systems, Inc"
+7825AD,"Samsung Electronics Co.,Ltd"
+7828CA,"Sonos, Inc."
+782B46,Intel Corporate
+782BCB,Dell Inc.
+7831C1,"Apple, Inc."
+7833C6,"Samsung Electronics Co.,Ltd"
+783716,"Samsung Electronics Co.,Ltd"
+783A84,"Apple, Inc."
+783F4D,"Apple, Inc."
+7840E4,"Samsung Electronics Co.,Ltd"
+78421C,Espressif Inc.
+7844FD,"Tp-Link Technologies Co.,Ltd."
+784558,Ubiquiti Inc
+7845C4,Dell Inc.
+7846D4,"Samsung Electronics Co.,Ltd"
+78471D,"Samsung Electronics Co.,Ltd"
+784859,Hewlett Packard
+7849D7,"Samsung Electronics Co.,Ltd"
+784F43,"Apple, Inc."
+78521A,"Samsung Electronics Co.,Ltd"
+78595E,"Samsung Electronics Co.,Ltd"
+785DC8,LG Electronics
+785ECC,"Apple, Inc."
+78605B,"Tp-Link Technologies Co.,Ltd."
+786089,"Samsung Electronics Co.,Ltd"
+7864A0,"Cisco Systems, Inc"
+7864C0,"Apple, Inc."
+7867D7,"Apple, Inc."
+786C1C,"Apple, Inc."
+786C84,Amazon Technologies Inc.
+78725D,"Cisco Systems, Inc"
+787462,Intel Corporate
+78753E,"Apple, Inc."
+787984,"Apple, Inc."
+787B8A,"Apple, Inc."
+787E61,"Apple, Inc."
+78843C,Sony Corporation
+788517,"Cisco Systems, Inc"
+78862E,Microsoft Corporation
+78886D,"Apple, Inc."
+788A20,Ubiquiti Inc
+788CB5,TP-Link Systems Inc
+78929C,Intel Corporate
+78960D,"Apple, Inc."
+789ED0,"Samsung Electronics Co.,Ltd"
+789F70,"Apple, Inc."
+78A03F,Amazon Technologies Inc.
+78A106,"Tp-Link Technologies Co.,Ltd."
+78A3E4,"Apple, Inc."
+78A7C7,"Apple, Inc."
+78A873,"Samsung Electronics Co.,Ltd"
+78ABBB,"Samsung Electronics Co.,Ltd"
+78AC44,Dell Inc.
+78ACC0,Hewlett Packard
+78AF08,Intel Corporate
+78B6FE,"Samsung Electronics Co.,Ltd"
+78BAF9,"Cisco Systems, Inc"
+78BC1A,"Cisco Systems, Inc"
+78BDBC,"Samsung Electronics Co.,Ltd"
+78BE81,FN-LINK TECHNOLOGY Ltd.
+78C05A,TP-Link Systems Inc.
+78C11D,"Samsung Electronics Co.,Ltd"
+78C3E9,"Samsung Electronics Co.,Ltd"
+78C881,Sony Interactive Entertainment Inc.
+78CA39,"Apple, Inc."
+78D162,"Apple, Inc."
+78D294,Netgear
+78D75F,"Apple, Inc."
+78DA6E,"Cisco Systems, Inc"
+78E0C5,"Samsung Electronics Co.,Ltd"
+78E103,Amazon Technologies Inc.
+78E36D,Espressif Inc.
+78E3B5,Hewlett Packard
+78E3DE,"Apple, Inc."
+78E7D1,Hewlett Packard
+78EE4C,Espressif Inc.
+78F1C6,"Cisco Systems, Inc"
+78F238,"Samsung Electronics Co.,Ltd"
+78F7BE,"Samsung Electronics Co.,Ltd"
+78F882,LG Electronics (Mobile Communications)
+78FBD8,"Apple, Inc."
+78FD94,"Apple, Inc."
+78FF57,Intel Corporate
+7C0191,"Apple, Inc."
+7C04D0,"Apple, Inc."
+7C0A3F,"Samsung Electronics Co.,Ltd"
+7C0BC6,"Samsung Electronics Co.,Ltd"
+7C0C5F,Espressif Inc.
+7C0ECE,"Cisco Systems, Inc"
+7C10C9,ASUSTek COMPUTER INC.
+7C11BE,"Apple, Inc."
+7C19E3,"Google, Inc."
+7C1C68,"Samsung Electronics Co.,Ltd"
+7C1E52,Microsoft
+7C210D,"Cisco Systems, Inc"
+7C210E,"Cisco Systems, Inc"
+7C214A,Intel Corporate
+7C2302,"Samsung Electronics Co.,Ltd"
+7C2499,"Apple, Inc."
+7C296F,"Apple, Inc."
+7C2A31,Intel Corporate
+7C2ACA,"Apple, Inc."
+7C2C67,Espressif Inc.
+7C2EBD,"Google, Inc."
+7C2EDD,"Samsung Electronics Co.,Ltd"
+7C310E,"Cisco Systems, Inc"
+7C38AD,"Samsung Electronics Co.,Ltd"
+7C3B2D,"Apple, Inc."
+7C4B26,"Apple, Inc."
+7C4D8F,HP Inc.
+7C4FAD,Espressif Inc.
+7C4FCD,"Apple, Inc."
+7C5049,"Apple, Inc."
+7C5079,Intel Corporate
+7C573C,Hewlett Packard Enterprise
+7C5758,HP Inc.
+7C59B1,"Apple, Inc."
+7C5CF8,Intel Corporate
+7C6130,"Apple, Inc."
+7C6166,Amazon Technologies Inc.
+7C62E7,"Cisco Systems, Inc"
+7C6305,Amazon Technologies Inc.
+7C6456,"Samsung Electronics Co.,Ltd"
+7C646C,LG Electronics
+7C67A2,Intel Corporate
+7C67AB,"Roku, Inc"
+7C69F6,"Cisco Systems, Inc"
+7C6D12,Microsoft Corporation
+7C6D62,"Apple, Inc."
+7C6DF8,"Apple, Inc."
+7C70DB,Intel Corporate
+7C7398,Espressif Inc.
+7C752D,"Samsung Electronics Co.,Ltd"
+7C7635,Intel Corporate
+7C787E,"Samsung Electronics Co.,Ltd"
+7C7A91,Intel Corporate
+7C7BBF,"Samsung Electronics Co.,Ltd"
+7C8767,"Cisco Systems, Inc"
+7C87CE,Espressif Inc.
+7C8956,"Samsung Electronics Co.,Ltd"
+7C8BB5,"Samsung Electronics Co.,Ltd"
+7C8BCA,"Tp-Link Technologies Co.,Ltd."
+7C9122,"Samsung Electronics Co.,Ltd"
+7C95F3,"Cisco Systems, Inc"
+7C9A1D,"Apple, Inc."
+7C9EBD,Espressif Inc.
+7CA1AE,"Apple, Inc."
+7CA62A,Hewlett Packard Enterprise
+7CA8EC,Hewlett Packard Enterprise
+7CAB60,"Apple, Inc."
+7CAD4F,"Cisco Systems, Inc"
+7CAD74,"Cisco Systems, Inc"
+7CB0C2,Intel Corporate
+7CB27D,Intel Corporate
+7CB353,"Cisco Systems, Inc"
+7CB566,Intel Corporate
+7CB59B,"Tp-Link Technologies Co.,Ltd."
+7CC06F,"Apple, Inc."
+7CC0AA,Microsoft Corporation
+7CC180,"Apple, Inc."
+7CC225,"Samsung Electronics Co.,Ltd"
+7CC2C6,TP-Link Systems Inc
+7CC3A1,"Apple, Inc."
+7CC537,"Apple, Inc."
+7CC8DF,"Apple, Inc."
+7CC95A,Dell EMC
+7CCCB8,Intel Corporate
+7CD1AD,"Apple, Inc."
+7CD1C3,"Apple, Inc."
+7CD2DA,"Apple, Inc."
+7CD544,Espressif Inc.
+7CD566,Amazon Technologies Inc.
+7CD62C,"Apple, Inc."
+7CD95C,"Google, Inc."
+7CDFA1,Espressif Inc.
+7CE8B1,Espressif Inc.
+7CECB1,"Apple, Inc."
+7CED8D,Microsoft
+7CEDC6,Amazon Technologies Inc.
+7CF05F,"Apple, Inc."
+7CF17E,TP-Link Systems Inc
+7CF31B,LG Electronics (Mobile Communications)
+7CF34D,"Apple, Inc."
+7CF854,"Samsung Electronics Co.,Ltd"
+7CF880,"Cisco Systems, Inc"
+7CF90E,"Samsung Electronics Co.,Ltd"
+7CFADF,"Apple, Inc."
+7CFC16,"Apple, Inc."
+80000B,Intel Corporate
+80006E,"Apple, Inc."
+80045F,"Apple, Inc."
+800794,"Samsung Electronics Co.,Ltd"
+800C67,"Apple, Inc."
+800CF9,Amazon Technologies Inc.
+800D3F,"Samsung Electronics Co.,Ltd"
+801242,"Apple, Inc."
+801316,Intel Corporate
+801844,Dell Inc.
+8018A7,"Samsung Electronics Co.,Ltd"
+801934,Intel Corporate
+801970,"Samsung Electronics Co.,Ltd"
+801D39,"Apple, Inc."
+8020FD,"Samsung Electronics Co.,Ltd"
+80248F,"Cisco Systems, Inc"
+80276C,"Cisco Systems, Inc"
+802AA8,Ubiquiti Inc
+802DBF,"Cisco Systems, Inc"
+8030E0,Hewlett Packard Enterprise
+8031F0,"Samsung Electronics Co.,Ltd"
+803253,Intel Corporate
+803773,Netgear
+8038FB,Intel Corporate
+80398C,"Samsung Electronics Co.,Ltd"
+803C04,TP-Link Systems Inc.
+803FD4,"Apple, Inc."
+80456B,Espressif Inc.
+8045DD,Intel Corporate
+804715,"Apple, Inc."
+804786,"Samsung Electronics Co.,Ltd"
+804971,"Apple, Inc."
+804A14,"Apple, Inc."
+804AF2,"Sonos, Inc."
+804E70,"Samsung Electronics Co.,Ltd"
+804E81,"Samsung Electronics Co.,Ltd"
+8053E0,Espressif Inc.
+80542D,"Samsung Electronics Co.,Ltd"
+80549C,"Samsung Electronics Co.,Ltd"
+8054E3,"Apple, Inc."
+805719,"Samsung Electronics Co.,Ltd"
+805A04,LG Electronics (Mobile Communications)
+805FC5,"Apple, Inc."
+806132,"Cisco Systems, Inc"
+80646F,Espressif Inc.
+80656D,"Samsung Electronics Co.,Ltd"
+80657C,"Apple, Inc."
+806599,Espressif Inc.
+806A00,"Cisco Systems, Inc"
+806D71,Amazon Technologies Inc.
+8075BF,"Samsung Electronics Co.,Ltd"
+807B3E,"Samsung Electronics Co.,Ltd"
+807D3A,Espressif Inc.
+808223,"Apple, Inc."
+8083F6,"Apple, Inc."
+808489,Intel Corporate
+8086D9,"Samsung Electronics Co.,Ltd"
+8086F2,Intel Corporate
+808917,"Tp-Link Technologies Co.,Ltd."
+808943,"Samsung Electronics Co.,Ltd"
+808ABD,"Samsung Electronics Co.,Ltd"
+808DB7,Hewlett Packard Enterprise
+808F1D,"Tp-Link Technologies Co.,Ltd."
+80929F,"Apple, Inc."
+80953A,"Apple, Inc."
+809698,"Apple, Inc."
+8099E7,Sony Corporation
+809B20,Intel Corporate
+809FF5,"Samsung Electronics Co.,Ltd"
+80A63C,Amazon Technologies Inc.
+80A997,"Apple, Inc."
+80AE54,"Tp-Link Technologies Co.,Ltd."
+80AF19,"Apple, Inc."
+80B03D,"Apple, Inc."
+80B54E,Espressif Inc.
+80B655,Intel Corporate
+80B989,"Apple, Inc."
+80BE05,"Apple, Inc."
+80C01E,Intel Corporate
+80C16E,Hewlett Packard
+80C327,"Apple, Inc."
+80C5E6,Microsoft Corporation
+80CC9C,Netgear
+80CE62,Hewlett Packard
+80CEB9,"Samsung Electronics Co.,Ltd"
+80D1CE,"Apple, Inc."
+80D605,"Apple, Inc."
+80E01D,"Cisco Systems, Inc"
+80E4BA,Intel Corporate
+80E650,"Apple, Inc."
+80E82C,Hewlett Packard
+80E86F,"Cisco Systems, Inc"
+80EA07,"Tp-Link Technologies Co.,Ltd."
+80EA96,"Apple, Inc."
+80ED2C,"Apple, Inc."
+80F1B2,Espressif Inc.
+80F3DA,Espressif Inc.
+8400D2,Sony Corporation
+840511,"Apple, Inc."
+84083A,Intel Corporate
+840C6D,"Cisco Systems, Inc"
+840D8E,Espressif Inc.
+840F4C,"Apple, Inc."
+84119E,"Samsung Electronics Co.,Ltd"
+84144D,Intel Corporate
+8416F9,"Tp-Link Technologies Co.,Ltd."
+841985,"Samsung Electronics Co.,Ltd"
+841B5E,Netgear
+841B77,Intel Corporate
+841FE8,Espressif Inc.
+842289,"Samsung Electronics Co.,Ltd"
+842519,Samsung Electronics
+8425DB,"Samsung Electronics Co.,Ltd"
+842789,"Apple, Inc."
+842859,Amazon Technologies Inc.
+842999,"Apple, Inc."
+842AFD,HP Inc.
+842B2B,Dell Inc.
+842E27,"Samsung Electronics Co.,Ltd"
+842F57,"Apple, Inc."
+843497,Hewlett Packard
+8437D5,"Samsung Electronics Co.,Ltd"
+843835,"Apple, Inc."
+843A4B,Intel Corporate
+843DC6,"Cisco Systems, Inc"
+844167,"Apple, Inc."
+844880,Amazon Technologies Inc.
+845181,"Samsung Electronics Co.,Ltd"
+8455A5,"Samsung Electronics Co.,Ltd"
+845733,Microsoft Corporation
+845A3E,"Cisco Systems, Inc"
+845C31,Dell Inc.
+845CF3,Intel Corporate
+845F04,"Samsung Electronics Co.,Ltd"
+8463D6,Microsoft Corporation
+84683E,Intel Corporate
+846878,"Apple, Inc."
+846993,HP Inc.
+847848,Ubiquiti Inc
+84788B,"Apple, Inc."
+8478AC,"Cisco Systems, Inc"
+847B57,Intel Corporate
+847BEB,Dell Inc.
+847CEE,"Cisco Systems, Inc"
+847D7E,"Cisco Systems, Inc"
+84802D,"Cisco Systems, Inc"
+848506,"Apple, Inc."
+8488E1,"Apple, Inc."
+8489AD,"Apple, Inc."
+848A8D,"Cisco Systems, Inc"
+848C8D,"Apple, Inc."
+848E0C,"Apple, Inc."
+848EDF,Sony Corporation
+848F69,Dell Inc.
+849265,Intel Corporate
+849437,"Apple, Inc."
+849866,"Samsung Electronics Co.,Ltd"
+84A134,"Apple, Inc."
+84A466,"Samsung Electronics Co.,Ltd"
+84A6C8,Intel Corporate
+84A824,"Google, Inc."
+84A93E,Hewlett Packard
+84AB1A,"Apple, Inc."
+84AC16,"Apple, Inc."
+84AD8D,"Apple, Inc."
+84B153,"Apple, Inc."
+84B1E2,Microsoft Corporation
+84B1E4,"Apple, Inc."
+84B261,"Cisco Systems, Inc"
+84B517,"Cisco Systems, Inc"
+84B541,"Samsung Electronics Co.,Ltd"
+84B802,"Cisco Systems, Inc"
+84B890,"Tp-Link Technologies Co.,Ltd."
+84C0EF,"Samsung Electronics Co.,Ltd"
+84C5A6,Intel Corporate
+84C7BB,Espressif Inc.
+84C7EA,Sony Corporation
+84CCA8,Espressif Inc.
+84D1C1,Intel Corporate
+84D328,"Apple, Inc."
+84D47E,Hewlett Packard Enterprise
+84D6D0,Amazon Technologies Inc.
+84D81B,"Tp-Link Technologies Co.,Ltd."
+84DD84,"Cisco Systems, Inc"
+84E657,Sony Interactive Entertainment Inc.
+84EAED,"Roku, Inc"
+84EBEF,"Cisco Systems, Inc"
+84EEE4,"Samsung Electronics Co.,Ltd"
+84EF18,Intel Corporate
+84F147,"Cisco Systems, Inc"
+84F3EB,Espressif Inc.
+84F703,Espressif Inc.
+84FCAC,"Apple, Inc."
+84FCE6,Espressif Inc.
+84FCFE,"Apple, Inc."
+84FDD1,Intel Corporate
+84FFC2,"Cisco Systems, Inc"
+88039E,"Apple, Inc."
+88074B,LG Electronics (Mobile Communications)
+881032,"Apple, Inc."
+8813BF,Espressif Inc.
+8817A8,"Apple, Inc."
+881908,"Apple, Inc."
+881DFC,"Cisco Systems, Inc"
+881E5A,"Apple, Inc."
+881FA1,"Apple, Inc."
+88200D,"Apple, Inc."
+88225B,Hewlett Packard Enterprise
+882510,Hewlett Packard Enterprise
+882593,"Tp-Link Technologies Co.,Ltd."
+88299C,"Samsung Electronics Co.,Ltd"
+8829BF,Amazon Technologies Inc.
+882C31,"Apple, Inc."
+88365F,LG Electronics (Mobile Communications)
+883A30,Hewlett Packard Enterprise
+883D24,"Google, Inc."
+8843E1,"Cisco Systems, Inc"
+884D7C,"Apple, Inc."
+884F59,"Cisco Systems, Inc"
+8851F2,"Apple, Inc."
+8851FB,Hewlett Packard
+88532E,Intel Corporate
+885395,"Apple, Inc."
+88541F,"Google, Inc."
+8856A6,Espressif Inc.
+885721,Espressif Inc.
+885A92,"Cisco Systems, Inc"
+885E54,"Samsung Electronics Co.,Ltd"
+8863DF,"Apple, Inc."
+886440,"Apple, Inc."
+88665A,"Apple, Inc."
+8866A5,"Apple, Inc."
+886B6E,"Apple, Inc."
+886BDB,"Apple, Inc."
+886FD4,Dell Inc.
+887015,"Apple, Inc."
+8871E5,Amazon Technologies Inc.
+887556,"Cisco Systems, Inc"
+887598,"Samsung Electronics Co.,Ltd"
+887873,Intel Corporate
+887ABC,"Cisco Systems, Inc"
+887E9B,"Apple, Inc."
+888322,"Samsung Electronics Co.,Ltd"
+88908D,"Cisco Systems, Inc"
+889986,"Tp-Link Technologies Co.,Ltd."
+889B39,"Samsung Electronics Co.,Ltd"
+889CAD,"Cisco Systems, Inc"
+889F6F,"Samsung Electronics Co.,Ltd"
+88A29E,Raspberry Pi (Trading) Ltd
+88A303,"Samsung Electronics Co.,Ltd"
+88A479,"Apple, Inc."
+88A9B7,"Apple, Inc."
+88ADD2,"Samsung Electronics Co.,Ltd"
+88AE07,"Apple, Inc."
+88B111,Intel Corporate
+88B291,"Apple, Inc."
+88B7EB,"Apple, Inc."
+88B945,"Apple, Inc."
+88BD45,"Samsung Electronics Co.,Ltd"
+88C08B,"Apple, Inc."
+88C344,"Google, Inc."
+88C663,"Apple, Inc."
+88C9D0,LG Electronics (Mobile Communications)
+88C9E8,Sony Corporation
+88CB87,"Apple, Inc."
+88D546,"Apple, Inc."
+88D7F6,ASUSTek COMPUTER INC.
+88D82E,Intel Corporate
+88DEA9,"Roku, Inc."
+88E87F,"Apple, Inc."
+88E9A4,Hewlett Packard Enterprise
+88E9FE,"Apple, Inc."
+88F031,"Cisco Systems, Inc"
+88F077,"Cisco Systems, Inc"
+88F155,Espressif Inc.
+88F2CE,"Apple, Inc."
+88F4DA,Intel Corporate
+88FC5D,"Cisco Systems, Inc"
+8AC72E,"Roku, Inc."
+8C006D,"Apple, Inc."
+8C04BA,Dell Inc.
+8C08AA,"Apple, Inc."
+8C142A,"Cisco Systems, Inc"
+8C1759,Intel Corporate
+8C1952,Amazon Technologies Inc.
+8C1ABF,"Samsung Electronics Co.,Ltd"
+8C1D96,Intel Corporate
+8C1E80,"Cisco Systems, Inc"
+8C210A,"Tp-Link Technologies Co.,Ltd."
+8C26AA,"Apple, Inc."
+8C2937,"Apple, Inc."
+8C2A85,Amazon Technologies Inc.
+8C2DAA,"Apple, Inc."
+8C2E72,"Samsung Electronics Co.,Ltd"
+8C3066,Ubiquiti Inc
+8C3396,"Apple, Inc."
+8C3AE3,LG Electronics (Mobile Communications)
+8C3BAD,Netgear
+8C44A5,"Cisco Systems, Inc"
+8C4598,Espressif Inc.
+8C47BE,Dell Inc.
+8C4962,"Roku, Inc"
+8C4B14,Espressif Inc.
+8C4EBB,Amazon Technologies Inc.
+8C4F00,Espressif Inc.
+8C554A,Intel Corporate
+8C5646,LG Electronics
+8C5877,"Apple, Inc."
+8C604F,"Cisco Systems, Inc"
+8C6422,Sony Corporation
+8C6A3B,"Samsung Electronics Co.,Ltd"
+8C705A,Intel Corporate
+8C71F8,"Samsung Electronics Co.,Ltd"
+8C7712,"Samsung Electronics Co.,Ltd"
+8C7909,Hewlett Packard Enterprise
+8C79F5,"Samsung Electronics Co.,Ltd"
+8C7AAA,"Apple, Inc."
+8C7B9D,"Apple, Inc."
+8C7C92,"Apple, Inc."
+8C8283,"Apple, Inc."
+8C83E1,"Samsung Electronics Co.,Ltd"
+8C8442,"Cisco Systems, Inc"
+8C8590,"Apple, Inc."
+8C85C1,Hewlett Packard Enterprise
+8C861E,"Apple, Inc."
+8C86DD,TP-Link Systems Inc.
+8C8C29,Espressif Inc.
+8C8D28,Intel Corporate
+8C8EF2,"Apple, Inc."
+8C8FE9,"Apple, Inc."
+8C902D,TP-Link Systems Inc.
+8C91A4,"Apple, Inc."
+8C941F,"Cisco Systems, Inc"
+8C9461,"Cisco Systems, Inc"
+8C94DF,Espressif Inc.
+8C986B,"Apple, Inc."
+8C9885,"Samsung Electronics Co.,Ltd"
+8CA3EC,"Samsung Electronics Co.,Ltd"
+8CA6DF,"Tp-Link Technologies Co.,Ltd."
+8CA982,Intel Corporate
+8CAAB5,Espressif Inc.
+8CB0E9,"Samsung Electronics.,LTD"
+8CB50E,"Cisco Systems, Inc"
+8CB64F,"Cisco Systems, Inc"
+8CB87E,Intel Corporate
+8CBFA6,"Samsung Electronics Co.,Ltd"
+8CBFEA,Espressif Inc.
+8CC246,"Apple, Inc."
+8CC5D0,"Samsung Electronics Co.,Ltd"
+8CC681,Intel Corporate
+8CC8CD,"Samsung Electronics Co.,Ltd"
+8CCE4E,Espressif Inc.
+8CCF09,Dell EMC
+8CDCD4,Hewlett Packard
+8CDEE6,"Samsung Electronics Co.,Ltd"
+8CE5C0,"Samsung Electronics Co.,Ltd"
+8CE9EE,Intel Corporate
+8CE9FF,Dell Inc.
+8CEA48,"Samsung Electronics Co.,Ltd"
+8CEC4B,Dell Inc.
+8CEC7B,"Apple, Inc."
+8CEDE1,Ubiquiti Inc
+8CF4F5,"Apple, Inc."
+8CF67D,Netgear
+8CF8C5,Intel Corporate
+8CFABA,"Apple, Inc."
+8CFD49,Espressif Inc.
+8CFE57,"Apple, Inc."
+9000DB,"Samsung Electronics Co.,Ltd"
+900628,"Samsung Electronics Co.,Ltd"
+9009D0,Synology Incorporated
+9009DF,Intel Corporate
+900A48,"Samsung Electronics Co.,Ltd"
+900CC8,"Google, Inc."
+901057,Intel Corporate
+901195,Amazon Technologies Inc.
+901506,Espressif Inc.
+901F94,TP-Link Systems Inc.
+9020C2,Hewlett Packard Enterprise
+9020D7,Microsoft Corporation
+90235B,Amazon Technologies Inc.
+9027E4,"Apple, Inc."
+902C09,"Apple, Inc."
+902E1C,Intel Corporate
+9035A2,"Apple, Inc."
+90380C,Espressif Inc.
+90395F,Amazon Technologies Inc.
+903C92,"Apple, Inc."
+9041B2,Ubiquiti Inc
+904748,Sony Interactive Entertainment Inc.
+9047C2,Intel Corporate
+9049FA,Intel Corporate
+904C81,Hewlett Packard Enterprise
+904CC5,"Apple, Inc."
+904DE2,"Apple, Inc."
+9051F8,Hewlett Packard Enterprise
+905671,"Cisco Systems, Inc"
+905F7A,"Apple, Inc."
+9060F1,"Apple, Inc."
+9061AE,Intel Corporate
+90623F,"Apple, Inc."
+90633B,"Samsung Electronics Co.,Ltd"
+90649B,Espressif Inc.
+906584,Intel Corporate
+906989,"Samsung Electronics Co.,Ltd"
+906AEB,Microsoft Corporation
+907069,Espressif Inc.
+907240,"Apple, Inc."
+9077EE,"Cisco Systems, Inc"
+907841,Intel Corporate
+90812A,"Apple, Inc."
+908158,"Apple, Inc."
+908175,"Samsung Electronics Co.,Ltd"
+90840D,"Apple, Inc."
+908855,"Cisco Systems, Inc"
+908A80,"Cisco Systems, Inc"
+908C43,"Apple, Inc."
+908D6C,"Apple, Inc."
+908D6E,Dell Inc.
+9097D5,Espressif Inc.
+9097F3,"Samsung Electronics Co.,Ltd"
+909A4A,"Tp-Link Technologies Co.,Ltd."
+909B6F,"Apple, Inc."
+909C4A,"Apple, Inc."
+90A25B,"Apple, Inc."
+90A822,Amazon Technologies Inc.
+90AC6D,"Apple, Inc."
+90AE1B,"Tp-Link Technologies Co.,Ltd."
+90B021,Intel Corporate
+90B0ED,"Apple, Inc."
+90B11C,Dell Inc.
+90B144,"Samsung Electronics Co.,Ltd"
+90B176,Intel Corporate
+90B21F,"Apple, Inc."
+90B339,Espressif Inc.
+90B622,"Samsung Electronics Co.,Ltd"
+90B790,"Apple, Inc."
+90B931,"Apple, Inc."
+90C115,Sony Corporation
+90C1C6,"Apple, Inc."
+90CAFA,"Google, Inc."
+90CCDF,Intel Corporate
+90CDE8,"Apple, Inc."
+90DA72,Espressif Inc.
+90DD5D,"Apple, Inc."
+90E17B,"Apple, Inc."
+90E2BA,Intel Corporate
+90E5B1,Espressif Inc.
+90E6BA,ASUSTek COMPUTER INC.
+90E95E,"Cisco Systems, Inc"
+90EB50,"Cisco Systems, Inc"
+90ECEA,"Apple, Inc."
+90EEC7,"Samsung Electronics Co.,Ltd"
+90F1AA,"Samsung Electronics Co.,Ltd"
+90F652,"Tp-Link Technologies Co.,Ltd."
+90F80C,"Samsung Electronics Co.,Ltd"
+90F82E,Amazon Technologies Inc.
+90FD61,"Apple, Inc."
+9401C2,"Samsung Electronics Co.,Ltd"
+940BCD,"Apple, Inc."
+940C6D,"Tp-Link Technologies Co.,Ltd."
+940C98,"Apple, Inc."
+940D4B,"Cisco Systems, Inc"
+940E5F,"Apple, Inc."
+94105A,Dell Inc.
+941625,"Apple, Inc."
+941865,Netgear
+941882,Hewlett Packard Enterprise
+941DD4,"Google, Inc."
+942157,"Apple, Inc."
+94270E,Intel Corporate
+942A6F,Ubiquiti Inc
+942B68,"Apple, Inc."
+942DDC,"Samsung Electronics Co.,Ltd"
+9433D8,"Cisco Systems, Inc"
+94350A,"Samsung Electronics Co.,Ltd"
+94390E,Intel Corporate
+943A91,Amazon Technologies Inc.
+943B22,Netgear
+943CC6,Espressif Inc.
+943FC2,Hewlett Packard Enterprise
+943FD6,"Apple, Inc."
+9440C9,Hewlett Packard Enterprise
+944560,"Google, Inc."
+944667,"Cisco Systems, Inc"
+945103,"Samsung Electronics Co.,Ltd"
+9451DC,Espressif Inc.
+945244,"Samsung Electronics Co.,Ltd"
+9453FF,Intel Corporate
+9454C5,Espressif Inc.
+9457A5,Hewlett Packard
+945915,Amazon Technologies Inc.
+945AFC,Amazon Technologies Inc.
+945C9A,"Apple, Inc."
+9460D5,Hewlett Packard Enterprise
+9463D1,"Samsung Electronics Co.,Ltd"
+946424,Hewlett Packard Enterprise
+94659C,Intel Corporate
+9476B7,"Samsung Electronics Co.,Ltd"
+947BE7,"Samsung Electronics Co.,Ltd"
+948978,"Apple, Inc."
+948BC1,"Samsung Electronics Co.,Ltd"
+949426,"Apple, Inc."
+9495A0,"Google, Inc."
+949AA9,Microsoft Corporation
+949F3E,"Sonos, Inc."
+94A67E,Netgear
+94A990,Espressif Inc.
+94AD23,"Apple, Inc."
+94AEF0,"Cisco Systems, Inc"
+94B01F,"Apple, Inc."
+94B10A,"Samsung Electronics Co.,Ltd"
+94B40F,Hewlett Packard Enterprise
+94B43A,"Samsung Electronics Co.,Ltd"
+94B555,Espressif Inc.
+94B609,Intel Corporate
+94B86D,Intel Corporate
+94B97E,Espressif Inc.
+94BF2D,"Apple, Inc."
+94CE2C,Sony Corporation
+94D469,"Cisco Systems, Inc"
+94D771,"Samsung Electronics Co.,Ltd"
+94D9B3,"Tp-Link Technologies Co.,Ltd."
+94DB56,Sony Home Entertainment&Sound Products Inc
+94E129,"Samsung Electronics Co.,Ltd"
+94E23C,Intel Corporate
+94E686,Espressif Inc.
+94E6BA,"Samsung Electronics Co.,Ltd"
+94E6F7,Intel Corporate
+94E70B,Intel Corporate
+94E96A,"Apple, Inc."
+94EA32,"Apple, Inc."
+94EB2C,"Google, Inc."
+94EF50,TP-Link Systems Inc.
+94F128,Hewlett Packard Enterprise
+94F6A3,"Apple, Inc."
+94F6D6,"Apple, Inc."
+94FF06,Hewlett Packard Enterprise
+9800C6,"Apple, Inc."
+9801A7,"Apple, Inc."
+98038E,TP-Link Systems Inc.
+9803D8,"Apple, Inc."
+98063C,"Samsung Electronics Co.,Ltd"
+98076A,"Apple, Inc."
+980D6F,"Samsung Electronics Co.,Ltd"
+980DAF,"Apple, Inc."
+9810E8,"Apple, Inc."
+981CA2,"Apple, Inc."
+981DFA,"Samsung Electronics Co.,Ltd"
+98226E,Amazon Technologies Inc.
+98254A,TP-Link Systems Inc
+982CBC,Intel Corporate
+982D68,"Samsung Electronics Co., Ltd"
+98398E,"Samsung Electronics Co.,Ltd"
+983A1F,"Google, Inc."
+983B8F,Intel Corporate
+983C8C,"Apple, Inc."
+983DAE,Espressif Inc.
+983FE8,"Samsung Electronics Co.,Ltd"
+9840BB,Dell Inc.
+9842F5,"Apple, Inc."
+9843FA,Intel Corporate
+98460A,"Apple, Inc."
+984827,"Tp-Link Technologies Co.,Ltd."
+984BE1,Hewlett Packard
+984E8A,"Samsung Electronics Co.,Ltd"
+984FEE,Intel Corporate
+98502E,"Apple, Inc."
+9852B1,"Samsung Electronics Co.,Ltd"
+98541B,Intel Corporate
+98597A,Intel Corporate
+985AEB,"Apple, Inc."
+985F41,Intel Corporate
+985FD3,Microsoft Corporation
+9860CA,"Apple, Inc."
+98698A,"Apple, Inc."
+987A14,Microsoft Corporation
+9880EE,"Samsung Electronics Co.,Ltd"
+988389,"Samsung Electronics Co.,Ltd"
+9888E0,Espressif Inc.
+988D46,Intel Corporate
+988F00,Hewlett Packard Enterprise
+989096,Dell Inc.
+9893CC,Lg Electronics Inc
+9897CC,"Tp-Link Technologies Co.,Ltd."
+9898FB,"Google, Inc."
+989E63,"Apple, Inc."
+98A2C0,"Cisco Systems, Inc"
+98A316,Espressif Inc.
+98A5F9,"Apple, Inc."
+98AF65,Intel Corporate
+98B08B,"Samsung Electronics Co.,Ltd"
+98B379,"Apple, Inc."
+98B8BA,LG Electronics (Mobile Communications)
+98B8BC,"Samsung Electronics Co.,Ltd"
+98B8E3,"Apple, Inc."
+98BA5F,TP-Link Systems Inc.
+98BD80,Intel Corporate
+98C377,Espressif Inc.
+98CA33,"Apple, Inc."
+98CAB5,"Apple, Inc."
+98CCF3,Amazon Technologies Inc.
+98CDAC,Espressif Inc.
+98CF7D,"Apple, Inc."
+98D293,"Google, Inc."
+98D6BB,"Apple, Inc."
+98D6F7,LG Electronics (Mobile Communications)
+98D742,"Samsung Electronics Co.,Ltd"
+98D7E1,"Cisco Systems, Inc"
+98DAC4,"Tp-Link Technologies Co.,Ltd."
+98DD60,"Apple, Inc."
+98DED0,"Tp-Link Technologies Co.,Ltd."
+98E0D9,"Apple, Inc."
+98E743,Dell Inc.
+98E7F4,Hewlett Packard
+98E859,"Apple, Inc."
+98F04C,"Cisco Systems, Inc"
+98F0AB,"Apple, Inc."
+98F2B3,Hewlett Packard Enterprise
+98F4AB,Espressif Inc.
+98FA2E,Sony Interactive Entertainment Inc.
+98FB27,"Samsung Electronics Co.,Ltd"
+98FE3E,Intel Corporate
+98FE54,Raspberry Pi (Trading) Ltd
+98FE94,"Apple, Inc."
+98FEE1,"Apple, Inc."
+9C0298,"Samsung Electronics Co.,Ltd"
+9C04EB,"Apple, Inc."
+9C05D6,Ubiquiti Inc
+9C098B,"Cisco Systems, Inc"
+9C139E,Espressif Inc.
+9C1A25,"Apple, Inc."
+9C1C12,Hewlett Packard Enterprise
+9C207B,"Apple, Inc."
+9C216A,"Tp-Link Technologies Co.,Ltd."
+9C2595,"Samsung Electronics Co.,Ltd"
+9C28B3,"Apple, Inc."
+9C293F,"Apple, Inc."
+9C2976,Intel Corporate
+9C2A83,"Samsung Electronics Co.,Ltd"
+9C2E7A,"Samsung Electronics Co.,Ltd"
+9C35EB,"Apple, Inc."
+9C3708,Hewlett Packard Enterprise
+9C37CB,Sony Interactive Entertainment Inc.
+9C3818,"Cisco Systems, Inc"
+9C3928,"Samsung Electronics Co.,Ltd"
+9C3AAF,"Samsung Electronics Co.,Ltd"
+9C3DCF,Netgear
+9C3E53,"Apple, Inc."
+9C4782,"Tp-Link Technologies Co.,Ltd."
+9C4DC2,"Cisco Systems, Inc"
+9C4E20,"Cisco Systems, Inc"
+9C4E36,Intel Corporate
+9C4F5F,"Google, Inc."
+9C4FDA,"Apple, Inc."
+9C5322,TP-Link Systems Inc
+9C5416,"Cisco Systems, Inc"
+9C57AD,"Cisco Systems, Inc"
+9C583C,"Apple, Inc."
+9C5884,"Apple, Inc."
+9C5C8E,ASUSTek COMPUTER INC.
+9C5CF9,Sony Corporation
+9C5FB0,"Samsung Electronics Co.,Ltd"
+9C6076,"Apple, Inc."
+9C648B,"Apple, Inc."
+9C65B0,"Samsung Electronics Co.,Ltd"
+9C65EB,Intel Corporate
+9C6697,"Cisco Systems, Inc"
+9C67D6,Intel Corporate
+9C6C15,Microsoft Corporation
+9C73B1,"Samsung Electronics Co.,Ltd"
+9C760E,"Apple, Inc."
+9C79E3,"Apple, Inc."
+9C7BEF,Hewlett Packard
+9C8306,"Samsung Electronics Co.,Ltd"
+9C84BF,"Apple, Inc."
+9C8BA0,"Apple, Inc."
+9C8C6E,"Samsung Electronics Co.,Ltd"
+9C8CD8,Hewlett Packard Enterprise
+9C8E99,Hewlett Packard
+9C924F,"Apple, Inc."
+9C96D5,Espressif Systems (Singapore) Pte. Ltd
+9C971B,Intel Corporate
+9C9C1F,Espressif Inc.
+9C9E6E,Espressif Inc.
+9CA2F4,TP-Link Systems Inc
+9CA513,"Samsung Electronics Co.,Ltd"
+9CA615,"Tp-Link Technologies Co.,Ltd."
+9CA9B8,"Cisco Systems, Inc"
+9CA9C5,"Apple, Inc."
+9CAA1B,Microsoft Corporation
+9CAFCA,"Cisco Systems, Inc"
+9CB150,Intel Corporate
+9CB654,Hewlett Packard
+9CBCA6,Hewlett Packard Enterprise
+9CC394,"Apple, Inc."
+9CC8E9,Amazon Technologies Inc.
+9CC9EB,Netgear
+9CCC01,Espressif Inc.
+9CD35B,"Samsung Electronics Co.,Ltd"
+9CD36D,Netgear
+9CD57D,"Cisco Systems, Inc"
+9CDA3E,Intel Corporate
+9CDAA8,"Apple, Inc."
+9CDAB7,Hewlett Packard Enterprise
+9CDC71,Hewlett Packard Enterprise
+9CE063,"Samsung Electronics Co.,Ltd"
+9CE176,"Cisco Systems, Inc"
+9CE33F,"Apple, Inc."
+9CE65E,"Apple, Inc."
+9CE6E7,"Samsung Electronics Co.,Ltd"
+9CF1D4,"Roku, Inc"
+9CF27E,"Samsung Electronics Co.,Ltd"
+9CF387,"Apple, Inc."
+9CF3AC,"Apple, Inc."
+9CF48E,"Apple, Inc."
+9CFA76,"Apple, Inc."
+9CFC01,"Apple, Inc."
+9CFC28,"Apple, Inc."
+9CFCE8,Intel Corporate
+A002A5,Intel Corporate
+A002DC,Amazon Technologies Inc.
+A00460,Netgear
+A00798,"Samsung Electronics Co.,Ltd"
+A00F37,"Cisco Systems, Inc"
+A01081,"Samsung Electronics Co.,Ltd"
+A01828,"Apple, Inc."
+A01B9E,"Samsung Electronics Co.,Ltd"
+A01D48,Hewlett Packard
+A020A6,Espressif Inc.
+A02195,"Samsung Electronics Co.,Ltd"
+A021B7,Netgear
+A0239F,"Cisco Systems, Inc"
+A025D7,Hewlett Packard Enterprise
+A027B6,"Samsung Electronics Co.,Ltd"
+A02919,Dell Inc.
+A02942,Intel Corporate
+A02BB8,Hewlett Packard
+A0334F,"Cisco Systems, Inc"
+A0369F,Intel Corporate
+A036BC,ASUSTek COMPUTER INC.
+A039F7,LG Electronics (Mobile Communications)
+A03BE3,"Apple, Inc."
+A03D6E,"Cisco Systems, Inc"
+A03D6F,"Cisco Systems, Inc"
+A040A0,Netgear
+A0481C,Hewlett Packard
+A04A5E,Microsoft Corporation
+A04EA7,"Apple, Inc."
+A04ECF,"Apple, Inc."
+A04F52,Intel Corporate
+A04F85,LG Electronics (Mobile Communications)
+A0510B,Intel Corporate
+A05272,"Apple, Inc."
+A0554F,"Cisco Systems, Inc"
+A0562C,"Samsung Electronics Co.,Ltd"
+A056F3,"Apple, Inc."
+A05950,Intel Corporate
+A06090,"Samsung Electronics Co.,Ltd"
+A06391,Netgear
+A07591,"Samsung Electronics Co.,Ltd"
+A0764E,Espressif Inc.
+A07817,"Apple, Inc."
+A0782D,"Apple, Inc."
+A07D9C,"Samsung Electronics Co.,Ltd"
+A08069,Intel Corporate
+A0821F,"Samsung Electronics Co.,Ltd"
+A08527,Intel Corporate
+A085E3,Espressif Inc.
+A085FC,Microsoft Corporation
+A087BE,"Apple, Inc."
+A08869,Intel Corporate
+A088B4,Intel Corporate
+A08CFD,Hewlett Packard
+A09169,LG Electronics (Mobile Communications)
+A09351,"Cisco Systems, Inc"
+A0999B,"Apple, Inc."
+A09A8E,"Apple, Inc."
+A09D22,"Apple, Inc."
+A0A001,Hewlett Packard Enterprise
+A0A309,"Apple, Inc."
+A0A3B3,Espressif Inc.
+A0A47F,"Cisco Systems, Inc"
+A0A4C5,Intel Corporate
+A0A8CD,Intel Corporate
+A0AC69,"Samsung Electronics Co.,Ltd"
+A0AD9F,ASUSTek COMPUTER INC.
+A0AFBD,Intel Corporate
+A0B0BD,"Samsung Electronics Co.,Ltd"
+A0B15C,"Google, Inc."
+A0B339,Intel Corporate
+A0B3CC,Hewlett Packard
+A0B40F,"Apple, Inc."
+A0B439,"Cisco Systems, Inc"
+A0B4A5,"Samsung Electronics Co.,Ltd"
+A0B765,Espressif Inc.
+A0BC6F,"Cisco Systems, Inc"
+A0C1C5,"Apple, Inc."
+A0C589,Intel Corporate
+A0C7D2,"Cisco Systems, Inc"
+A0CBFD,"Samsung Electronics Co.,Ltd"
+A0CF5B,"Cisco Systems, Inc"
+A0D05B,"Samsung Electronics Co.,Ltd"
+A0D0DC,Amazon Technologies Inc.
+A0D1B3,"Apple, Inc."
+A0D2B1,Amazon Technologies Inc.
+A0D365,Intel Corporate
+A0D37A,Intel Corporate
+A0D3C1,Hewlett Packard
+A0D722,"Samsung Electronics Co.,Ltd"
+A0D795,"Apple, Inc."
+A0D7F3,"Samsung Electronics Co.,Ltd"
+A0DD6C,Espressif Inc.
+A0E0AF,"Cisco Systems, Inc"
+A0E390,"Apple, Inc."
+A0E453,Sony Corporation
+A0E70B,Intel Corporate
+A0ECF9,"Cisco Systems, Inc"
+A0EDCD,"Apple, Inc."
+A0EE1A,"Apple, Inc."
+A0F262,Espressif Inc.
+A0F3C1,"Tp-Link Technologies Co.,Ltd."
+A0F849,"Cisco Systems, Inc"
+A0FBC5,"Apple, Inc."
+A4004E,"Cisco Systems, Inc"
+A402B7,Amazon Technologies Inc.
+A402B9,Intel Corporate
+A407B6,"Samsung Electronics Co.,Ltd"
+A40801,Amazon Technologies Inc.
+A40987,"Apple, Inc."
+A40CC3,"Cisco Systems, Inc"
+A40E75,Hewlett Packard Enterprise
+A410B6,"Cisco Systems, Inc"
+A411BB,"Cisco Systems, Inc"
+A416C0,"Apple, Inc."
+A41875,"Cisco Systems, Inc"
+A41A3A,"Tp-Link Technologies Co.,Ltd."
+A41F72,Dell Inc.
+A426CA,Intel Corporate
+A42B8C,Netgear
+A42BB0,"Tp-Link Technologies Co.,Ltd."
+A4307A,"Samsung Electronics Co.,Ltd"
+A43135,"Apple, Inc."
+A434D9,Intel Corporate
+A43FA7,Hewlett Packard Enterprise
+A4423B,Intel Corporate
+A44280,"Apple, Inc."
+A44C11,"Cisco Systems, Inc"
+A44CC8,Dell Inc.
+A44E31,Intel Corporate
+A4516F,Microsoft Mobile Oy
+A4530E,"Cisco Systems, Inc"
+A45630,"Cisco Systems, Inc"
+A45D36,Hewlett Packard
+A45E60,"Apple, Inc."
+A46706,"Apple, Inc."
+A46BB6,Intel Corporate
+A46C2A,"Cisco Systems, Inc"
+A46CF1,"Samsung Electronics Co.,Ltd"
+A475B9,"Samsung Electronics Co.,Ltd"
+A47733,"Google, Inc."
+A477F3,"Apple, Inc."
+A47806,"Cisco Systems, Inc"
+A47B9D,Espressif Inc.
+A483E7,"Apple, Inc."
+A48431,"Samsung Electronics Co.,Ltd"
+A48873,"Cisco Systems, Inc"
+A4934C,"Cisco Systems, Inc"
+A49700,"Cisco Systems, Inc"
+A49A58,"Samsung Electronics Co.,Ltd"
+A49BCD,"Cisco Systems, Inc"
+A49DDD,"Samsung Electronics Co.,Ltd"
+A49FE7,"Samsung Electronics Co.,Ltd"
+A4A490,"Samsung Electronics Co.,Ltd"
+A4A584,"Cisco Systems, Inc"
+A4B197,"Apple, Inc."
+A4B1C1,Intel Corporate
+A4B239,"Cisco Systems, Inc"
+A4B439,"Cisco Systems, Inc"
+A4B805,"Apple, Inc."
+A4BADB,Dell Inc.
+A4BB6D,Dell Inc.
+A4BF01,Intel Corporate
+A4C337,"Apple, Inc."
+A4C361,"Apple, Inc."
+A4C3F0,Intel Corporate
+A4C494,Intel Corporate
+A4C69A,"Samsung Electronics Co.,Ltd"
+A4C6F0,"Apple, Inc."
+A4CB8F,Espressif Inc.
+A4CF12,Espressif Inc.
+A4CF99,"Apple, Inc."
+A4D18C,"Apple, Inc."
+A4D1D2,"Apple, Inc."
+A4D23E,"Apple, Inc."
+A4D931,"Apple, Inc."
+A4D990,"Samsung Electronics Co.,Ltd"
+A4DCD5,"Cisco Systems, Inc"
+A4E57C,Espressif Inc.
+A4E972,Espressif Inc.
+A4E975,"Apple, Inc."
+A4EBD3,"Samsung Electronics Co.,Ltd"
+A4F00F,Espressif Inc.
+A4F1E8,"Apple, Inc."
+A4F6E6,"Apple, Inc."
+A4F6E8,"Apple, Inc."
+A4F841,"Apple, Inc."
+A4F8FF,Ubiquiti Inc
+A4F921,"Apple, Inc."
+A4F933,Intel Corporate
+A4FC14,"Apple, Inc."
+A8032A,Espressif Inc.
+A80600,"Samsung Electronics Co.,Ltd"
+A80C0D,"Cisco Systems, Inc"
+A8154D,"Tp-Link Technologies Co.,Ltd."
+A816B2,LG Electronics (Mobile Communications)
+A816D0,"Samsung Electronics Co.,Ltd"
+A81AF1,"Apple, Inc."
+A82066,"Apple, Inc."
+A823FE,LG Electronics
+A82948,TP-Link Systems Inc.
+A829DC,TP-Link Systems Inc.
+A82BB9,"Samsung Electronics Co.,Ltd"
+A82C89,"Apple, Inc."
+A830BC,"Samsung Electronics Co.,Ltd"
+A8346A,"Samsung Electronics Co.,Ltd"
+A83CA5,Dell Inc.
+A842A1,TP-Link Systems Inc
+A842E3,Espressif Inc.
+A84674,Espressif Inc.
+A848FA,Espressif Inc.
+A84A28,"Apple, Inc."
+A84B4D,"Samsung Electronics Co.,Ltd"
+A84FB1,"Cisco Systems, Inc"
+A8515B,"Samsung Electronics Co.,Ltd"
+A851AB,"Apple, Inc."
+A852D4,Hewlett Packard Enterprise
+A8574E,"Tp-Link Technologies Co.,Ltd."
+A8595F,Intel Corporate
+A85B78,"Apple, Inc."
+A85BB7,"Apple, Inc."
+A85BF7,Hewlett Packard Enterprise
+A85C2C,"Apple, Inc."
+A85E45,ASUSTek COMPUTER INC.
+A85F61,"Apple, Inc."
+A860B6,"Apple, Inc."
+A864F1,Intel Corporate
+A8667F,"Apple, Inc."
+A86DAA,Intel Corporate
+A86E84,TP-Link Systems Inc
+A8724D,Intel Corporate
+A87650,"Samsung Electronics Co.,Ltd"
+A8798D,"Samsung Electronics Co.,Ltd"
+A87C01,"Samsung Electronics Co.,Ltd"
+A87CF8,"Apple, Inc."
+A87EEA,Intel Corporate
+A8817E,"Apple, Inc."
+A88195,"Samsung Electronics Co.,Ltd"
+A886DD,"Apple, Inc."
+A887B3,"Samsung Electronics Co.,Ltd"
+A88808,"Apple, Inc."
+A88C3E,Microsoft Corporation
+A88E24,"Apple, Inc."
+A88FD9,"Apple, Inc."
+A8913D,"Apple, Inc."
+A8922C,LG Electronics (Mobile Communications)
+A8968A,"Apple, Inc."
+A89969,Dell Inc.
+A89C6C,Ubiquiti Inc
+A89C78,"Apple, Inc."
+A89D21,"Cisco Systems, Inc"
+A89FBA,"Samsung Electronics Co.,Ltd"
+A8ABB5,"Apple, Inc."
+A8B13B,HP Inc.
+A8B1D4,"Cisco Systems, Inc"
+A8B456,"Cisco Systems, Inc"
+A8B57C,"Roku, Inc"
+A8B86E,LG Electronics (Mobile Communications)
+A8BA25,Hewlett Packard Enterprise
+A8BA69,"Samsung Electronics Co.,Ltd"
+A8BB56,"Apple, Inc."
+A8BBCF,"Apple, Inc."
+A8BD27,Hewlett Packard Enterprise
+A8BE27,"Apple, Inc."
+A8CA77,Amazon Technologies Inc.
+A8D162,"Samsung Electronics Co.,Ltd"
+A8E3EE,Sony Interactive Entertainment Inc.
+A8E621,Amazon Technologies Inc.
+A8EE67,"Samsung Electronics Co.,Ltd"
+A8F274,"Samsung Electronics Co.,Ltd"
+A8FAD8,"Apple, Inc."
+A8FB45,"Google, Inc."
+A8FD07,Espressif Inc.
+A8FE9D,"Apple, Inc."
+AC007A,"Apple, Inc."
+AC05C7,Intel Corporate
+AC0775,"Apple, Inc."
+AC0BFB,Espressif Inc.
+AC0D1B,LG Electronics (Mobile Communications)
+AC1203,Intel Corporate
+AC1518,Espressif Inc.
+AC15A2,TP-Link Systems Inc
+AC15F4,"Apple, Inc."
+AC1615,"Apple, Inc."
+AC162D,Hewlett Packard
+AC16DE,Intel Corporate
+AC198E,Intel Corporate
+AC1A3D,Dell Inc.
+AC1D06,"Apple, Inc."
+AC1E92,"Samsung Electronics Co.,Ltd"
+AC1F74,"Apple, Inc."
+AC220B,ASUSTek COMPUTER INC.
+AC276E,Espressif Inc.
+AC293A,"Apple, Inc."
+AC2AA1,"Cisco Systems, Inc"
+AC2B6E,Intel Corporate
+AC3613,"Samsung Electronics Co.,Ltd"
+AC3A67,"Cisco Systems, Inc"
+AC3A7A,"Roku, Inc."
+AC3C0B,"Apple, Inc."
+AC3DCB,Intel Corporate
+AC3EB1,"Google, Inc."
+AC416A,Amazon Technologies Inc.
+AC4500,"Apple, Inc."
+AC45EF,Intel Corporate
+AC49DB,"Apple, Inc."
+AC4A56,"Cisco Systems, Inc"
+AC4A67,"Cisco Systems, Inc"
+AC5322,"Samsung Electronics Co.,Ltd"
+AC5A14,"Samsung Electronics Co.,Ltd"
+AC5AF0,LG Electronics
+AC5AFC,Intel Corporate
+AC5C2C,"Apple, Inc."
+AC61EA,"Apple, Inc."
+AC63BE,Amazon Technologies Inc.
+AC675D,Intel Corporate
+AC6784,"Google, Inc."
+AC67B2,Espressif Inc.
+AC6C90,"Samsung Electronics Co.,Ltd"
+AC7289,Intel Corporate
+AC74B1,Intel Corporate
+AC7A56,"Cisco Systems, Inc"
+AC7BA1,Intel Corporate
+AC7E8A,"Cisco Systems, Inc"
+AC7F3E,"Apple, Inc."
+AC800A,Sony Corporation
+AC80FB,"Samsung Electronics Co.,Ltd"
+AC8247,Intel Corporate
+AC82F0,"Apple, Inc."
+AC84C6,"Tp-Link Technologies Co.,Ltd."
+AC8674,"Open Mesh, Inc."
+AC86A3,"Apple, Inc."
+AC87A3,"Apple, Inc."
+AC88FD,"Apple, Inc."
+AC8BA9,Ubiquiti Inc
+AC8EBD,Microsoft Corporation
+AC9085,"Apple, Inc."
+AC91A1,Dell Inc.
+AC9738,"Apple, Inc."
+AC9B0A,Sony Corporation
+AC9E17,ASUSTek COMPUTER INC.
+ACA016,"Cisco Systems, Inc"
+ACA26A,Espressif Systems (Singapore) Pte. Ltd
+ACA31E,Hewlett Packard Enterprise
+ACA704,Espressif Inc.
+ACA7F1,TP-Link Systems Inc.
+ACAE19,"Roku, Inc"
+ACAFB9,"Samsung Electronics Co.,Ltd"
+ACB480,Dell Inc.
+ACBC32,"Apple, Inc."
+ACBCB5,"Apple, Inc."
+ACBCD9,"Cisco Systems, Inc"
+ACC33A,"Samsung Electronics Co.,Ltd"
+ACC906,"Apple, Inc."
+ACCCFC,Amazon Technologies Inc.
+ACCF5C,"Apple, Inc."
+ACD074,Espressif Inc.
+ACD400,"Cisco Systems, Inc"
+ACDFA1,"Apple, Inc."
+ACE2D3,Hewlett Packard
+ACE4B5,"Apple, Inc."
+ACE6BB,"Google, Inc."
+ACE6FB,"Apple, Inc."
+ACEBE6,Espressif Inc.
+ACED5C,Intel Corporate
+ACEE9E,"Samsung Electronics Co.,Ltd"
+ACF2C5,"Cisco Systems, Inc"
+ACF466,HP Inc.
+ACF5E6,"Cisco Systems, Inc"
+ACF6F7,LG Electronics (Mobile Communications)
+ACFDCE,Intel Corporate
+ACFDEC,"Apple, Inc."
+B000B4,"Cisco Systems, Inc"
+B00CD1,Hewlett Packard
+B01831,"Apple, Inc."
+B01921,TP-Link Systems Inc
+B019C6,"Apple, Inc."
+B01BFC,"Cisco Systems, Inc"
+B01F8C,Hewlett Packard Enterprise
+B0227A,HP Inc.
+B02680,"Cisco Systems, Inc"
+B02A43,"Google, Inc."
+B02B64,"Cisco Systems, Inc"
+B03495,"Apple, Inc."
+B0359F,Intel Corporate
+B035B5,"Apple, Inc."
+B03795,LG Electronics
+B03956,Netgear
+B03CDC,Intel Corporate
+B03F64,"Apple, Inc."
+B03FD3,Espressif Inc.
+B047BF,"Samsung Electronics Co.,Ltd"
+B047E9,Intel Corporate
+B0481A,"Apple, Inc."
+B0487A,"Tp-Link Technologies Co.,Ltd."
+B04A6A,"Samsung Electronics Co.,Ltd"
+B04E26,"Tp-Link Technologies Co.,Ltd."
+B04F13,Dell Inc.
+B05476,"Samsung Electronics Co.,Ltd"
+B05ADA,Hewlett Packard
+B05CDA,HP Inc.
+B06088,Intel Corporate
+B064E0,"Samsung Electronics Co.,Ltd"
+B065BD,"Apple, Inc."
+B067B5,"Apple, Inc."
+B06A41,"Google, Inc."
+B06EBF,ASUSTek COMPUTER INC.
+B06FE0,"Samsung Electronics Co.,Ltd"
+B0702D,"Apple, Inc."
+B07219,"Apple, Inc."
+B0739C,Amazon Technologies Inc.
+B07B25,Dell Inc.
+B07D47,"Cisco Systems, Inc"
+B07D64,Intel Corporate
+B07FB9,Netgear
+B08184,Espressif Inc.
+B082E2,ASUSTek COMPUTER INC.
+B083FE,Dell Inc.
+B08BA8,Amazon Technologies Inc.
+B08BCF,"Cisco Systems, Inc"
+B08BD0,"Cisco Systems, Inc"
+B08C75,"Apple, Inc."
+B08D57,"Cisco Systems, Inc"
+B0907E,"Cisco Systems, Inc"
+B09200,"Apple, Inc."
+B09575,"Tp-Link Technologies Co.,Ltd."
+B0958E,"Tp-Link Technologies Co.,Ltd."
+B099D7,"Samsung Electronics Co.,Ltd"
+B09CB2,"Google, Inc."
+B09FBA,"Apple, Inc."
+B0A460,Intel Corporate
+B0A5B3,Hewlett Packard Enterprise
+B0A604,Espressif Inc.
+B0A651,"Cisco Systems, Inc"
+B0A732,Espressif Inc.
+B0A737,"Roku, Inc."
+B0A7B9,TP-Link Systems Inc
+B0AA77,"Cisco Systems, Inc"
+B0B21C,Espressif Inc.
+B0B867,Hewlett Packard Enterprise
+B0B98A,Netgear
+B0BBA9,"Apple, Inc."
+B0BE76,"Tp-Link Technologies Co.,Ltd."
+B0BE83,"Apple, Inc."
+B0C4E7,"Samsung Electronics Co.,Ltd"
+B0C53C,"Cisco Systems, Inc"
+B0C559,"Samsung Electronics Co.,Ltd"
+B0CA68,"Apple, Inc."
+B0CBD8,Espressif Inc.
+B0CFCB,Amazon Technologies Inc.
+B0D09C,"Samsung Electronics Co.,Ltd"
+B0D576,"Apple, Inc."
+B0D5FB,"Google, Inc."
+B0DCEF,Intel Corporate
+B0DE28,"Apple, Inc."
+B0DE31,"Samsung Electronics Co.,Ltd"
+B0DF3A,"Samsung Electronics Co.,Ltd"
+B0E45C,"Samsung Electronics Co.,Ltd"
+B0E4D5,"Google, Inc."
+B0E5EF,"Apple, Inc."
+B0E5F9,"Apple, Inc."
+B0EC69,"Apple, Inc."
+B0EC71,"Samsung Electronics Co.,Ltd"
+B0EE7B,"Roku, Inc"
+B0F1D8,"Apple, Inc."
+B0F2F6,"Samsung Electronics Co.,Ltd"
+B0F7C4,Amazon Technologies Inc.
+B0FAEB,"Cisco Systems, Inc"
+B0FC0D,Amazon Technologies Inc.
+B40216,"Cisco Systems, Inc"
+B40AD8,Sony Interactive Entertainment Inc.
+B40B1D,"Samsung Electronics Co.,Ltd"
+B40EDE,Intel Corporate
+B4107A,Amazon Technologies Inc.
+B41324,"Google, Inc."
+B41489,"Cisco Systems, Inc"
+B41584,"Samsung Electronics Co.,Ltd"
+B418D1,"Apple, Inc."
+B41974,"Apple, Inc."
+B41A1D,"Samsung Electronics Co.,Ltd"
+B41BB0,"Apple, Inc."
+B41F4D,Sony Interactive Entertainment Inc.
+B423A2,"Google, Inc."
+B42802,Intel Corporate
+B43A28,"Samsung Electronics Co.,Ltd"
+B43A45,Espressif Inc.
+B440A4,"Apple, Inc."
+B440DC,"Samsung Electronics Co.,Ltd"
+B44506,Dell Inc.
+B44BD2,"Apple, Inc."
+B44C90,"Cisco Systems, Inc"
+B4527D,Sony Corporation
+B4527E,Sony Corporation
+B45575,"Apple, Inc."
+B456E3,"Apple, Inc."
+B45976,"Apple, Inc."
+B45BD1,TP-Link Systems Inc.
+B45D50,Hewlett Packard Enterprise
+B46293,"Samsung Electronics Co.,Ltd"
+B46921,Intel Corporate
+B46BFC,Intel Corporate
+B46D83,Intel Corporate
+B47064,"Samsung Electronics Co.,Ltd"
+B47443,"Samsung Electronics Co.,Ltd"
+B47AF1,Hewlett Packard Enterprise
+B47C9C,Amazon Technologies Inc.
+B48351,Intel Corporate
+B485E1,"Apple, Inc."
+B48A0A,Espressif Inc.
+B48B19,"Apple, Inc."
+B49691,Intel Corporate
+B496A5,"Apple, Inc."
+B499BA,Hewlett Packard
+B49CDF,"Apple, Inc."
+B49D02,"Samsung Electronics Co.,Ltd"
+B4A4E3,"Cisco Systems, Inc"
+B4A64A,Espressif Inc.
+B4A8B9,"Cisco Systems, Inc"
+B4AE2B,Microsoft
+B4AEC1,"Apple, Inc."
+B4B024,TP-Link Systems Inc
+B4B291,LG Electronics
+B4B52F,Hewlett Packard
+B4B676,Intel Corporate
+B4B686,Hewlett Packard
+B4B742,Amazon Technologies Inc.
+B4BFE9,Espressif Inc.
+B4BFF6,"Samsung Electronics Co.,Ltd"
+B4C0C3,TP-Link Systems Inc.
+B4CADD,"Cisco Systems, Inc"
+B4CE40,"Samsung Electronics Co.,Ltd"
+B4D5BD,Intel Corporate
+B4D5E5,"Samsung Electronics Co.,Ltd"
+B4DE31,"Cisco Systems, Inc"
+B4E10F,Dell Inc.
+B4E1C4,Microsoft Mobile Oy
+B4E25B,HP Inc.
+B4E3D0,LG Electronics
+B4E454,Amazon Technologies Inc.
+B4E62D,Espressif Inc.
+B4E9B0,"Cisco Systems, Inc"
+B4E9B8,Dell Inc.
+B4EF39,"Samsung Electronics Co.,Ltd"
+B4F0AB,"Apple, Inc."
+B4F1DA,LG Electronics (Mobile Communications)
+B4F61C,"Apple, Inc."
+B4F7A1,LG Electronics (Mobile Communications)
+B4FA48,"Apple, Inc."
+B4FBE4,Ubiquiti Inc
+B4FEB5,Espressif Systems (Singapore) Pte. Ltd
+B8011F,"Apple, Inc."
+B80305,Intel Corporate
+B80533,"Apple, Inc."
+B808CF,Intel Corporate
+B8098A,"Apple, Inc."
+B8114B,"Cisco Systems, Inc"
+B8144D,"Apple, Inc."
+B817C2,"Apple, Inc."
+B81DAA,LG Electronics (Mobile Communications)
+B81EA4,Liteon Technology Corporation
+B81F3F,Espressif Inc.
+B8211C,"Apple, Inc."
+B8220C,"Apple, Inc."
+B827EB,Raspberry Pi Foundation
+B82A72,Dell Inc.
+B82AA9,"Apple, Inc."
+B831B5,Microsoft Corporation
+B8374A,"Apple, Inc."
+B8374B,Hewlett Packard Enterprise
+B837B2,Hewlett Packard Enterprise
+B83861,"Cisco Systems, Inc"
+B83865,Hewlett Packard Enterprise
+B83A5A,Hewlett Packard Enterprise
+B83C28,"Apple, Inc."
+B83E59,"Roku, Inc."
+B841A4,"Apple, Inc."
+B844D9,"Apple, Inc."
+B845EB,"Apple, Inc."
+B8496D,"Apple, Inc."
+B84FA7,"Apple, Inc."
+B84FD5,Microsoft Corporation
+B853AC,"Apple, Inc."
+B857D6,"Cisco Systems, Inc"
+B857D8,"Samsung Electronics Co.,Ltd"
+B85A73,"Samsung Electronics Co.,Ltd"
+B85C5C,Microsoft Corporation
+B85D0A,"Apple, Inc."
+B85E7B,"Samsung Electronics Co.,Ltd"
+B85F98,Amazon Technologies Inc.
+B8621F,"Cisco Systems, Inc"
+B8634D,"Apple, Inc."
+B86CE0,Hewlett Packard Enterprise
+B86CE8,"Samsung Electronics Co.,Ltd"
+B8782E,"Apple, Inc."
+B87B4D,Espressif Inc.
+B87BC5,"Apple, Inc."
+B87BD4,"Google, Inc."
+B88198,Intel Corporate
+B881FA,"Apple, Inc."
+B88303,Hewlett Packard Enterprise
+B88584,Dell Inc.
+B88788,HP Inc.
+B88A60,Intel Corporate
+B88D12,"Apple, Inc."
+B89047,"Apple, Inc."
+B89A2A,Intel Corporate
+B8A0B8,"Samsung Electronics Co.,Ltd"
+B8A175,"Roku, Inc."
+B8A377,"Cisco Systems, Inc"
+B8A825,"Samsung Electronics Co.,Ltd"
+B8AC6F,Dell Inc.
+B8AF67,Hewlett Packard
+B8B2F8,"Apple, Inc."
+B8B409,"Samsung Electronics Co.,Ltd"
+B8B81E,Intel Corporate
+B8BA66,Microsoft Corporation
+B8BB11,Espressif Systems (Singapore) Pte. Ltd
+B8BBAF,"Samsung Electronics Co.,Ltd"
+B8BC5B,"Samsung Electronics Co.,Ltd"
+B8BEBF,"Cisco Systems, Inc"
+B8BF83,Intel Corporate
+B8C111,"Apple, Inc."
+B8C68E,"Samsung Electronics Co.,Ltd"
+B8C75D,"Apple, Inc."
+B8C924,"Cisco Systems, Inc"
+B8CA3A,Dell Inc.
+B8CB29,Dell Inc.
+B8D4E7,Hewlett Packard Enterprise
+B8D61A,Espressif Inc.
+B8D9CE,"Samsung Electronics Co.,Ltd"
+B8DB38,"Google, Inc."
+B8E60C,"Apple, Inc."
+B8E856,"Apple, Inc."
+B8E937,"Sonos, Inc."
+B8F009,Espressif Inc.
+B8F12A,"Apple, Inc."
+B8F4A4,"Google, Inc."
+B8F6B1,"Apple, Inc."
+B8F775,Intel Corporate
+B8F862,Espressif Inc.
+B8F883,"Tp-Link Technologies Co.,Ltd."
+B8F934,Sony Corporation
+B8FBB3,TP-Link Systems Inc.
+B8FE90,"Cisco Systems, Inc"
+B8FE96,Amazon Technologies Inc.
+B8FF61,"Apple, Inc."
+BC0358,Intel Corporate
+BC071D,TP-Link Systems Inc.
+BC091B,Intel Corporate
+BC0963,"Apple, Inc."
+BC0EAB,"Samsung Electronics Co.,Ltd"
+BC0F64,Intel Corporate
+BC0FF3,HP Inc.
+BC107B,"Samsung Electronics Co.,Ltd"
+BC1485,"Samsung Electronics Co.,Ltd"
+BC1665,"Cisco Systems, Inc"
+BC16F5,"Cisco Systems, Inc"
+BC17B8,Intel Corporate
+BC1827,"Apple, Inc."
+BC1926,Espressif Inc.
+BC20A4,"Samsung Electronics Co.,Ltd"
+BC26C7,"Cisco Systems, Inc"
+BC277A,"Samsung Electronics Co.,Ltd"
+BC2A51,"Apple, Inc."
+BC2CE6,"Cisco Systems, Inc"
+BC305B,Dell Inc.
+BC32B2,"Samsung Electronics Co.,Ltd"
+BC3329,Sony Interactive Entertainment Inc.
+BC37D3,"Apple, Inc."
+BC3898,Intel Corporate
+BC3BAF,"Apple, Inc."
+BC4486,"Samsung Electronics Co.,Ltd"
+BC455B,"Samsung Electronics Co.,Ltd"
+BC4699,"Tp-Link Technologies Co.,Ltd."
+BC4760,"Samsung Electronics Co.,Ltd"
+BC4A56,"Cisco Systems, Inc"
+BC4CC4,"Apple, Inc."
+BC4F2D,"Apple, Inc."
+BC5274,"Samsung Electronics Co.,Ltd"
+BC52B7,"Apple, Inc."
+BC542F,Intel Corporate
+BC5436,"Apple, Inc."
+BC5451,"Samsung Electronics Co.,Ltd"
+BC5A56,"Cisco Systems, Inc"
+BC60A7,Sony Interactive Entertainment Inc.
+BC671C,"Cisco Systems, Inc"
+BC6778,"Apple, Inc."
+BC6C21,"Apple, Inc."
+BC6E64,Sony Corporation
+BC6EE2,Intel Corporate
+BC72B1,"Samsung Electronics Co.,Ltd"
+BC74EA,"Apple, Inc."
+BC765E,"Samsung Electronics Co.,Ltd"
+BC7737,Intel Corporate
+BC79AD,"Samsung Electronics Co.,Ltd"
+BC7ABF,"Samsung Electronics Co.,Ltd"
+BC7E8B,"Samsung Electronics Co.,Ltd"
+BC804E,"Apple, Inc."
+BC8385,Microsoft Corporation
+BC851F,"Samsung Electronics Co.,Ltd"
+BC89A7,"Apple, Inc."
+BC89C1,"Apple, Inc."
+BC8D1F,"Cisco Systems, Inc"
+BC926B,"Apple, Inc."
+BC9307,"Samsung Electronics Co.,Ltd"
+BC9F58,"Apple, Inc."
+BC9FE4,Hewlett Packard Enterprise
+BC9FEF,"Apple, Inc."
+BCA080,"Samsung Electronics Co.,Ltd"
+BCA511,Netgear
+BCA58B,"Samsung Electronics Co.,Ltd"
+BCA5A9,"Apple, Inc."
+BCA8A6,Intel Corporate
+BCA920,"Apple, Inc."
+BCABF5,"Cisco Systems, Inc"
+BCAEC5,ASUSTek COMPUTER INC.
+BCB1F3,"Samsung Electronics Co.,Ltd"
+BCB2CC,"Samsung Electronics Co.,Ltd"
+BCB30E,"Cisco Systems, Inc"
+BCB863,"Apple, Inc."
+BCBB58,"Apple, Inc."
+BCBF2E,ASUSTek COMPUTER INC.
+BCC493,"Cisco Systems, Inc"
+BCCD99,Intel Corporate
+BCD074,"Apple, Inc."
+BCD11F,"Samsung Electronics Co.,Ltd"
+BCD177,"Tp-Link Technologies Co.,Ltd."
+BCD22C,Intel Corporate
+BCD295,"Cisco Systems, Inc"
+BCD7A5,Hewlett Packard Enterprise
+BCD7D4,"Roku, Inc"
+BCD849,TP-Link Systems Inc.
+BCDDC2,Espressif Inc.
+BCDF58,"Google, Inc."
+BCE143,"Apple, Inc."
+BCE63F,"Samsung Electronics Co.,Ltd"
+BCE712,"Cisco Systems, Inc"
+BCE92F,HP Inc.
+BCEAFA,Hewlett Packard
+BCEBE8,"Samsung Electronics Co.,Ltd"
+BCEC5D,"Apple, Inc."
+BCEE7B,ASUSTek COMPUTER INC.
+BCF105,Intel Corporate
+BCF171,Intel Corporate
+BCF1F2,"Cisco Systems, Inc"
+BCF5AC,LG Electronics (Mobile Communications)
+BCF730,"Samsung Electronics Co.,Ltd"
+BCFAEB,"Cisco Systems, Inc"
+BCFCE7,ASUSTek COMPUTER INC.
+BCFED9,"Apple, Inc."
+BCFF4D,Espressif Inc.
+C00195,Amazon Technologies Inc.
+C006C3,TP-Link Systems Inc
+C01173,"Samsung Electronics Co.,Ltd"
+C014FE,"Cisco Systems, Inc"
+C0151B,Sony Interactive Entertainment Inc.
+C0174D,"Samsung Electronics Co.,Ltd"
+C01754,"Apple, Inc."
+C01803,HP Inc.
+C01ADA,"Apple, Inc."
+C01C6A,"Google, Inc."
+C0238D,"Samsung Electronics Co.,Ltd"
+C0255C,"Cisco Systems, Inc"
+C025A5,Dell Inc.
+C025E9,"Tp-Link Technologies Co.,Ltd."
+C02897,"Cisco Systems, Inc"
+C02C17,"Cisco Systems, Inc"
+C02C5C,"Apple, Inc."
+C0335E,Microsoft
+C03A55,TP-Link Systems Inc.
+C03C59,Intel Corporate
+C03D03,"Samsung Electronics Co.,Ltd"
+C03EBA,Dell Inc.
+C03F0E,Netgear
+C041F6,Lg Electronics Inc
+C04442,"Apple, Inc."
+C0470E,Dell Inc.
+C048E6,"Samsung Electronics Co.,Ltd"
+C049EF,Espressif Inc.
+C04A00,"Tp-Link Technologies Co.,Ltd."
+C04E30,Espressif Inc.
+C0582E,"Cisco Systems, Inc"
+C05D89,Espressif Inc.
+C06118,"Tp-Link Technologies Co.,Ltd."
+C0626B,"Cisco Systems, Inc"
+C06394,"Apple, Inc."
+C064E4,"Cisco Systems, Inc"
+C06599,"Samsung Electronics Co.,Ltd"
+C067AF,"Cisco Systems, Inc"
+C06C0C,"Apple, Inc."
+C07AD6,"Samsung Electronics Co.,Ltd"
+C07BBC,"Cisco Systems, Inc"
+C0847A,"Apple, Inc."
+C087EB,"Samsung Electronics Co.,Ltd"
+C08997,"Samsung Electronics Co.,Ltd"
+C08B2A,"Cisco Systems, Inc"
+C08C60,"Cisco Systems, Inc"
+C08D51,Amazon Technologies Inc.
+C091B9,Amazon Technologies Inc.
+C0956D,"Apple, Inc."
+C095CF,Amazon Technologies Inc.
+C09AD0,"Apple, Inc."
+C09F42,"Apple, Inc."
+C0A53E,"Apple, Inc."
+C0A5E8,Intel Corporate
+C0A600,"Apple, Inc."
+C0A810,Intel Corporate
+C0B22F,"Apple, Inc."
+C0B658,"Apple, Inc."
+C0B6F9,Intel Corporate
+C0B883,Intel Corporate
+C0BDC8,"Samsung Electronics Co.,Ltd"
+C0C7DB,"Apple, Inc."
+C0C9E3,"Tp-Link Technologies Co.,Ltd."
+C0CCF8,"Apple, Inc."
+C0CDD6,Espressif Inc.
+C0CECD,"Apple, Inc."
+C0D012,"Apple, Inc."
+C0D2DD,"Samsung Electronics Co.,Ltd"
+C0D3C0,"Samsung Electronics Co.,Ltd"
+C0D5E2,"Samsung Electronics Co.,Ltd"
+C0D6D5,Microsoft Corporation
+C0DCDA,"Samsung Electronics Co.,Ltd"
+C0E42D,"Tp-Link Technologies Co.,Ltd."
+C0E862,"Apple, Inc."
+C0F2FB,"Apple, Inc."
+C0F87F,"Cisco Systems, Inc"
+C0FFD4,Netgear
+C403A8,Intel Corporate
+C40415,Netgear
+C40ACB,"Cisco Systems, Inc"
+C40B31,"Apple, Inc."
+C40F08,Intel Corporate
+C41234,"Apple, Inc."
+C41411,"Apple, Inc."
+C4143C,"Cisco Systems, Inc"
+C4168F,"Apple, Inc."
+C418E9,"Samsung Electronics Co.,Ltd"
+C418FC,"Cisco Systems, Inc"
+C41C07,"Samsung Electronics Co.,Ltd"
+C42360,Intel Corporate
+C42AD0,"Apple, Inc."
+C42C03,"Apple, Inc."
+C4346B,Hewlett Packard
+C435D9,"Apple, Inc."
+C43875,"Sonos, Inc."
+C43ABE,Sony Corporation
+C43D1A,Intel Corporate
+C43DC7,Netgear
+C44202,"Samsung Electronics Co.,Ltd"
+C4438F,LG Electronics (Mobile Communications)
+C444A0,"Cisco Systems, Inc"
+C44606,"Cisco Systems, Inc"
+C4474E,Intel Corporate
+C4491B,"Apple, Inc."
+C44B31,"Cisco Systems, Inc"
+C44D84,"Cisco Systems, Inc"
+C44F33,Espressif Inc.
+C45006,"Samsung Electronics Co.,Ltd"
+C4524F,"Apple, Inc."
+C4576E,"Samsung Electronics Co.,Ltd"
+C45AB1,Dell Inc.
+C45BAC,"Apple, Inc."
+C45BBE,Espressif Inc.
+C45D83,"Samsung Electronics Co.,Ltd"
+C4618B,"Apple, Inc."
+C461C7,Microsoft Corporation
+C462EA,"Samsung Electronics Co.,Ltd"
+C46413,"Cisco Systems, Inc"
+C46516,Hewlett Packard
+C46E1F,"Tp-Link Technologies Co.,Ltd."
+C47154,"Tp-Link Technologies Co.,Ltd."
+C471FE,"Cisco Systems, Inc"
+C47295,"Cisco Systems, Inc"
+C4731E,"Samsung Electronics Co.,Ltd"
+C475AB,Intel Corporate
+C47764,"Samsung Electronics Co.,Ltd"
+C47D4F,"Cisco Systems, Inc"
+C47D9F,"Samsung Electronics Co.,Ltd"
+C47EE0,"Cisco Systems, Inc"
+C48466,"Apple, Inc."
+C484FC,"Apple, Inc."
+C48508,Intel Corporate
+C488E5,"Samsung Electronics Co.,Ltd"
+C4910C,"Apple, Inc."
+C493D9,"Samsung Electronics Co.,Ltd"
+C49500,Amazon Technologies Inc.
+C4969F,Amazon Technologies Inc.
+C49880,"Apple, Inc."
+C49A02,LG Electronics (Mobile Communications)
+C49DED,Microsoft Corporation
+C49E7E,Espressif Inc.
+C4AA43,"Cisco Systems, Inc"
+C4AB4D,"Cisco Systems, Inc"
+C4ACAA,"Apple, Inc."
+C4AE12,"Samsung Electronics Co.,Ltd"
+C4B239,"Cisco Systems, Inc"
+C4B301,"Apple, Inc."
+C4B349,"Apple, Inc."
+C4B36A,"Cisco Systems, Inc"
+C4B9CD,"Cisco Systems, Inc"
+C4BDE5,Intel Corporate
+C4C00A,Microsoft Corporation
+C4C17D,"Apple, Inc."
+C4C36B,"Apple, Inc."
+C4C603,"Cisco Systems, Inc"
+C4CB76,Microsoft Corporation
+C4CBE1,Dell Inc.
+C4D0E3,Intel Corporate
+C4D6D3,Dell Inc.
+C4D8D5,Espressif Inc.
+C4D987,Intel Corporate
+C4DD57,Espressif Inc.
+C4DEE2,Espressif Inc.
+C4E984,"Tp-Link Technologies Co.,Ltd."
+C4EB81,"Apple, Inc."
+C4EF3D,"Samsung Electronics Co.,Ltd"
+C4F445,"Apple, Inc."
+C4F7C1,"Apple, Inc."
+C4F7D5,"Cisco Systems, Inc"
+C4FF99,Intel Corporate
+C80084,"Cisco Systems, Inc"
+C808E9,LG Electronics
+C809A8,Intel Corporate
+C8102F,Netgear
+C8120B,"Samsung Electronics Co.,Ltd"
+C81479,"Samsung Electronics Co.,Ltd"
+C8154E,Intel Corporate
+C819F7,"Samsung Electronics Co.,Ltd"
+C81EE7,"Apple, Inc."
+C81F66,Dell Inc.
+C81FE8,"Apple, Inc."
+C82158,Intel Corporate
+C828E5,"Cisco Systems, Inc"
+C82A14,"Apple, Inc."
+C82ADD,"Google, Inc."
+C82B96,Espressif Inc.
+C82E18,Espressif Inc.
+C8334B,"Apple, Inc."
+C8348E,Intel Corporate
+C834E5,"Cisco Systems, Inc"
+C83870,"Samsung Electronics Co.,Ltd"
+C83A6B,"Roku, Inc"
+C83C85,"Apple, Inc."
+C83F26,Microsoft Corporation
+C8418A,"Samsung Electronics.,LTD"
+C84709,"Cisco Systems, Inc"
+C84AA0,Sony Interactive Entertainment Inc.
+C84BD6,Dell Inc.
+C84C75,"Cisco Systems, Inc"
+C85142,"Samsung Electronics Co.,Ltd"
+C858B3,Intel Corporate
+C858C0,Intel Corporate
+C85ACF,HP Inc.
+C85EA9,Intel Corporate
+C86000,ASUSTek COMPUTER INC.
+C8608F,"Cisco Systems, Inc"
+C863F1,Sony Interactive Entertainment Inc.
+C869CD,"Apple, Inc."
+C86C3D,Amazon Technologies Inc.
+C86E08,Intel Corporate
+C86F1D,"Apple, Inc."
+C875DD,LG Electronics NV
+C878F7,"Cisco Systems, Inc"
+C87E75,"Samsung Electronics Co.,Ltd"
+C87F54,ASUSTek COMPUTER INC.
+C8806D,"Apple, Inc."
+C88234,"Cisco Systems, Inc"
+C884A1,"Cisco Systems, Inc"
+C88541,Espressif Inc.
+C88550,"Apple, Inc."
+C889F3,"Apple, Inc."
+C88A7B,Espressif Inc.
+C88A9A,Intel Corporate
+C8908A,"Samsung Electronics Co.,Ltd"
+C895CE,Intel Corporate
+C89665,Microsoft Corporation
+C89C1D,"Cisco Systems, Inc"
+C89E43,Netgear
+C8A6EF,"Samsung Electronics Co.,Ltd"
+C8A823,"Samsung Electronics Co.,Ltd"
+C8B1CD,"Apple, Inc."
+C8B29B,Intel Corporate
+C8B5AD,Hewlett Packard Enterprise
+C8B5B7,"Apple, Inc."
+C8BCC8,"Apple, Inc."
+C8BD4D,"Samsung Electronics Co.,Ltd"
+C8BD69,"Samsung Electronics Co.,Ltd"
+C8C9A3,Espressif Inc.
+C8C9B2,Amazon Technologies Inc.
+C8CB9E,Intel Corporate
+C8CBB8,Hewlett Packard
+C8D083,"Apple, Inc."
+C8D3FF,Hewlett Packard
+C8D7B0,"Samsung Electronics Co.,Ltd"
+C8D9D2,Hewlett Packard
+C8DA29,Espressif Systems (Singapore) Pte. Ltd
+C8E0EB,"Apple, Inc."
+C8E265,Intel Corporate
+C8EA71,Espressif Inc.
+C8ED8B,Espressif Inc.
+C8F09E,Espressif Inc.
+C8F319,LG Electronics (Mobile Communications)
+C8F650,"Apple, Inc."
+C8F733,Intel Corporate
+C8F750,Dell Inc.
+C8F9F9,"Cisco Systems, Inc"
+CA125C,Microsoft Corporation
+CC051B,"Samsung Electronics Co.,Ltd"
+CC07AB,"Samsung Electronics Co.,Ltd"
+CC088D,"Apple, Inc."
+CC08E0,"Apple, Inc."
+CC08FA,"Apple, Inc."
+CC08FB,"Tp-Link Technologies Co.,Ltd."
+CC0DCB,Microsoft Corporation
+CC115A,"Apple, Inc."
+CC1531,Intel Corporate
+CC167E,"Cisco Systems, Inc"
+CC20AC,"Samsung Electronics Co.,Ltd"
+CC20E8,"Apple, Inc."
+CC2119,"Samsung Electronics Co.,Ltd"
+CC2293,Amazon Technologies Inc.
+CC22FE,"Apple, Inc."
+CC25EF,"Apple, Inc."
+CC2746,"Apple, Inc."
+CC28AA,ASUSTek COMPUTER INC.
+CC29F5,"Apple, Inc."
+CC2D8C,Lg Electronics Inc
+CC2DB7,"Apple, Inc."
+CC2F71,Intel Corporate
+CC32E5,"Tp-Link Technologies Co.,Ltd."
+CC3429,"Tp-Link Technologies Co.,Ltd."
+CC35D9,Ubiquiti Inc
+CC36CF,"Cisco Systems, Inc"
+CC3D82,Intel Corporate
+CC3E5F,Hewlett Packard
+CC3F36,"Apple, Inc."
+CC40D0,Netgear
+CC4463,"Apple, Inc."
+CC464E,"Samsung Electronics Co.,Ltd"
+CC46D6,"Cisco Systems, Inc"
+CC483A,Dell Inc.
+CC4B04,"Apple, Inc."
+CC50E3,Espressif Inc.
+CC5A53,"Cisco Systems, Inc"
+CC6023,"Apple, Inc."
+CC60C8,Microsoft Corporation
+CC660A,"Apple, Inc."
+CC68B6,TP-Link Systems Inc
+CC68C7,Espressif Inc.
+CC68E0,"Apple, Inc."
+CC69FA,"Apple, Inc."
+CC6A33,"Cisco Systems, Inc"
+CC6DA0,"Roku, Inc."
+CC6EA4,"Samsung Electronics Co.,Ltd"
+CC70ED,"Cisco Systems, Inc"
+CC722A,"Apple, Inc."
+CC7645,Microsoft Corporation
+CC785F,"Apple, Inc."
+CC79D7,"Cisco Systems, Inc"
+CC7B5C,Espressif Inc.
+CC7E1F,Espressif Inc.
+CC7F75,"Cisco Systems, Inc"
+CC7F76,"Cisco Systems, Inc"
+CC808F,"Apple, Inc."
+CC817D,"Apple, Inc."
+CC88C7,Hewlett Packard Enterprise
+CC8DA2,Espressif Inc.
+CC8E71,"Cisco Systems, Inc"
+CC9070,"Cisco Systems, Inc"
+CC96E5,Dell Inc.
+CC988B,SONY Visual Products Inc.
+CC9891,"Cisco Systems, Inc"
+CC9EA2,Amazon Technologies Inc.
+CCA7C1,"Google, Inc."
+CCAA00,Microsoft Corporation
+CCAFE3,Amazon Technologies Inc.
+CCB0B3,Microsoft Corporation
+CCB11A,"Samsung Electronics Co.,Ltd"
+CCB6C8,"Cisco Systems, Inc"
+CCBA97,Espressif Inc.
+CCBABD,TP-Link Systems Inc.
+CCBE61,"Apple, Inc."
+CCC5E5,Dell Inc.
+CCC760,"Apple, Inc."
+CCC95D,"Apple, Inc."
+CCD083,Hewlett Packard Enterprise
+CCD281,"Apple, Inc."
+CCD342,"Cisco Systems, Inc"
+CCD539,"Cisco Systems, Inc"
+CCD8C1,"Cisco Systems, Inc"
+CCD9AC,Intel Corporate
+CCDB93,"Cisco Systems, Inc"
+CCDBA7,Espressif Inc.
+CCE686,"Samsung Electronics Co.,Ltd"
+CCE732,Espressif Inc.
+CCE9FA,"Samsung Electronics Co.,Ltd"
+CCED4D,"Cisco Systems, Inc"
+CCEF48,"Cisco Systems, Inc"
+CCF411,"Google, Inc."
+CCF735,Amazon Technologies Inc.
+CCF826,"Samsung Electronics Co.,Ltd"
+CCF9E4,Intel Corporate
+CCF9E8,"Samsung Electronics Co.,Ltd"
+CCF9F0,"Samsung Electronics Co.,Ltd"
+CCFA00,LG Electronics (Mobile Communications)
+CCFE3C,"Samsung Electronics Co.,Ltd"
+D0034B,"Apple, Inc."
+D003DF,"Samsung Electronics Co.,Ltd"
+D004B0,"Samsung Electronics Co.,Ltd"
+D009C8,"Cisco Systems, Inc"
+D011E5,"Apple, Inc."
+D013FD,LG Electronics (Mobile Communications)
+D015A6,Hewlett Packard Enterprise
+D0176A,"Samsung Electronics Co.,Ltd"
+D017C2,ASUSTek COMPUTER INC.
+D01B49,"Samsung Electronics Co.,Ltd"
+D021F9,Ubiquiti Inc
+D023DB,"Apple, Inc."
+D02598,"Apple, Inc."
+D02791,TP-Link Systems Inc.
+D02B20,"Apple, Inc."
+D02C39,"Cisco Systems, Inc"
+D03169,"Samsung Electronics Co.,Ltd"
+D03311,"Apple, Inc."
+D03745,"Tp-Link Technologies Co.,Ltd."
+D039FA,"Samsung Electronics Co.,Ltd"
+D03C1F,Intel Corporate
+D03E07,"Apple, Inc."
+D03FAA,"Apple, Inc."
+D0431E,Dell Inc.
+D0460C,Dell Inc.
+D04D2C,"Roku, Inc."
+D04D86,"Apple, Inc."
+D04DC6,Hewlett Packard Enterprise
+D04F7E,"Apple, Inc."
+D05162,Sony Corporation
+D056FB,"Samsung Electronics Co.,Ltd"
+D0574C,"Cisco Systems, Inc"
+D0577B,Intel Corporate
+D0577E,Intel Corporate
+D058A5,"Apple, Inc."
+D059E4,"Samsung Electronics Co.,Ltd"
+D05D01,TP-Link Systems Inc.
+D06544,"Apple, Inc."
+D06578,Intel Corporate
+D0667B,"Samsung Electronics Co.,Ltd"
+D06726,Hewlett Packard Enterprise
+D067E5,Dell Inc.
+D06B78,"Apple, Inc."
+D072DC,"Cisco Systems, Inc"
+D076E7,"Tp-Link Technologies Co.,Ltd."
+D07E28,Hewlett Packard
+D07E35,Intel Corporate
+D07FA0,"Samsung Electronics Co.,Ltd"
+D0817A,"Apple, Inc."
+D08543,"Cisco Systems, Inc"
+D087E2,"Samsung Electronics Co.,Ltd"
+D0880C,"Apple, Inc."
+D08E79,Dell Inc.
+D09282,"Apple, Inc."
+D0929E,Microsoft Corporation
+D09466,Dell Inc.
+D09AAF,Espressif Systems (Singapore) Pte. Ltd
+D0A5A6,"Cisco Systems, Inc"
+D0A637,"Apple, Inc."
+D0ABD5,Intel Corporate
+D0AD08,HP Inc.
+D0B128,"Samsung Electronics Co.,Ltd"
+D0B324,"Apple, Inc."
+D0BF9C,Hewlett Packard
+D0C050,"Apple, Inc."
+D0C1B1,"Samsung Electronics Co.,Ltd"
+D0C1B5,Dell Inc.
+D0C24E,"Samsung Electronics Co.,Ltd"
+D0C282,"Cisco Systems, Inc"
+D0C5F3,"Apple, Inc."
+D0C637,Intel Corporate
+D0C789,"Cisco Systems, Inc"
+D0C7C0,"Tp-Link Technologies Co.,Ltd."
+D0CDBF,LG Electronics
+D0CF13,Espressif Inc.
+D0D003,"Samsung Electronics Co.,Ltd"
+D0D0FD,"Cisco Systems, Inc"
+D0D23C,"Apple, Inc."
+D0D2B0,"Apple, Inc."
+D0D3E0,Hewlett Packard Enterprise
+D0D49F,"Apple, Inc."
+D0DAD7,"Apple, Inc."
+D0DC2C,"Cisco Systems, Inc"
+D0DFC7,"Samsung Electronics Co.,Ltd"
+D0E042,"Cisco Systems, Inc"
+D0E140,"Apple, Inc."
+D0E581,"Apple, Inc."
+D0EC35,"Cisco Systems, Inc"
+D0EF76,Espressif Inc.
+D0FCCC,"Samsung Electronics Co.,Ltd"
+D4016D,"Tp-Link Technologies Co.,Ltd."
+D40592,Espressif Inc.
+D40CFD,"Apple, Inc."
+D40F9E,"Apple, Inc."
+D411A3,"Samsung Electronics Co.,Ltd"
+D4126E,"Apple, Inc."
+D41972,Hewlett Packard Enterprise
+D4258B,Intel Corporate
+D42B6F,"Cisco Systems, Inc"
+D42C44,"Cisco Systems, Inc"
+D42CA6,"Samsung Electronics Co.,Ltd"
+D42DCC,"Apple, Inc."
+D42FCA,"Apple, Inc."
+D4389C,Sony Corporation
+D43A2C,"Google, Inc."
+D43B04,Intel Corporate
+D440CF,"Apple, Inc."
+D446E1,"Apple, Inc."
+D4548B,Intel Corporate
+D45763,"Apple, Inc."
+D45D64,ASUSTek COMPUTER INC.
+D4619D,"Apple, Inc."
+D461DA,"Apple, Inc."
+D463C0,"Apple, Inc."
+D46624,"Cisco Systems, Inc"
+D468AA,"Apple, Inc."
+D46A35,"Cisco Systems, Inc"
+D46D50,"Cisco Systems, Inc"
+D46D6D,Intel Corporate
+D46E0E,"Tp-Link Technologies Co.,Ltd."
+D47798,"Cisco Systems, Inc"
+D4789B,"Cisco Systems, Inc"
+D47AE2,"Samsung Electronics Co.,Ltd"
+D47F35,"Cisco Systems, Inc"
+D481D7,Dell Inc.
+D48564,Hewlett Packard
+D487D8,"Samsung Electronics Co.,Ltd"
+D48890,"Samsung Electronics Co.,Ltd"
+D489C1,Ubiquiti Inc
+D48A39,"Samsung Electronics Co.,Ltd"
+D48AFC,Espressif Inc.
+D48C49,Espressif Inc.
+D48CB5,"Cisco Systems, Inc"
+D48E83,"Apple, Inc."
+D48F33,Microsoft Corporation
+D4909C,"Apple, Inc."
+D4910F,Amazon Technologies Inc.
+D494A9,Intel Corporate
+D49A20,"Apple, Inc."
+D49DC0,"Samsung Electronics Co.,Ltd"
+D4A02A,"Cisco Systems, Inc"
+D4A2CD,Dell Inc.
+D4A33D,"Apple, Inc."
+D4AB61,Intel Corporate
+D4ABCD,"Hui Zhou Gaoshengda Technology Co.,LTD"
+D4AD71,"Cisco Systems, Inc"
+D4ADBD,"Cisco Systems, Inc"
+D4AE05,"Samsung Electronics Co.,Ltd"
+D4AE52,Dell Inc.
+D4BED7,Dell Inc.
+D4BED9,Dell Inc.
+D4BEDC,"Roku, Inc"
+D4C93C,"Cisco Systems, Inc"
+D4C9D7,"Apple, Inc."
+D4C9EF,Hewlett Packard
+D4CE40,"Apple, Inc."
+D4D252,Intel Corporate
+D4D4DA,Espressif Inc.
+D4D6DF,TP-Link Systems Inc.
+D4D748,"Cisco Systems, Inc"
+D4D853,Intel Corporate
+D4DCCD,"Apple, Inc."
+D4E053,Hewlett Packard Enterprise
+D4E22F,"Roku, Inc"
+D4E6B7,"Samsung Electronics Co.,Ltd"
+D4E880,"Cisco Systems, Inc"
+D4E8B2,"Samsung Electronics Co.,Ltd"
+D4E98A,Intel Corporate
+D4E9F4,Espressif Inc.
+D4EB68,"Cisco Systems, Inc"
+D4F32D,Intel Corporate
+D4F46F,"Apple, Inc."
+D4F547,"Google, Inc."
+D4F5EF,Hewlett Packard Enterprise
+D4F7D5,Sony Interactive Entertainment Inc.
+D4F98D,Espressif Inc.
+D4FB8E,"Apple, Inc."
+D4FF1A,"Apple, Inc."
+D8004D,"Apple, Inc."
+D807B6,"Tp-Link Technologies Co.,Ltd."
+D80831,"Samsung Electronics Co.,Ltd"
+D80B9A,"Samsung Electronics Co.,Ltd"
+D80D17,"Tp-Link Technologies Co.,Ltd."
+D8132A,Espressif Inc.
+D8150D,"Tp-Link Technologies Co.,Ltd."
+D81C79,"Apple, Inc."
+D81D72,"Apple, Inc."
+D824BD,"Cisco Systems, Inc"
+D83062,"Apple, Inc."
+D83134,"Roku, Inc"
+D831CF,"Samsung Electronics Co.,Ltd"
+D83ADD,Raspberry Pi Trading Ltd
+D83BBF,Intel Corporate
+D83BDA,Espressif Inc.
+D84489,TP-Link Systems Inc
+D846CE,"Apple, Inc."
+D84732,"Tp-Link Technologies Co.,Ltd."
+D84C90,"Apple, Inc."
+D84FB8,Lg Electronics
+D850E6,ASUSTek COMPUTER INC.
+D85575,"Samsung Electronics Co.,Ltd"
+D857EF,"Samsung Electronics Co.,Ltd"
+D85B2A,"Samsung Electronics Co.,Ltd"
+D85D4C,"Tp-Link Technologies Co.,Ltd."
+D862CA,"Cisco Systems, Inc"
+D867D9,"Cisco Systems, Inc"
+D868A0,"Samsung Electronics Co.,Ltd"
+D868C3,"Samsung Electronics Co.,Ltd"
+D86C63,"Google, Inc."
+D87154,"Samsung Electronics Co.,Ltd"
+D87475,"Apple, Inc."
+D885AC,Espressif Inc.
+D88C79,"Google, Inc."
+D88F76,"Apple, Inc."
+D890E8,"Samsung Electronics Co.,Ltd"
+D89403,Hewlett Packard Enterprise
+D89695,"Apple, Inc."
+D89D13,"Samsung Electronics Co.,Ltd"
+D89D67,Hewlett Packard
+D89E3F,"Apple, Inc."
+D89EF3,Dell Inc.
+D8A01D,Espressif Inc.
+D8A25E,"Apple, Inc."
+D8A35C,"Samsung Electronics Co.,Ltd"
+D8B190,"Cisco Systems, Inc"
+D8B1DE,Hewlett Packard Enterprise
+D8B370,Ubiquiti Inc
+D8BB2C,"Apple, Inc."
+D8BC38,Espressif Inc.
+D8BE1F,"Apple, Inc."
+D8BE65,Amazon Technologies Inc.
+D8BF42,Intel Corporate
+D8BFC0,Espressif Inc.
+D8C262,Ubiquiti Inc
+D8C4E9,"Samsung Electronics Co.,Ltd"
+D8C7C8,Hewlett Packard Enterprise
+D8CF9C,"Apple, Inc."
+D8D090,Dell Inc.
+D8D1CB,"Apple, Inc."
+D8D385,Hewlett Packard
+D8D43C,Sony Corporation
+D8DC40,"Apple, Inc."
+D8DE3A,"Apple, Inc."
+D8E0E1,"Samsung Electronics Co.,Ltd"
+D8E2DF,Microsoft Corporation
+D8E593,"Apple, Inc."
+D8EB46,"Google, Inc."
+D8F12E,TP-Link Systems Inc.
+D8F15B,Espressif Inc.
+D8F2CA,Intel Corporate
+D8F883,Intel Corporate
+D8FBD6,Amazon Technologies Inc.
+D8FC93,Intel Corporate
+DAA119,"Google, Inc."
+DC0077,"Tp-Link Technologies Co.,Ltd."
+DC0539,"Cisco Systems, Inc"
+DC0675,Espressif Inc.
+DC080F,"Apple, Inc."
+DC0A69,Espressif Inc.
+DC0B09,"Cisco Systems, Inc"
+DC0B34,LG Electronics (Mobile Communications)
+DC0C5C,"Apple, Inc."
+DC1057,"Apple, Inc."
+DC1BA1,Intel Corporate
+DC1ED5,Espressif Inc.
+DC2148,Intel Corporate
+DC215C,Intel Corporate
+DC2B2A,"Apple, Inc."
+DC2B61,"Apple, Inc."
+DC3714,"Apple, Inc."
+DC3979,"Cisco Systems, Inc"
+DC3A5E,"Roku, Inc."
+DC415F,"Apple, Inc."
+DC41A9,Intel Corporate
+DC44B6,"Samsung Electronics Co.,Ltd"
+DC4546,Intel Corporate
+DC45B8,"Apple, Inc."
+DC4628,Intel Corporate
+DC4A3E,Hewlett Packard
+DC4F22,Espressif Inc.
+DC5285,"Apple, Inc."
+DC5360,Intel Corporate
+DC5392,"Apple, Inc."
+DC5475,Espressif Inc.
+DC54D7,Amazon Technologies Inc.
+DC55B1,Espressif Inc.
+DC56E7,"Apple, Inc."
+DC5D89,"Cisco Systems, Inc"
+DC6279,TP-Link Systems Inc
+DC6672,"Samsung Electronics Co.,Ltd"
+DC680C,Hewlett Packard Enterprise
+DC69E2,"Samsung Electronics Co.,Ltd"
+DC6DBC,"Apple, Inc."
+DC7196,Intel Corporate
+DC71D0,"Apple, Inc."
+DC74A8,"Samsung Electronics Co.,Ltd"
+DC774C,"Cisco Systems, Inc"
+DC7B94,"Cisco Systems, Inc"
+DC8084,"Apple, Inc."
+DC86D8,"Apple, Inc."
+DC87F8,"Samsung Electronics Co.,Ltd"
+DC8983,"Samsung Electronics Co.,Ltd"
+DC8B28,Intel Corporate
+DC8C37,"Cisco Systems, Inc"
+DC9009,Intel Corporate
+DC91BF,Amazon Technologies Inc.
+DC9396,"Apple, Inc."
+DC9566,"Apple, Inc."
+DC97BA,Intel Corporate
+DC9840,Microsoft Corporation
+DC9B9C,"Apple, Inc."
+DC9DED,"Samsung Electronics Co.,Ltd"
+DC9E8F,"Apple, Inc."
+DC9FDB,Ubiquiti Inc
+DCA0D0,Amazon Technologies Inc.
+DCA4CA,"Apple, Inc."
+DCA5F4,"Cisco Systems, Inc"
+DCA632,Raspberry Pi Trading Ltd
+DCA904,"Apple, Inc."
+DCA971,Intel Corporate
+DCB4C4,Microsoft XCG
+DCB4D9,Espressif Inc.
+DCB54F,"Apple, Inc."
+DCB7AC,Hewlett Packard Enterprise
+DCB87D,Hewlett Packard Enterprise
+DCC49C,"Samsung Electronics Co.,Ltd"
+DCCCE6,"Samsung Electronics Co.,Ltd"
+DCCEC1,"Cisco Systems, Inc"
+DCCF96,"Samsung Electronics Co.,Ltd"
+DCD3A2,"Apple, Inc."
+DCD83B,"Cisco Systems, Inc"
+DCDA0C,Espressif Inc.
+DCDCE2,"Samsung Electronics Co.,Ltd"
+DCE541,"Apple, Inc."
+DCE55B,"Google, Inc."
+DCEB94,"Cisco Systems, Inc"
+DCEF09,Netgear
+DCF401,Dell Inc.
+DCF4CA,"Apple, Inc."
+DCF719,"Cisco Systems, Inc"
+DCF756,"Samsung Electronics Co.,Ltd"
+DCFB48,Intel Corporate
+DCFE18,"Tp-Link Technologies Co.,Ltd."
+E0036B,"Samsung Electronics Co.,Ltd"
+E005C5,"Tp-Link Technologies Co.,Ltd."
+E0071B,Hewlett Packard Enterprise
+E00EDA,"Cisco Systems, Inc"
+E01ADF,"Google, Inc."
+E02611,"Apple, Inc."
+E0280A,TP-Link Systems Inc.
+E02A66,"Cisco Systems, Inc"
+E02B96,"Apple, Inc."
+E02BE9,Intel Corporate
+E02E0B,Intel Corporate
+E02F6D,"Cisco Systems, Inc"
+E0338E,"Apple, Inc."
+E03AAA,Intel Corporate
+E03F49,ASUSTek COMPUTER INC.
+E0469A,Netgear
+E046EE,Netgear
+E05A1B,Espressif Inc.
+E05F45,"Apple, Inc."
+E05FB9,"Cisco Systems, Inc"
+E063DA,Ubiquiti Inc
+E063E5,Sony Corporation
+E06678,"Apple, Inc."
+E069BA,"Cisco Systems, Inc"
+E06D17,"Apple, Inc."
+E070EA,HP Inc.
+E07256,Intel Corporate
+E072A1,Espressif Inc.
+E073E7,HP Inc.
+E0897E,"Apple, Inc."
+E0899D,"Cisco Systems, Inc"
+E08C3C,"Cisco Systems, Inc"
+E08CFE,Espressif Inc.
+E08F4C,Intel Corporate
+E091F5,Netgear
+E0925C,"Apple, Inc."
+E09467,Intel Corporate
+E09806,Espressif Inc.
+E09971,"Samsung Electronics Co.,Ltd"
+E09D13,"Samsung Electronics Co.,Ltd"
+E09D31,Intel Corporate
+E0AA96,"Samsung Electronics Co.,Ltd"
+E0ACCB,"Apple, Inc."
+E0ACF1,"Cisco Systems, Inc"
+E0B52D,"Apple, Inc."
+E0B55F,"Apple, Inc."
+E0B9BA,"Apple, Inc."
+E0BA78,"Apple, Inc."
+E0BDA0,"Apple, Inc."
+E0BFB2,"Apple, Inc."
+E0C250,Netgear
+E0C264,Intel Corporate
+E0C377,"Samsung Electronics Co.,Ltd"
+E0C3EA,"Apple, Inc."
+E0C767,"Apple, Inc."
+E0C932,Intel Corporate
+E0C97A,"Apple, Inc."
+E0CB1D,Amazon Technologies Inc.
+E0CB4E,ASUSTek COMPUTER INC.
+E0CBEE,"Samsung Electronics Co.,Ltd"
+E0D045,Intel Corporate
+E0D083,"Samsung Electronics Co.,Ltd"
+E0D173,"Cisco Systems, Inc"
+E0D362,TP-Link Systems Inc.
+E0D464,Intel Corporate
+E0D491,"Cisco Systems, Inc"
+E0D4E8,Intel Corporate
+E0D55D,Intel Corporate
+E0D848,Dell Inc.
+E0DB10,"Samsung Electronics Co.,Ltd"
+E0DB55,Dell Inc.
+E0E258,Intel Corporate
+E0E2E6,Espressif Inc.
+E0EB40,"Apple, Inc."
+E0F5C6,"Apple, Inc."
+E0F728,Amazon Technologies Inc.
+E0F847,"Apple, Inc."
+E4013B,"Apple, Inc."
+E4029B,Intel Corporate
+E40D36,Intel Corporate
+E41088,"Samsung Electronics Co.,Ltd"
+E4115B,Hewlett Packard
+E4121D,"Samsung Electronics Co.,Ltd"
+E4135C,"Cisco Systems, Inc"
+E41F7B,"Cisco Systems, Inc"
+E41FD5,Intel Corporate
+E425E7,"Apple, Inc."
+E42AAC,Microsoft Corporation
+E42B34,"Apple, Inc."
+E42F37,"Apple, Inc."
+E432CB,"Samsung Electronics Co.,Ltd"
+E4379F,"Cisco Systems, Inc"
+E4387E,"Cisco Systems, Inc"
+E43883,Ubiquiti Inc
+E43A85,"Cisco Systems, Inc"
+E440E2,"Samsung Electronics Co.,Ltd"
+E442A6,Intel Corporate
+E4434B,Dell Inc.
+E44389,"Apple, Inc."
+E443CF,TP-Link Systems Inc.
+E44AE0,Intel Corporate
+E44E2D,"Cisco Systems, Inc"
+E450EB,"Apple, Inc."
+E45341,"Apple, Inc."
+E454E8,Dell Inc.
+E458B8,"Samsung Electronics Co.,Ltd"
+E458E7,"Samsung Electronics Co.,Ltd"
+E45D75,"Samsung Electronics Co.,Ltd"
+E45E1B,"Google, Inc."
+E45E37,Intel Corporate
+E45F01,Raspberry Pi Trading Ltd
+E46017,Intel Corporate
+E462C4,"Cisco Systems, Inc"
+E465B8,Espressif Inc.
+E47010,"Apple, Inc."
+E470B8,Intel Corporate
+E47684,"Apple, Inc."
+E47CF9,"Samsung Electronics Co.,Ltd"
+E47DBD,"Samsung Electronics Co.,Ltd"
+E489CA,"Cisco Systems, Inc"
+E48B7F,"Apple, Inc."
+E490FD,"Apple, Inc."
+E49282,"Samsung Electronics Co.,Ltd"
+E492FB,"Samsung Electronics Co.,Ltd"
+E498D1,Microsoft Mobile Oy
+E498D6,"Apple, Inc."
+E49A79,"Apple, Inc."
+E49ADC,"Apple, Inc."
+E49C67,"Apple, Inc."
+E49F7D,"Samsung Electronics Co.,Ltd"
+E4A41C,"Cisco Systems, Inc"
+E4A430,"Samsung Electronics Co.,Ltd"
+E4A471,Intel Corporate
+E4A7A0,Intel Corporate
+E4AA5D,"Cisco Systems, Inc"
+E4B021,"Samsung Electronics Co.,Ltd"
+E4B063,Espressif Inc.
+E4B16C,"Apple, Inc."
+E4B2FB,"Apple, Inc."
+E4B318,Intel Corporate
+E4B323,Espressif Inc.
+E4B97A,Dell Inc.
+E4C0FE,"Apple, Inc."
+E4C32A,"Tp-Link Technologies Co.,Ltd."
+E4C63D,"Apple, Inc."
+E4C722,"Cisco Systems, Inc"
+E4C767,Intel Corporate
+E4CE8F,"Apple, Inc."
+E4D332,"Tp-Link Technologies Co.,Ltd."
+E4D3F1,"Cisco Systems, Inc"
+E4DE40,Hewlett Packard Enterprise
+E4E0A6,"Apple, Inc."
+E4E0C5,"Samsung Electronics Co.,Ltd"
+E4E4AB,"Apple, Inc."
+E4E749,Hewlett Packard
+E4ECE8,"Samsung Electronics Co.,Ltd"
+E4F004,Dell Inc.
+E4F042,"Google, Inc."
+E4F3C4,"Samsung Electronics Co.,Ltd"
+E4F4C6,Netgear
+E4F89C,Intel Corporate
+E4F8EF,"Samsung Electronics Co.,Ltd"
+E4FAC4,TP-Link Systems Inc
+E4FADE,Microsoft Corporation
+E4FAED,"Samsung Electronics Co.,Ltd"
+E4FAFD,Intel Corporate
+E4FB1E,Microsoft Corporation
+E4FD45,Intel Corporate
+E4FED4,Microsoft Corporation
+E8039A,"Samsung Electronics Co.,Ltd"
+E8040B,"Apple, Inc."
+E80462,"Cisco Systems, Inc"
+E80688,"Apple, Inc."
+E80690,Espressif Inc.
+E80AB9,"Cisco Systems, Inc"
+E81098,Hewlett Packard Enterprise
+E81132,"Samsung Electronics Co.,Ltd"
+E81CA5,Hewlett Packard Enterprise
+E81CD8,"Apple, Inc."
+E82689,Hewlett Packard Enterprise
+E82AEA,Intel Corporate
+E831CD,Espressif Inc.
+E83617,"Apple, Inc."
+E83935,Hewlett Packard
+E83A12,"Samsung Electronics Co.,Ltd"
+E83DC1,Espressif Inc.
+E84040,"Cisco Systems, Inc"
+E843B6,"QNAP Systems, Inc."
+E848B8,TP-Link Systems Inc
+E84A78,"Apple, Inc."
+E84C4A,Amazon Technologies Inc.
+E84E84,"Samsung Electronics Co.,Ltd"
+E84EBA,"Google, Inc."
+E85497,"Samsung Electronics Co.,Ltd"
+E85B5B,Lg Electronics Inc
+E85C0A,"Cisco Systems, Inc"
+E85F02,"Apple, Inc."
+E862BE,Intel Corporate
+E86549,"Cisco Systems, Inc"
+E8655F,Dell Inc.
+E868E7,Espressif Inc.
+E86BEA,Espressif Inc.
+E86DCB,"Samsung Electronics Co.,Ltd"
+E86E3A,Sony Interactive Entertainment Inc.
+E87865,"Apple, Inc."
+E879A3,"Cisco Systems, Inc"
+E87F6B,"Samsung Electronics Co.,Ltd"
+E87F95,"Apple, Inc."
+E8802E,"Apple, Inc."
+E88152,"Apple, Inc."
+E884A5,Intel Corporate
+E8854B,"Apple, Inc."
+E88D28,"Apple, Inc."
+E892A4,LG Electronics (Mobile Communications)
+E89309,"Samsung Electronics Co.,Ltd"
+E894F6,"Tp-Link Technologies Co.,Ltd."
+E898EE,"Apple, Inc."
+E89C25,ASUSTek COMPUTER INC.
+E89F6D,Espressif Inc.
+E8A72F,Microsoft Corporation
+E8A730,"Apple, Inc."
+E8AACB,"Samsung Electronics Co.,Ltd"
+E8B0C5,Intel Corporate
+E8B1FC,Intel Corporate
+E8B265,Dell Inc.
+E8B2AC,"Apple, Inc."
+E8B4C8,"Samsung Electronics Co.,Ltd"
+E8B5D0,Dell Inc.
+E8B748,"Cisco Systems, Inc"
+E8BA70,"Cisco Systems, Inc"
+E8BCE4,"Cisco Systems, Inc"
+E8BFB8,Intel Corporate
+E8BFE1,Intel Corporate
+E8C386,"Apple, Inc."
+E8C829,Intel Corporate
+E8C913,"Samsung Electronics Co.,Ltd"
+E8CF83,Dell Inc.
+E8D322,"Cisco Systems, Inc"
+E8D52B,"Google, Inc."
+E8D87E,Amazon Technologies Inc.
+E8D8D1,HP Inc.
+E8DB84,Espressif Inc.
+E8DC6C,"Cisco Systems, Inc"
+E8DE27,"Tp-Link Technologies Co.,Ltd."
+E8E5D6,"Samsung Electronics Co.,Ltd"
+E8EB34,"Cisco Systems, Inc"
+E8EDBD,Espressif Inc.
+E8EDF3,"Cisco Systems, Inc"
+E8F408,Intel Corporate
+E8F60A,Espressif Inc.
+E8F673,Microsoft Corporation
+E8F724,Hewlett Packard Enterprise
+E8FBE9,"Apple, Inc."
+E8FCAF,Netgear
+E8FEBE,"Apple, Inc."
+E8FFF4,"Apple, Inc."
+EABEA7,"Sonos, Inc."
+EC01D5,"Cisco Systems, Inc"
+EC0273,Hewlett Packard Enterprise
+EC086B,"Tp-Link Technologies Co.,Ltd."
+EC0D51,"Apple, Inc."
+EC0DE4,Amazon Technologies Inc.
+EC107B,"Samsung Electronics Co.,Ltd"
+EC172F,"Tp-Link Technologies Co.,Ltd."
+EC192E,"Cisco Systems, Inc"
+EC1B5F,Hewlett Packard Enterprise
+EC1D8B,"Cisco Systems, Inc"
+EC2651,"Apple, Inc."
+EC26CA,"Tp-Link Technologies Co.,Ltd."
+EC28D3,"Apple, Inc."
+EC2A72,Dell Inc.
+EC2BEB,Amazon Technologies Inc.
+EC2C0D,"Apple, Inc."
+EC2C73,"Apple, Inc."
+EC2CE2,"Apple, Inc."
+EC3091,"Cisco Systems, Inc"
+EC315F,Amazon Technologies Inc.
+EC33CC,Hewlett Packard Enterprise
+EC3586,"Apple, Inc."
+EC42CC,"Apple, Inc."
+EC4476,"Cisco Systems, Inc"
+EC4654,"Apple, Inc."
+EC4684,Microsoft Corporation
+EC4C8C,Intel Corporate
+EC50AA,Hewlett Packard Enterprise
+EC59E7,Microsoft Corporation
+EC6073,"Tp-Link Technologies Co.,Ltd."
+EC6260,Espressif Inc.
+EC63D7,Intel Corporate
+EC64C9,Espressif Inc.
+EC6794,Hewlett Packard Enterprise
+EC7379,"Apple, Inc."
+EC748C,Sony Interactive Entertainment Inc.
+EC750C,TP-Link Systems Inc.
+EC7CB6,"Samsung Electronics Co.,Ltd"
+EC7CBA,Hewlett Packard Enterprise
+EC8150,"Apple, Inc."
+EC8350,Microsoft Corporation
+EC852F,"Apple, Inc."
+EC888F,"Tp-Link Technologies Co.,Ltd."
+EC8AC4,Amazon Technologies Inc.
+EC8E77,Intel Corporate
+EC8EB5,Hewlett Packard
+EC90C1,"Samsung Electronics Co.,Ltd"
+EC94CB,Espressif Inc.
+EC97A2,"Apple, Inc."
+EC9A74,Hewlett Packard
+EC9B75,"Roku, Inc"
+EC9B8B,Hewlett Packard Enterprise
+ECA138,Amazon Technologies Inc.
+ECA1CC,"Cisco Systems, Inc"
+ECA78D,"Cisco Systems, Inc"
+ECA907,"Apple, Inc."
+ECAA25,"Samsung Electronics Co.,Ltd"
+ECADB8,"Apple, Inc."
+ECB1D7,Hewlett Packard
+ECB293,Hewlett Packard Enterprise
+ECB550,"Samsung Electronics Co.,Ltd"
+ECB931,TP-Link Systems Inc.
+ECBB78,"Cisco Systems, Inc"
+ECBD1D,"Cisco Systems, Inc"
+ECC018,"Cisco Systems, Inc"
+ECC882,"Cisco Systems, Inc"
+ECC9FF,Espressif Inc.
+ECCE13,"Cisco Systems, Inc"
+ECCED7,"Apple, Inc."
+ECD508,"Apple, Inc."
+ECD61B,Espressif Inc.
+ECDA3B,Espressif Inc.
+ECDCAA,"Apple, Inc."
+ECDD24,"Cisco Systems, Inc"
+ECE09B,"Samsung Electronics Co.,Ltd"
+ECE1A9,"Cisco Systems, Inc"
+ECE334,Espressif Inc.
+ECE60E,"Apple, Inc."
+ECE7A7,Intel Corporate
+ECE9D2,"Apple, Inc."
+ECEBB8,Hewlett Packard Enterprise
+ECED04,Intel Corporate
+ECF33C,Intel Corporate
+ECF40C,"Cisco Systems, Inc"
+ECF4BB,Dell Inc.
+ECFABC,Espressif Inc.
+ECFCC6,Hewlett Packard Enterprise
+ECFF3A,"Apple, Inc."
+F003BC,"Cisco Systems, Inc"
+F004E1,"Apple, Inc."
+F0051B,"Samsung Electronics Co.,Ltd"
+F008D1,Espressif Inc.
+F008F1,"Samsung Electronics Co.,Ltd"
+F0090D,TP-Link Systems Inc
+F0161D,Espressif Inc.
+F01898,"Apple, Inc."
+F01AA0,Hewlett Packard Enterprise
+F01C13,LG Electronics (Mobile Communications)
+F01D2D,"Cisco Systems, Inc"
+F01DBC,Microsoft Corporation
+F01FAF,Dell Inc.
+F01FC7,"Apple, Inc."
+F020FF,Intel Corporate
+F02475,"Apple, Inc."
+F024F9,Espressif Inc.
+F02572,"Cisco Systems, Inc"
+F0272D,Amazon Technologies Inc.
+F027A0,"Apple, Inc."
+F02929,"Cisco Systems, Inc"
+F02F4B,"Apple, Inc."
+F02F74,ASUSTek COMPUTER INC.
+F02F9E,Amazon Technologies Inc.
+F02FBA,"Apple, Inc."
+F03965,"Samsung Electronics Co.,Ltd"
+F040D9,"Apple, Inc."
+F0421C,Intel Corporate
+F04A02,"Cisco Systems, Inc"
+F04DA2,Dell Inc.
+F04EA4,HP Inc.
+F04F7C,Amazon Technologies Inc.
+F057A6,Intel Corporate
+F05A09,"Samsung Electronics Co.,Ltd"
+F05B7B,"Samsung Electronics Co.,Ltd"
+F05C19,Hewlett Packard Enterprise
+F05C77,"Google, Inc."
+F05CD5,"Apple, Inc."
+F061C0,Hewlett Packard Enterprise
+F065AE,"Samsung Electronics Co.,Ltd"
+F067B1,"Samsung Electronics Co.,Ltd"
+F06BCA,"Samsung Electronics Co.,Ltd"
+F06E0B,Microsoft Corporation
+F0704F,"Samsung Electronics Co.,Ltd"
+F0728C,"Samsung Electronics Co.,Ltd"
+F072EA,"Google, Inc."
+F0766F,"Apple, Inc."
+F077C3,Intel Corporate
+F07807,"Apple, Inc."
+F07816,"Cisco Systems, Inc"
+F07959,ASUSTek COMPUTER INC.
+F07960,"Apple, Inc."
+F07F06,"Cisco Systems, Inc"
+F08173,Amazon Technologies Inc.
+F08A76,"Samsung Electronics Co.,Ltd"
+F0921C,Hewlett Packard
+F0989D,"Apple, Inc."
+F099B6,"Apple, Inc."
+F099BF,"Apple, Inc."
+F09E4A,Intel Corporate
+F09E63,"Cisco Systems, Inc"
+F09E9E,Espressif Inc.
+F09FC2,Ubiquiti Inc
+F0A225,Amazon Technologies Inc.
+F0A35A,"Apple, Inc."
+F0A731,TP-Link Systems Inc
+F0B0E7,"Apple, Inc."
+F0B2B9,Intel Corporate
+F0B2E5,"Cisco Systems, Inc"
+F0B3EC,"Apple, Inc."
+F0B479,"Apple, Inc."
+F0B61E,Intel Corporate
+F0BF97,Sony Corporation
+F0C1F1,"Apple, Inc."
+F0C371,"Apple, Inc."
+F0C725,"Apple, Inc."
+F0CBA1,"Apple, Inc."
+F0CD31,"Samsung Electronics Co.,Ltd"
+F0D018,Hewlett Packard Enterprise
+F0D1A9,"Apple, Inc."
+F0D2F1,Amazon Technologies Inc.
+F0D31F,"Apple, Inc."
+F0D415,Intel Corporate
+F0D4E2,Dell Inc.
+F0D5BF,Intel Corporate
+F0D635,"Apple, Inc."
+F0D793,"Apple, Inc."
+F0D805,"Cisco Systems, Inc"
+F0DBE2,"Apple, Inc."
+F0DBF8,"Apple, Inc."
+F0DCE2,"Apple, Inc."
+F0E426,"Samsung Electronics Co.,Ltd"
+F0E77E,"Samsung Electronics Co.,Ltd"
+F0EE10,"Samsung Electronics Co.,Ltd"
+F0EE7A,"Apple, Inc."
+F0EF86,"Google, Inc."
+F0F0A4,Amazon Technologies Inc.
+F0F336,"Tp-Link Technologies Co.,Ltd."
+F0F564,"Samsung Electronics Co.,Ltd"
+F0F5BD,Espressif Inc.
+F0F61C,"Apple, Inc."
+F0F6C1,"Sonos, Inc."
+F0F755,"Cisco Systems, Inc"
+F0F832,"Google, Inc."
+F400A2,"Samsung Electronics Co.,Ltd"
+F40270,Dell Inc.
+F40304,"Google, Inc."
+F4032A,Amazon Technologies Inc.
+F40343,Hewlett Packard Enterprise
+F40616,"Apple, Inc."
+F40669,Intel Corporate
+F40E01,"Apple, Inc."
+F40E22,"Samsung Electronics Co.,Ltd"
+F40F1B,"Cisco Systems, Inc"
+F40F24,"Apple, Inc."
+F412FA,Espressif Inc.
+F41BA1,"Apple, Inc."
+F41FC2,"Cisco Systems, Inc"
+F421CA,"Apple, Inc."
+F42679,Intel Corporate
+F42A7D,"Tp-Link Technologies Co.,Ltd."
+F42B8C,"Samsung Electronics Co.,Ltd"
+F42DC9,Espressif Inc.
+F42E7F,Hewlett Packard Enterprise
+F430B9,Hewlett Packard
+F431C3,"Apple, Inc."
+F43392,"Cisco Systems, Inc"
+F433B7,"Apple, Inc."
+F434F0,"Apple, Inc."
+F437B7,"Apple, Inc."
+F43909,Hewlett Packard
+F439A6,"Apple, Inc."
+F43BD8,Intel Corporate
+F4428F,"Samsung Electronics Co.,Ltd"
+F44637,Intel Corporate
+F44E05,"Cisco Systems, Inc"
+F44EE3,Intel Corporate
+F45293,"Apple, Inc."
+F45BB4,"Cisco Systems, Inc"
+F45C89,"Apple, Inc."
+F46412,Sony Interactive Entertainment Inc.
+F4650B,Espressif Inc.
+F465A6,"Apple, Inc."
+F46AD7,Microsoft Corporation
+F46D04,ASUSTek COMPUTER INC.
+F46D2F,"Tp-Link Technologies Co.,Ltd."
+F46D3F,Intel Corporate
+F47190,"Samsung Electronics Co.,Ltd"
+F47470,"Cisco Systems, Inc"
+F478AC,"Apple, Inc."
+F47B09,Intel Corporate
+F47B5E,"Samsung Electronics Co.,Ltd"
+F47D8F,"Google, Inc."
+F47DEF,"Samsung Electronics Co.,Ltd"
+F47F35,"Cisco Systems, Inc"
+F481C4,"Apple, Inc."
+F483CD,"Tp-Link Technologies Co.,Ltd."
+F4848D,"Tp-Link Technologies Co.,Ltd."
+F48974,"Cisco Systems, Inc"
+F48C50,Intel Corporate
+F48E38,Dell Inc.
+F492BF,Ubiquiti Inc
+F49634,Intel Corporate
+F49AB1,Hewlett Packard Enterprise
+F49F54,"Samsung Electronics Co.,Ltd"
+F4A1A6,"Apple, Inc."
+F4A310,"Apple, Inc."
+F4A475,Intel Corporate
+F4ACC1,"Cisco Systems, Inc"
+F4AFE7,"Apple, Inc."
+F4B301,Intel Corporate
+F4B599,"Apple, Inc."
+F4B821,"Cisco Systems, Inc"
+F4BD9E,"Cisco Systems, Inc"
+F4BEEC,"Apple, Inc."
+F4C248,"Samsung Electronics Co.,Ltd"
+F4C88A,Intel Corporate
+F4CBE7,"Apple, Inc."
+F4CE23,Intel Corporate
+F4CE46,Hewlett Packard
+F4CFA2,Espressif Inc.
+F4CFE2,"Cisco Systems, Inc"
+F4D108,Intel Corporate
+F4D488,"Apple, Inc."
+F4D9FB,"Samsung Electronics Co.,Ltd"
+F4DBE3,"Apple, Inc."
+F4DBE6,"Cisco Systems, Inc"
+F4DD06,"Samsung Electronics Co.,Ltd"
+F4E1FC,Hewlett Packard Enterprise
+F4E2C6,Ubiquiti Inc
+F4E8C7,"Apple, Inc."
+F4EA67,"Cisco Systems, Inc"
+F4EC38,"Tp-Link Technologies Co.,Ltd."
+F4EE08,Dell Inc.
+F4EE31,"Cisco Systems, Inc"
+F4F15A,"Apple, Inc."
+F4F26D,"Tp-Link Technologies Co.,Ltd."
+F4F309,"Samsung Electronics Co.,Ltd"
+F4F50B,TP-Link Systems Inc.
+F4F5D8,"Google, Inc."
+F4F5E8,"Google, Inc."
+F4F951,"Apple, Inc."
+F4FE3E,"Apple, Inc."
+F4FEFB,"Samsung Electronics Co.,Ltd"
+F801B4,LG Electronics
+F80377,"Apple, Inc."
+F80BCB,"Cisco Systems, Inc"
+F80C4E,Espressif Inc.
+F80CF3,LG Electronics (Mobile Communications)
+F80DAC,HP Inc.
+F80F6F,"Cisco Systems, Inc"
+F80FF9,"Google, Inc."
+F81093,"Apple, Inc."
+F814DD,"Cisco Systems, Inc"
+F81654,Intel Corporate
+F81A2B,"Google, Inc."
+F81A67,"Tp-Link Technologies Co.,Ltd."
+F81E49,"Apple, Inc."
+F81EDF,"Apple, Inc."
+F82793,"Apple, Inc."
+F82AE2,"Apple, Inc."
+F82D7C,"Apple, Inc."
+F832E4,ASUSTek COMPUTER INC.
+F83441,Intel Corporate
+F83869,LG Electronics
+F83880,"Apple, Inc."
+F83918,"Cisco Systems, Inc"
+F83F51,"Samsung Electronics Co.,Ltd"
+F84288,"Apple, Inc."
+F843EE,Espressif Inc.
+F8461C,Sony Interactive Entertainment Inc.
+F84D89,"Apple, Inc."
+F84E17,Sony Corporation
+F84E58,"Samsung Electronics Co.,Ltd"
+F84E73,"Apple, Inc."
+F84F57,"Cisco Systems, Inc"
+F854B8,Amazon Technologies Inc.
+F85971,Intel Corporate
+F85B1B,Espressif Inc.
+F85B6E,"Samsung Electronics Co.,Ltd"
+F85C24,Sonos Inc.
+F85EA0,Intel Corporate
+F860F0,Hewlett Packard Enterprise
+F86214,"Apple, Inc."
+F8633F,Intel Corporate
+F8665A,"Apple, Inc."
+F866F2,"Cisco Systems, Inc"
+F868FF,"Cisco Systems, Inc"
+F86BD9,"Cisco Systems, Inc"
+F86FB0,"Tp-Link Technologies Co.,Ltd."
+F86FC1,"Apple, Inc."
+F871A6,"Apple, Inc."
+F872EA,"Cisco Systems, Inc"
+F87394,Netgear
+F873DF,"Apple, Inc."
+F877B8,"Samsung Electronics Co.,Ltd"
+F87A41,"Cisco Systems, Inc"
+F87B20,"Cisco Systems, Inc"
+F87D76,"Apple, Inc."
+F884F2,"Samsung Electronics Co.,Ltd"
+F887F1,"Apple, Inc."
+F88C21,"Tp-Link Technologies Co.,Ltd."
+F88F07,"Samsung Electronics Co.,Ltd"
+F88FCA,"Google, Inc."
+F894C2,Intel Corporate
+F895C7,LG Electronics (Mobile Communications)
+F895EA,"Apple, Inc."
+F89E94,Intel Corporate
+F8A5C5,"Cisco Systems, Inc"
+F8A73A,"Cisco Systems, Inc"
+F8A986,Microsoft Corporation
+F8A9D0,LG Electronics (Mobile Communications)
+F8AC65,Intel Corporate
+F8B156,Dell Inc.
+F8B1DD,"Apple, Inc."
+F8B22C,"Roku, Inc"
+F8B3B7,Espressif Inc.
+F8B46A,Hewlett Packard
+F8B54D,Intel Corporate
+F8B7E2,"Cisco Systems, Inc"
+F8BC12,Dell Inc.
+F8C288,"Cisco Systems, Inc"
+F8C3CC,"Apple, Inc."
+F8C650,"Cisco Systems, Inc"
+F8C903,"Tp-Link Technologies Co.,Ltd."
+F8CAB8,Dell Inc.
+F8CB15,"Apple, Inc."
+F8CE21,"Tp-Link Technologies Co.,Ltd."
+F8CF52,Intel Corporate
+F8D0AC,Sony Interactive Entertainment Inc.
+F8D0BD,"Samsung Electronics Co.,Ltd"
+F8D111,"Tp-Link Technologies Co.,Ltd."
+F8D3F0,"Apple, Inc."
+F8D9B8,"Open Mesh, Inc."
+F8DB88,Dell Inc.
+F8E252,"Apple, Inc."
+F8E4E3,Intel Corporate
+F8E57E,"Cisco Systems, Inc"
+F8E5CE,"Apple, Inc."
+F8E61A,"Samsung Electronics Co.,Ltd"
+F8E94E,"Apple, Inc."
+F8E94F,"Cisco Systems, Inc"
+F8EDFC,HP Inc.
+F8F1E6,"Samsung Electronics Co.,Ltd"
+F8F21E,Intel Corporate
+F8F58C,"Apple, Inc."
+F8FCE1,Amazon Technologies Inc.
+F8FE5E,Intel Corporate
+F8FFC2,"Apple, Inc."
+FA63E1,Samsung Electronics (UK) Ltd
+FC012C,Espressif Inc.
+FC039F,"Samsung Electronics Co.,Ltd"
+FC0F76,Amazon Technologies Inc.
+FC0FE6,Sony Interactive Entertainment Inc.
+FC15B4,Hewlett Packard
+FC183C,"Apple, Inc."
+FC1910,"Samsung Electronics Co.,Ltd"
+FC1A46,"Samsung Electronics Co.,Ltd"
+FC1D43,"Apple, Inc."
+FC2120,"Cisco Systems, Inc"
+FC253F,"Apple, Inc."
+FC2A9C,"Apple, Inc."
+FC315D,"Apple, Inc."
+FC3497,ASUSTek COMPUTER INC.
+FC3FDB,Hewlett Packard
+FC4116,"Google, Inc."
+FC4203,"Samsung Electronics Co.,Ltd"
+FC4482,Intel Corporate
+FC47D8,"Apple, Inc."
+FC492D,Amazon Technologies Inc.
+FC4CEA,Dell Inc.
+FC4EA4,"Apple, Inc."
+FC5557,"Apple, Inc."
+FC589A,"Cisco Systems, Inc"
+FC5B39,"Cisco Systems, Inc"
+FC643A,"Samsung Electronics Co.,Ltd"
+FC65DE,Amazon Technologies Inc.
+FC66CF,"Apple, Inc."
+FC6D77,Intel Corporate
+FC6E83,"Samsung Electronics Co.,Ltd"
+FC7288,"Cisco Systems, Inc"
+FC7774,Intel Corporate
+FC7FF1,Hewlett Packard Enterprise
+FC8827,"Apple, Inc."
+FC8C11,Microsoft Corporation
+FC8F90,"Samsung Electronics Co.,Ltd"
+FC915D,"Google, Inc."
+FC936B,"Samsung Electronics Co.,Ltd"
+FC9947,"Cisco Systems, Inc"
+FC9CA7,"Apple, Inc."
+FC9DD2,"Apple, Inc."
+FC9E53,Intel Corporate
+FCA13E,"Samsung Electronics Co.,Ltd"
+FCA183,Amazon Technologies Inc.
+FCA5C8,"Apple, Inc."
+FCA621,"Samsung Electronics Co.,Ltd"
+FCA667,Amazon Technologies Inc.
+FCAA81,"Apple, Inc."
+FCAAB6,"Samsung Electronics Co.,Ltd"
+FCB214,"Apple, Inc."
+FCB3AA,Intel Corporate
+FCB3BC,Intel Corporate
+FCB467,Espressif Inc.
+FCB6D8,"Apple, Inc."
+FCC233,ASUSTek COMPUTER INC.
+FCC734,"Samsung Electronics Co.,Ltd"
+FCCA40,Sony Interactive Entertainment Inc.
+FCD733,"Tp-Link Technologies Co.,Ltd."
+FCD749,Amazon Technologies Inc.
+FCD848,"Apple, Inc."
+FCDE90,"Samsung Electronics Co.,Ltd"
+FCE26C,"Apple, Inc."
+FCE5F0,"Samsung Electronics Co.,Ltd"
+FCE8C0,Espressif Inc.
+FCE998,"Apple, Inc."
+FCE9D8,Amazon Technologies Inc.
+FCECDA,Ubiquiti Inc
+FCF136,"Samsung Electronics Co.,Ltd"
+FCF152,Sony Corporation
+FCF5C4,Espressif Inc.
+FCF8AE,Intel Corporate
+FCFBFB,"Cisco Systems, Inc"
+FCFC48,"Apple, Inc."
