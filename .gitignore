@@ -44,3 +44,18 @@ coverage.out
 # os
 .DS_Store
 Thumbs.db
+
+# ios relay
+relay/ios/**/xcuserdata/
+relay/ios/**/*.xcuserstate
+relay/ios/**/DerivedData/
+relay/ios/**/build/
+**/*.xcworkspace/xcshareddata/swiftpm/
+.swiftpm/
+*.ipa
+*.dSYM.zip
+Pods/
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.cer
