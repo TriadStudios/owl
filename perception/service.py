@@ -4,17 +4,23 @@ import threading
 from datetime import datetime, timezone
 
 import cv2
+import numpy as np
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from starlette.concurrency import run_in_threadpool
 
+import capture
+import leds
 import segment
 
 MAX_IMAGE_BYTES = 20 * 2**20
+MAX_BURST_S = 30
 POLYGON_EPSILON_PX = 1.5
+FRAMES = segment.ROOT / "data" / "frames"
 
 app = FastAPI()
 analyze_lock = threading.Lock()
+camera_lock = threading.Lock()
 
 
 def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
@@ -56,17 +62,71 @@ def health() -> dict[str, object]:
     }
 
 
-@app.post("/segment")
-async def segment_frame(request: Request) -> dict[str, object]:
-    image_bytes = await request.body()
-    if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
-        raise HTTPException(413 if image_bytes else 400, f"send one image of at most {MAX_IMAGE_BYTES} bytes as the request body")
+def describe_upload(image_bytes: bytes) -> dict[str, object]:
+    result = describe(image_bytes)
+    image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    result["leds"] = leds.leds([image], [port["box"] for port in result["ports"]])
+    return result
+
+
+def describe_camera(burst: float) -> dict[str, object]:
+    with camera_lock, capture.connect(segment.load_env()) as mini:
+        ok, encoded = cv2.imencode(".png", next(capture.frames(mini, 0)))
+        if not ok:
+            raise ValueError("failed to encode the camera frame")
+        result = describe(encoded.tobytes())
+        FRAMES.mkdir(parents=True, exist_ok=True)
+        (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
+        result["leds"] = leds.leds(capture.frames(mini, burst), [port["box"] for port in result["ports"]])
+    return result
+
+
+def watch(regions: list[list[int]], seconds: float) -> dict[str, object]:
+    changes = [0.0] * len(regions)
+    base = None
+    with camera_lock, capture.connect(segment.load_env()) as mini:
+        for frame in capture.frames(mini, seconds):
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
+            if base is None:
+                base = gray
+                continue
+            for i, (x0, y0, x1, y1) in enumerate(regions):
+                changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
+    return {"changes": [round(c, 2) for c in changes]}
+
+
+async def run(fn, *args) -> dict[str, object]:
     try:
-        return await run_in_threadpool(describe, image_bytes)
+        return await run_in_threadpool(fn, *args)
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from error
+
+
+@app.post("/segment")
+async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]:
+    image_bytes = await request.body()
+    if burst:
+        if image_bytes or not 0 < burst <= MAX_BURST_S:
+            raise HTTPException(400, f"burst takes no body and at most {MAX_BURST_S} s")
+        return await run(describe_camera, burst)
+    if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(413 if image_bytes else 400, f"send one image of at most {MAX_IMAGE_BYTES} bytes as the request body")
+    return await run(describe_upload, image_bytes)
+
+
+@app.post("/motion")
+async def motion(request: Request) -> dict[str, object]:
+    body = await request.json()
+    regions, seconds = body.get("regions"), body.get("seconds")
+    if (
+        not isinstance(regions, list) or not regions
+        or not all(isinstance(r, list) and len(r) == 4 and all(isinstance(v, int) and v >= 0 for v in r) and r[0] < r[2] and r[1] < r[3] for r in regions)
+        or not isinstance(seconds, (int, float)) or not 0 < seconds <= MAX_BURST_S
+    ):
+        raise HTTPException(400, f"want {{regions: [[x0, y0, x1, y1], ...] as non-negative ints, seconds: (0, {MAX_BURST_S}]}}")
+    return await run(watch, regions, float(seconds))
 
 
 def main() -> None:
