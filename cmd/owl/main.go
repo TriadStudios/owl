@@ -36,7 +36,6 @@ const (
 	maxPingTargets = 4
 	pingersPerIP   = 4
 	enrollBurst    = 10 * time.Second
-	touchWindow    = 8 * time.Second
 	touchMinChange = 12.0
 	touchDominance = 1.5
 	baselinePath   = "data/baseline.json"
@@ -194,7 +193,7 @@ func run(args []string) error {
 		}
 		boxes := make([][4]float64, len(frame.Ports))
 		for i, c := range frame.Ports {
-			boxes[i] = c.Box
+			boxes[i] = [4]float64{c.Box[0], frame.Row[0], c.Box[2], frame.Row[1]}
 		}
 		var windows []enroll.Window
 		for range passiveWindows {
@@ -342,16 +341,23 @@ func run(args []string) error {
 		for i := range ports {
 			p := &ports[i]
 			r, cabled := regionOf[p.Num]
-			if p.Status != enroll.Unknown || !cabled {
+			if p.Status == enroll.Verified || !cabled {
 				continue
 			}
 			if !human {
 				p.Reason += "; no human at the terminal"
 				continue
 			}
-			fmt.Printf("touch the cable in port %d: press Enter, then touch it within %s (s + Enter skips): ", p.Num, touchWindow)
-			line, err := stdin.ReadString('\n')
+			if err := cam.MotionStart(ctx, regions); err != nil {
+				return err
+			}
+			fmt.Printf("touch the cable in port %d, then press Enter (s + Enter skips): ", p.Num)
+			line, readErr := stdin.ReadString('\n')
+			changes, err := cam.MotionStop(ctx, len(regions))
 			if err != nil {
+				return err
+			}
+			if readErr != nil {
 				human = false
 				p.Reason += "; no human at the terminal"
 				fmt.Println()
@@ -360,10 +366,6 @@ func run(args []string) error {
 			if strings.TrimSpace(line) == "s" {
 				p.Reason += "; human skipped"
 				continue
-			}
-			changes, err := cam.Motion(ctx, regions, touchWindow)
-			if err != nil {
-				return err
 			}
 			var other float64
 			for j, ch := range changes {
@@ -388,6 +390,11 @@ func run(args []string) error {
 			if err := nb.RecordPort(iface.ID, string(p.Status), frame.FrameHash, p.VerifiedAt); err != nil {
 				return err
 			}
+			if p.Status == enroll.Unknown && iface.Cable != nil {
+				if err := nb.MarkCable(iface.Cable.ID, string(enroll.Unknown)); err != nil {
+					return err
+				}
+			}
 			if !p.Occupied || p.Status == enroll.Unknown {
 				continue
 			}
@@ -409,7 +416,7 @@ func run(args []string) error {
 				if far == nil {
 					continue
 				}
-				if err := nb.Connect(iface, far); err != nil {
+				if err := nb.Connect(iface, far, string(p.Status)); err != nil {
 					return err
 				}
 				p.CableTo = far.Device.Name + " " + far.Name

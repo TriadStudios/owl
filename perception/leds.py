@@ -3,7 +3,7 @@ from collections.abc import Iterable
 import cv2
 import numpy as np
 
-GREEN = ((31, 40, 170), (90, 255, 255))
+GREEN = ((31, 30, 170), (90, 255, 255))
 AMBER = ((5, 80, 170), (30, 255, 255))
 LIT_FRACTION = 0.02
 LINK_FRAMES = 0.5

@@ -221,6 +221,8 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     row = max(runs, key=len, default=[])
     if len(row) != COPPER_PORTS:
         raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
+    for port in row:
+        port["row_band"] = [top, bottom]
     return row
 
 

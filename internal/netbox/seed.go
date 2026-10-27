@@ -30,7 +30,7 @@ func Seed(c *Client, in SeedInput) (int, error) {
 		}
 	}
 	for _, f := range []struct{ name, kind string }{{"owl_status", "text"}, {"owl_evidence", "text"}, {"owl_verified_at", "datetime"}} {
-		if _, err := c.Ensure("extras/custom-fields/", url.Values{"name": {f.name}}, map[string]any{"name": f.name, "type": f.kind, "object_types": []string{"dcim.interface"}}); err != nil {
+		if _, err := c.Ensure("extras/custom-fields/", url.Values{"name": {f.name}}, map[string]any{"name": f.name, "type": f.kind, "object_types": []string{"dcim.interface", "dcim.cable"}}); err != nil {
 			return 0, err
 		}
 	}

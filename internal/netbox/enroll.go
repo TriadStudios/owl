@@ -46,7 +46,11 @@ func (c *Client) RecordPort(iface int, status, evidence string, verifiedAt time.
 	}, nil)
 }
 
-func (c *Client) Connect(a, b *Interface) error {
+func (c *Client) MarkCable(cable int, status string) error {
+	return c.Do(http.MethodPatch, fmt.Sprintf("dcim/cables/%d/", cable), nil, map[string]any{"custom_fields": map[string]any{"owl_status": status}}, nil)
+}
+
+func (c *Client) Connect(a, b *Interface, status string) error {
 	for _, end := range []*Interface{a, b} {
 		if end.Cable == nil {
 			continue
@@ -57,7 +61,7 @@ func (c *Client) Connect(a, b *Interface) error {
 		}
 		if len(existing.A) == 1 && len(existing.B) == 1 &&
 			(existing.A[0].ObjectID == a.ID && existing.B[0].ObjectID == b.ID || existing.A[0].ObjectID == b.ID && existing.B[0].ObjectID == a.ID) {
-			return nil
+			return c.MarkCable(existing.ID, status)
 		}
 		if err := c.Do(http.MethodDelete, fmt.Sprintf("dcim/cables/%d/", existing.ID), nil, nil, nil); err != nil {
 			return err
@@ -67,6 +71,7 @@ func (c *Client) Connect(a, b *Interface) error {
 		"a_terminations": []map[string]any{{"object_type": "dcim.interface", "object_id": a.ID}},
 		"b_terminations": []map[string]any{{"object_type": "dcim.interface", "object_id": b.ID}},
 		"status":         "connected",
+		"custom_fields":  map[string]any{"owl_status": status},
 	}, nil)
 }
 

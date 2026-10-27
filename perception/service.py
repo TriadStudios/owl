@@ -15,6 +15,8 @@ import segment
 
 MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
+MAX_RECORD_S = 300
+RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
 POLYGON_EPSILON_PX = 1.5
 FRAMES = segment.ROOT / "data" / "frames"
@@ -22,6 +24,7 @@ FRAMES = segment.ROOT / "data" / "frames"
 app = FastAPI()
 analyze_lock = threading.Lock()
 camera_lock = threading.Lock()
+recording: dict[str, object] = {}
 
 
 def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
@@ -49,7 +52,13 @@ def describe(image_bytes: bytes) -> dict[str, object]:
             outline = cv2.approxPolyDP(max(contours, key=cv2.contourArea), POLYGON_EPSILON_PX, True)
             entry["cable_polygon"] = [to_frame(float(x), float(y), rect) for x, y in outline.reshape(-1, 2)]
         ports.append(entry)
-    return {"ports": ports, "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
+    row_top, row_bottom = row[0]["row_band"]
+    return {"ports": ports, "row": [row_top / 2 + rect[1], row_bottom / 2 + rect[1]], "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
+
+
+def led_boxes(result: dict[str, object]) -> list[list[float]]:
+    top, bottom = result["row"]
+    return [[port["box"][0], top, port["box"][2], bottom] for port in result["ports"]]
 
 
 @app.get("/health")
@@ -66,7 +75,7 @@ def health() -> dict[str, object]:
 def describe_upload(image_bytes: bytes) -> dict[str, object]:
     result = describe(image_bytes)
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
-    result["leds"] = leds.leds([image], [port["box"] for port in result["ports"]])
+    result["leds"] = leds.leds([image], led_boxes(result))
     return result
 
 
@@ -84,22 +93,56 @@ def describe_camera(burst: float) -> dict[str, object]:
                     raise ValueError(f"{CAMERA_ATTEMPTS} camera frames rejected, last: {error}") from error
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
-        result["leds"] = leds.leds(capture.frames(mini, burst), [port["box"] for port in result["ports"]])
+        result["leds"] = leds.leds(capture.frames(mini, burst), led_boxes(result))
     return result
 
 
-def watch(regions: list[list[int]], seconds: float) -> dict[str, object]:
+def record(regions: list[list[int]], ready: threading.Event, stop: threading.Event, state: dict[str, object]) -> None:
     changes = [0.0] * len(regions)
-    base = None
-    with camera_lock, capture.connect(segment.load_env()) as mini:
-        for frame in capture.frames(mini, seconds):
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
-            if base is None:
-                base = gray
-                continue
-            for i, (x0, y0, x1, y1) in enumerate(regions):
-                changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
-    return {"changes": [round(c, 2) for c in changes]}
+    state["changes"] = changes
+    try:
+        with camera_lock, capture.connect(segment.load_env()) as mini:
+            base = None
+            for frame in capture.frames(mini, MAX_RECORD_S):
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
+                if base is None:
+                    base = gray
+                    ready.set()
+                for i, (x0, y0, x1, y1) in enumerate(regions):
+                    changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
+                if stop.is_set():
+                    return
+    except Exception as error:
+        state["error"] = str(error)
+    finally:
+        ready.set()
+
+
+def start_recording(regions: list[list[int]]) -> dict[str, object]:
+    if recording.get("thread") is not None and recording["thread"].is_alive():
+        raise ValueError("a motion recording is already running")
+    ready, stop = threading.Event(), threading.Event()
+    recording.clear()
+    recording["stop"] = stop
+    recording["thread"] = threading.Thread(target=record, args=(regions, ready, stop, recording), daemon=True)
+    recording["thread"].start()
+    if not ready.wait(RECORD_START_TIMEOUT_S):
+        stop.set()
+        raise RuntimeError(f"camera gave no frame within {RECORD_START_TIMEOUT_S} s")
+    if "error" in recording:
+        raise RuntimeError(recording["error"])
+    return {"recording": True}
+
+
+def stop_recording() -> dict[str, object]:
+    thread = recording.get("thread")
+    if thread is None:
+        raise ValueError("no motion recording to stop")
+    recording["stop"].set()
+    thread.join(RECORD_START_TIMEOUT_S)
+    if "error" in recording:
+        raise RuntimeError(recording["error"])
+    return {"changes": [round(c, 2) for c in recording["changes"]]}
 
 
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
@@ -128,17 +171,19 @@ async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]
     return await run(describe_upload, image_bytes)
 
 
-@app.post("/motion")
-async def motion(request: Request) -> dict[str, object]:
-    body = await request.json()
-    regions, seconds = body.get("regions"), body.get("seconds")
-    if (
-        not isinstance(regions, list) or not regions
-        or not all(isinstance(r, list) and len(r) == 4 and all(isinstance(v, int) and v >= 0 for v in r) and r[0] < r[2] and r[1] < r[3] for r in regions)
-        or not isinstance(seconds, (int, float)) or not 0 < seconds <= MAX_BURST_S
+@app.post("/motion/start")
+async def motion_start(request: Request) -> dict[str, object]:
+    regions = (await request.json()).get("regions")
+    if not isinstance(regions, list) or not regions or not all(
+        isinstance(r, list) and len(r) == 4 and all(isinstance(v, int) and v >= 0 for v in r) and r[0] < r[2] and r[1] < r[3] for r in regions
     ):
-        raise HTTPException(400, f"want {{regions: [[x0, y0, x1, y1], ...] as non-negative ints, seconds: (0, {MAX_BURST_S}]}}")
-    return await run(watch, regions, float(seconds))
+        raise HTTPException(400, "want {regions: [[x0, y0, x1, y1], ...] as non-negative ints}")
+    return await run(start_recording, regions)
+
+
+@app.post("/motion/stop")
+async def motion_stop() -> dict[str, object]:
+    return await run(stop_recording)
 
 
 @app.post("/leds")

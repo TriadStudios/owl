@@ -14,9 +14,10 @@ import (
 const maxResponseBytes = 4 << 20
 
 type Result struct {
-	Ports     []Port `json:"ports"`
-	LEDs      []LED  `json:"leds"`
-	FrameHash string `json:"frame_hash"`
+	Ports     []Port     `json:"ports"`
+	Row       [2]float64 `json:"row"`
+	LEDs      []LED      `json:"leds"`
+	FrameHash string     `json:"frame_hash"`
 }
 
 type LED struct {
@@ -86,12 +87,20 @@ func (c *Client) LEDs(ctx context.Context, boxes [][4]float64, window time.Durat
 	return res.LEDs, nil
 }
 
-func (c *Client) Motion(ctx context.Context, regions [][4]int, window time.Duration) ([]float64, error) {
-	req, err := json.Marshal(map[string]any{"regions": regions, "seconds": window.Seconds()})
+func (c *Client) MotionStart(ctx context.Context, regions [][4]int) error {
+	req, err := json.Marshal(map[string]any{"regions": regions})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	body, err := c.post(ctx, "/motion", req, "application/json")
+	body, err := c.post(ctx, "/motion/start", req, "application/json")
+	if err != nil {
+		return err
+	}
+	return body.Close()
+}
+
+func (c *Client) MotionStop(ctx context.Context, regions int) ([]float64, error) {
+	body, err := c.post(ctx, "/motion/stop", nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +111,8 @@ func (c *Client) Motion(ctx context.Context, regions [][4]int, window time.Durat
 	if err := json.NewDecoder(io.LimitReader(body, maxResponseBytes)).Decode(&res); err != nil {
 		return nil, fmt.Errorf("perception: decode motion: %w", err)
 	}
-	if len(res.Changes) != len(regions) {
-		return nil, fmt.Errorf("perception: %d motion values for %d regions", len(res.Changes), len(regions))
+	if len(res.Changes) != regions {
+		return nil, fmt.Errorf("perception: %d motion values for %d regions", len(res.Changes), regions)
 	}
 	return res.Changes, nil
 }
@@ -146,6 +155,9 @@ func Decode(r io.Reader) (*Result, error) {
 		if p.Box[2] <= p.Box[0] || p.Box[3] <= p.Box[1] {
 			return nil, fmt.Errorf("perception: port %d has an empty box", p.Num)
 		}
+	}
+	if len(res.Ports) > 0 && res.Row[1] <= res.Row[0] {
+		return nil, fmt.Errorf("perception: empty port row band %v", res.Row)
 	}
 	for i, l := range res.LEDs {
 		if l.Num != i+1 || l.ActivityEnergy < 0 {

@@ -30,7 +30,7 @@ class FixtureFrame(unittest.TestCase):
     def test_link_leds_lit_only_on_plugged_ports(self) -> None:
         frame = cv2.imread(str(TESTDATA / "switch-face.png"))
         x0, y0 = self.sam["rect"][:2]
-        boxes = [[a / 2 + x0, b / 2 + y0, c / 2 + x0, d / 2 + y0] for a, b, c, d in (port["box"] for port in self.row)]
+        boxes = [[p["box"][0] / 2 + x0, p["row_band"][0] / 2 + y0, p["box"][2] / 2 + x0, p["row_band"][1] / 2 + y0] for p in self.row]
         self.assertEqual([led["link_on"] for led in leds.leds([frame], boxes)], [True] * 3 + [False] * 5)
 
 
