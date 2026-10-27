@@ -15,6 +15,7 @@ from meta_sam_parser import CompletedOutcome, decode_mask_to_raster, image_segme
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "sam-cache"
+SPEND_PATH = CACHE / "spend.json"
 ROI_PATH = ROOT / "data" / "port-roi.json"
 ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
 META_API_URL = "https://api.meta.ai/v1/responses"
@@ -57,11 +58,10 @@ def iou(a: list[float], b: list[float]) -> float:
 def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
-        sys.exit("OWL_META_API_KEY missing from .env.local")
+        raise RuntimeError("OWL_META_API_KEY missing from .env.local")
     cap = int(env.get("OWL_SAM_DAILY_CAP", "2000"))
 
     CACHE.mkdir(parents=True, exist_ok=True)
-    spend_path = CACHE / "spend.json"
     data_url = "data:image/png;base64," + base64.b64encode(image_bytes).decode()
 
     raw: dict[str, str] = {}
@@ -71,10 +71,10 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         if cache_path.exists():
             raw[prompt] = json.loads(cache_path.read_text())["output_text"]
             continue
-        spend: dict[str, int] = json.loads(spend_path.read_text()) if spend_path.exists() else {}
+        spend: dict[str, int] = json.loads(SPEND_PATH.read_text()) if SPEND_PATH.exists() else {}
         today = datetime.now(timezone.utc).date().isoformat()
         if spend.get(today, 0) >= cap:
-            sys.exit(f"SAM daily cap reached: {spend[today]}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
+            raise RuntimeError(f"SAM daily cap reached: {spend[today]}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
 
         body = {
             "model": "sam-3.1",
@@ -95,13 +95,13 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
             with urllib.request.urlopen(request, timeout=120) as response:
                 reply = json.load(response)
         except urllib.error.HTTPError as error:
-            sys.exit(f"Meta SAM API returned {error.code} for '{prompt}': {error.read().decode(errors='replace')[:500]}")
+            raise RuntimeError(f"Meta SAM API returned {error.code} for '{prompt}': {error.read().decode(errors='replace')[:500]}")
 
         spend[today] = spend.get(today, 0) + 1
-        spend_path.write_text(json.dumps(spend))
+        SPEND_PATH.write_text(json.dumps(spend))
         billed += 1
         if reply.get("status") != "completed":
-            sys.exit(f"Meta SAM API response for '{prompt}' not completed: {json.dumps(reply)[:500]}")
+            raise RuntimeError(f"Meta SAM API response for '{prompt}' not completed: {json.dumps(reply)[:500]}")
         raw[prompt] = "".join(
             part.get("text", "")
             for item in reply.get("output", [])
@@ -184,7 +184,7 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     top, bottom = int(round(row_y - socket_height / 2)), int(round(row_y + socket_height / 2))
 
     candidates = [
-        {"box": s["box"], "occupied": False, "cable": None}
+        {"box": s["box"], "occupied": False, "cable": None, "score": s["score"]}
         for s, y in zip(sockets, centers_y)
         if abs(y - row_y) <= socket_height / 2
     ]
@@ -202,7 +202,7 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
                     if min(c["box"][2], box[2]) - max(c["box"][0], box[0])
                     < 0.5 * min(c["box"][2] - c["box"][0], box[2] - box[0])
                 ]
-                candidates.append({"box": box, "occupied": True, "cable": cable_index})
+                candidates.append({"box": box, "occupied": True, "cable": cable_index, "score": cable["score"]})
 
     candidates.sort(key=lambda c: c["box"][0] + c["box"][2])
     runs: list[list[dict[str, object]]] = []
@@ -218,34 +218,37 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     return row
 
 
-def segment(backend: str, image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[str, list[Instance]]:
-    if backend == "local":
+def load_env() -> dict[str, str]:
+    env_file = ROOT / ".env.local"
+    env = dict(line.split("=", 1) for line in env_file.read_text().splitlines() if "=" in line) if env_file.exists() else {}
+    env.update(os.environ)
+    return env
+
+
+def backend(env: dict[str, str]) -> str:
+    name = env.get("OWL_SAM_BACKEND", "meta-api").strip()
+    if name not in ("meta-api", "local"):
+        raise ValueError(f"unknown OWL_SAM_BACKEND '{name}', expected meta-api or local")
+    return name
+
+
+def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[str, list[Instance]]:
+    if backend(env) == "local":
         return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     return meta_api(image_bytes, image.shape[0], image.shape[1], env)
 
 
-def main() -> None:
-    if len(sys.argv) != 2:
-        sys.exit("usage: segment.py <image>")
-    image_path = Path(sys.argv[1])
-    image_bytes = image_path.read_bytes()
+def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
-        sys.exit(f"cannot decode image {image_path}")
+        raise ValueError("cannot decode image")
     height, width = image.shape[:2]
-
-    env_file = ROOT / ".env.local"
-    env = dict(line.split("=", 1) for line in env_file.read_text().splitlines() if "=" in line) if env_file.exists() else {}
-    env.update(os.environ)
-    backend = env.get("OWL_SAM_BACKEND", "meta-api").strip()
-    if backend not in ("meta-api", "local"):
-        sys.exit(f"unknown OWL_SAM_BACKEND '{backend}', expected meta-api or local")
 
     if not ROI_PATH.exists():
         try:
-            full_row = ports(segment(backend, image_bytes, image, env))
+            full_row = ports(segment(image_bytes, image, env))
         except ValueError as error:
-            sys.exit(f"cannot place the port-row crop from {image_path.name}: {error}")
+            raise ValueError(f"cannot place the port-row crop: {error}") from error
         box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
         box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
         rect = [
@@ -255,23 +258,34 @@ def main() -> None:
             min(int(max(p["box"][3] for p in full_row) + ROI_PAD_DOWN * box_height), height),
         ]
         ROI_PATH.parent.mkdir(parents=True, exist_ok=True)
-        ROI_PATH.write_text(json.dumps({"rect": rect, "frame_size": [height, width], "source": image_path.name}))
+        ROI_PATH.write_text(json.dumps({"rect": rect, "frame_size": [height, width]}))
         print(f"port-row crop {rect} stored in {ROI_PATH.name}")
     roi = json.loads(ROI_PATH.read_text())
     if roi["frame_size"] != [height, width]:
-        sys.exit(f"{ROI_PATH.name} was made for {roi['frame_size']} frames, this one is {[height, width]}; delete it to recompute")
+        raise ValueError(f"{ROI_PATH.name} was made for {roi['frame_size']} frames, this one is {[height, width]}; delete it to recompute")
     x0, y0, x1, y1 = roi["rect"]
     crop = cv2.resize(image[y0:y1, x0:x1], None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     ok, encoded = cv2.imencode(".png", crop)
     if not ok:
-        sys.exit("failed to encode the port-row crop")
+        raise ValueError("failed to encode the port-row crop")
 
     start = time.perf_counter()
-    results = segment(backend, encoded.tobytes(), crop, env)
-    elapsed = time.perf_counter() - start
+    results = segment(encoded.tobytes(), crop, env)
+    return crop, results, roi["rect"], time.perf_counter() - start
+
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        sys.exit("usage: segment.py <image>")
+    image_path = Path(sys.argv[1])
+    env = load_env()
+    try:
+        crop, results, rect, elapsed = analyze(image_path.read_bytes(), env)
+    except (ValueError, RuntimeError) as error:
+        sys.exit(f"{image_path.name}: {error}")
 
     overlay = crop.copy()
-    print(f"crop {roi['rect']} at 2x, coordinates below are crop pixels")
+    print(f"crop {rect} at 2x, coordinates below are crop pixels")
     for prompt, instances in results.items():
         print(f"{prompt}: {len(instances)}")
         for instance in sorted(instances, key=lambda instance: instance["box"][0] + instance["box"][2]):
@@ -310,7 +324,7 @@ def main() -> None:
     if not cv2.imwrite(str(out), overlay):
         sys.exit(f"failed to write {out}")
     print(f"overlay {out}")
-    print(f"segment {elapsed:.2f} s ({backend})")
+    print(f"segment {elapsed:.2f} s ({backend(env)})")
 
 
 if __name__ == "__main__":
