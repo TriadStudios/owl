@@ -7,6 +7,7 @@ import (
 
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/perception"
+	"github.com/triadstudios/owl/internal/policy"
 )
 
 func TestJoinFixtureFrameAllCopperConsistent(t *testing.T) {
@@ -44,8 +45,22 @@ func TestJoinFixtureFrameAllCopperConsistent(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	rulesFile, err := os.Open("../../policy/rules.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rulesFile.Close()
+	rules, err := policy.Load(rulesFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ports, err := Join(cam, state, state, ids, rules)
+	if err != nil {
+		t.Fatal(err)
+	}
 	byNum := map[int]Port{}
-	for _, p := range Join(cam, state, ids) {
+	for _, p := range ports {
 		byNum[p.Num] = p
 	}
 	for n := 1; n <= 8; n++ {

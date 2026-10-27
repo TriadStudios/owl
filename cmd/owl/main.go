@@ -15,12 +15,14 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/perception"
+	"github.com/triadstudios/owl/internal/policy"
 	"github.com/triadstudios/owl/internal/reconcile"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL]"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N [-leases CSV] [-rules FILE]"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -34,8 +36,8 @@ func run(args []string) error {
 	switch {
 	case len(args) >= 2 && args[0] == "snmp":
 		cmd, args = "snmp "+args[1], args[2:]
-	case len(args) >= 1 && args[0] == "reconcile":
-		cmd, args = "reconcile", args[1:]
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast"):
+		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
 	}
@@ -50,6 +52,8 @@ func run(args []string) error {
 	image := fset.String("image", "", "switch face frame")
 	leases := fset.String("leases", os.Getenv("OWL_DHCP_LEASES"), "DHCP client list CSV")
 	perceptionURL := fset.String("perception", "http://127.0.0.1:8701", "perception service URL")
+	rulesPath := fset.String("rules", "policy/rules.yaml", "policy rules file")
+	port := fset.Int("port", 0, "physical port number")
 	if err := fset.Parse(args); err != nil {
 		return err
 	}
@@ -101,8 +105,8 @@ func run(args []string) error {
 		}
 		return tw.Flush()
 	case "reconcile":
-		if *image == "" || *leases == "" {
-			return errors.New("reconcile needs -image and -leases (or OWL_DHCP_LEASES)")
+		if *image == "" {
+			return errors.New("reconcile needs -image")
 		}
 		frame, err := os.ReadFile(*image)
 		if err != nil {
@@ -113,23 +117,26 @@ func run(args []string) error {
 		if err != nil {
 			return err
 		}
-		state, err := discovery.Poll(cfg)
+		ids, rules, err := loadPolicyInputs(*leases, *rulesPath)
 		if err != nil {
 			return err
 		}
-		f, err := os.Open(*leases)
+		prev, cur, err := pollTwice(cfg, rules.LivenessWindow)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		ids, err := discovery.LoadIdentities(f)
+		ports, err := reconcile.Join(cam, prev, cur, ids, rules)
 		if err != nil {
-			return fmt.Errorf("%s: %w", *leases, err)
+			return err
 		}
 		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(tw, "PORT\tCAMERA\tSWITCH\tSTATUS\tDEVICE(S)\tSOURCES")
-		for _, p := range reconcile.Join(cam, state, ids) {
-			cells := []string{p.Camera, p.Switch, string(p.Status), p.Summary, strings.Join(p.Sources, ",")}
+		fmt.Fprintln(tw, "PORT\tCAMERA\tSWITCH\tSTATUS\tVERDICT\tDEVICE(S)\tSOURCES")
+		for _, p := range ports {
+			var verdict, downstream string
+			if p.Blast != nil {
+				verdict, downstream = string(p.Blast.Verdict), p.Blast.Downstream
+			}
+			cells := []string{p.Camera, p.Switch, string(p.Status), verdict, downstream, strings.Join(p.Sources, ",")}
 			for i, c := range cells {
 				if c == "" {
 					cells[i] = "-"
@@ -138,9 +145,77 @@ func run(args []string) error {
 			fmt.Fprintf(tw, "%d\t%s\n", p.Num, strings.Join(cells, "\t"))
 		}
 		return tw.Flush()
+	case "blast":
+		if *port <= 0 {
+			return errors.New("blast needs -port N")
+		}
+		ids, rules, err := loadPolicyInputs(*leases, *rulesPath)
+		if err != nil {
+			return err
+		}
+		prev, cur, err := pollTwice(cfg, rules.LivenessWindow)
+		if err != nil {
+			return err
+		}
+		card, err := blast.Assess(*port, prev, cur, ids, rules)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("port %d: %s\n", card.Port, strings.ToUpper(string(card.Verdict)))
+		fmt.Printf("  downstream   %s\n", card.Downstream)
+		fmt.Printf("  behind       %d MAC(s), LLDP neighbor %q\n", card.Behind, card.Neighbor)
+		fmt.Printf("  liveness     %s (%d B in %s)\n", card.Liveness, card.DeltaBytes, card.Window.Round(time.Second))
+		fmt.Printf("  criticality  %s\n", strings.Join(card.Criticality, ", "))
+		fmt.Println("  devices")
+		for _, d := range card.Devices {
+			fmt.Printf("    %s  %-15s  %-20s  %s  [%s]\n", d.MAC, d.IP, d.Hostname, d.Vendor, strings.Join(d.Sources, ","))
+		}
+		fmt.Println("  inputs")
+		for _, in := range card.Inputs {
+			fmt.Printf("    - %s\n", in)
+		}
+		return nil
 	default:
 		return errors.New(usage)
 	}
+}
+
+func loadPolicyInputs(leasesPath, rulesPath string) (*discovery.Identities, policy.Rules, error) {
+	if leasesPath == "" {
+		return nil, policy.Rules{}, errors.New("need -leases or OWL_DHCP_LEASES")
+	}
+	lf, err := os.Open(leasesPath)
+	if err != nil {
+		return nil, policy.Rules{}, err
+	}
+	defer lf.Close()
+	ids, err := discovery.LoadIdentities(lf)
+	if err != nil {
+		return nil, policy.Rules{}, fmt.Errorf("%s: %w", leasesPath, err)
+	}
+	rf, err := os.Open(rulesPath)
+	if err != nil {
+		return nil, policy.Rules{}, err
+	}
+	defer rf.Close()
+	rules, err := policy.Load(rf)
+	if err != nil {
+		return nil, policy.Rules{}, fmt.Errorf("%s: %w", rulesPath, err)
+	}
+	return ids, rules, nil
+}
+
+func pollTwice(cfg discovery.Config, window time.Duration) (*discovery.SwitchState, *discovery.SwitchState, error) {
+	prev, err := discovery.Poll(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	time.Sleep(window)
+	cur, err := discovery.Poll(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return prev, cur, nil
 }
 
 func loadEnvFile(path string) error {

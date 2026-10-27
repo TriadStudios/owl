@@ -1,12 +1,12 @@
 package reconcile
 
 import (
-	"fmt"
 	"slices"
-	"strings"
 
+	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/perception"
+	"github.com/triadstudios/owl/internal/policy"
 )
 
 type Status string
@@ -23,19 +23,18 @@ type Port struct {
 	Camera  string
 	Switch  string
 	Status  Status
-	Devices []discovery.Device
-	Summary string
+	Blast   *blast.Card
 	Sources []string
 }
 
-func Join(cam *perception.Result, sw *discovery.SwitchState, ids *discovery.Identities) []Port {
+func Join(cam *perception.Result, prev, cur *discovery.SwitchState, ids *discovery.Identities, rules policy.Rules) ([]Port, error) {
 	camByNum := map[int]perception.Port{}
 	var nums []int
 	for _, p := range cam.Ports {
 		camByNum[p.Num] = p
 		nums = append(nums, p.Num)
 	}
-	for n := range sw.Ports {
+	for n := range cur.Ports {
 		if _, seen := camByNum[n]; !seen {
 			nums = append(nums, n)
 		}
@@ -53,7 +52,7 @@ func Join(cam *perception.Result, sw *discovery.SwitchState, ids *discovery.Iden
 			}
 			port.Sources = append(port.Sources, "camera")
 		}
-		s, onSwitch := sw.Ports[n]
+		s, onSwitch := cur.Ports[n]
 		if onSwitch {
 			port.Switch = "down"
 			if s.OperUp {
@@ -62,37 +61,13 @@ func Join(cam *perception.Result, sw *discovery.SwitchState, ids *discovery.Iden
 			for _, src := range s.Sources {
 				port.Sources = append(port.Sources, src)
 			}
-			for _, mac := range s.MACs {
-				d := ids.Lookup(mac)
-				port.Devices = append(port.Devices, d)
+			card, err := blast.Assess(n, prev, cur, ids, rules)
+			if err != nil {
+				return nil, err
+			}
+			port.Blast = &card
+			for _, d := range card.Devices {
 				port.Sources = append(port.Sources, d.Sources...)
-			}
-			neighbor := ""
-			if s.LLDP != nil {
-				neighbor = s.LLDP.SysName
-				if neighbor == "" {
-					neighbor = s.LLDP.ChassisID
-				}
-			}
-			switch {
-			case len(port.Devices) > 1:
-				var named []string
-				for _, d := range port.Devices {
-					if d.Hostname != "" && d.Hostname != neighbor {
-						named = append(named, d.Hostname)
-					}
-				}
-				slices.Sort(named)
-				port.Summary = strings.TrimSpace(fmt.Sprintf("%d devices behind %s", len(port.Devices), neighbor))
-				if len(named) > 0 {
-					port.Summary += ": " + strings.Join(named, ", ")
-				}
-			case len(port.Devices) == 1 && port.Devices[0].Hostname != "":
-				port.Summary = port.Devices[0].Hostname
-			case neighbor != "":
-				port.Summary = neighbor
-			case len(port.Devices) == 1:
-				port.Summary = strings.TrimSpace(port.Devices[0].Vendor + " " + port.Devices[0].MAC)
 			}
 		}
 		if onCamera && onSwitch {
@@ -109,5 +84,5 @@ func Join(cam *perception.Result, sw *discovery.SwitchState, ids *discovery.Iden
 		port.Sources = slices.Compact(port.Sources)
 		out = append(out, port)
 	}
-	return out
+	return out, nil
 }
