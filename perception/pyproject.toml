@@ -1,0 +1,20 @@
+[project]
+name = "perception"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "meta-sam-parser>=0.1.0",
+    "numpy>=2.4.6",
+    "opencv-python-headless>=5.0.0.93",
+    "reachy-mini>=1.13.0",
+    "torch>=2.11.0",
+    "transformers>=5.21.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
