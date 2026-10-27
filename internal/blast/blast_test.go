@@ -6,10 +6,21 @@ import (
 	"time"
 
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
 )
 
-func TestAssessFixtureUplinkAndIdleHost(t *testing.T) {
+func TestAssessFixtureVerdicts(t *testing.T) {
+	camFile, err := os.Open("../../testdata/perception-switch-face.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer camFile.Close()
+	cam, err := perception.Decode(camFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	walkFile, err := os.Open("../../testdata/walk-datto.txt")
 	if err != nil {
 		t.Fatal(err)
@@ -44,19 +55,25 @@ func TestAssessFixtureUplinkAndIdleHost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	uplink, err := Assess(2, state, state, ids, rules)
-	if err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		name           string
+		port           int
+		attributionMin float64
+		verdict        Verdict
+		unknown        bool
+	}{
+		{"uplink neighbor", 2, 0.6, DoNotTouch, false},
+		{"idle single host", 3, 0.6, Safe, false},
+		{"sfp cage the camera cannot see", 9, 0.6, "", true},
+		{"attribution below minimum", 1, 0.7, "", true},
 	}
-	if uplink.Verdict != DoNotTouch || len(uplink.Criticality) == 0 || uplink.Criticality[0] != "uplink" {
-		t.Errorf("port 2: verdict %s criticality %v, want do-not-touch from uplink; inputs %v", uplink.Verdict, uplink.Criticality, uplink.Inputs)
-	}
-
-	host, err := Assess(3, state, state, ids, rules)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if host.Verdict != Safe || host.Liveness != Idle || host.Behind != 1 {
-		t.Errorf("port 3: verdict %s liveness %s behind %d, want safe idle 1; inputs %v", host.Verdict, host.Liveness, host.Behind, host.Inputs)
+	for _, c := range cases {
+		card, err := Assess(c.port, Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: c.attributionMin, IDs: ids, Rules: rules})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if card.Verdict != c.verdict || (card.Unknown != "") != c.unknown {
+			t.Errorf("%s: port %d verdict %q unknown %q, want verdict %q unknown %t; inputs %v", c.name, c.port, card.Verdict, card.Unknown, c.verdict, c.unknown, card.Inputs)
+		}
 	}
 }

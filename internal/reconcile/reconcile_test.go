@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
@@ -55,7 +56,7 @@ func TestJoinFixtureFrameAllCopperConsistent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ports, err := Join(cam, state, state, ids, rules)
+	ports, err := Join(blast.Inputs{Prev: state, Cur: state, Camera: cam, AttributionMin: 0.6, IDs: ids, Rules: rules})
 	if err != nil {
 		t.Fatal(err)
 	}

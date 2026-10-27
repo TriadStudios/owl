@@ -4,9 +4,7 @@ import (
 	"slices"
 
 	"github.com/triadstudios/owl/internal/blast"
-	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/perception"
-	"github.com/triadstudios/owl/internal/policy"
 )
 
 type Status string
@@ -27,14 +25,14 @@ type Port struct {
 	Sources []string
 }
 
-func Join(cam *perception.Result, prev, cur *discovery.SwitchState, ids *discovery.Identities, rules policy.Rules) ([]Port, error) {
+func Join(in blast.Inputs) ([]Port, error) {
 	camByNum := map[int]perception.Port{}
 	var nums []int
-	for _, p := range cam.Ports {
+	for _, p := range in.Camera.Ports {
 		camByNum[p.Num] = p
 		nums = append(nums, p.Num)
 	}
-	for n := range cur.Ports {
+	for n := range in.Cur.Ports {
 		if _, seen := camByNum[n]; !seen {
 			nums = append(nums, n)
 		}
@@ -52,7 +50,7 @@ func Join(cam *perception.Result, prev, cur *discovery.SwitchState, ids *discove
 			}
 			port.Sources = append(port.Sources, "camera")
 		}
-		s, onSwitch := cur.Ports[n]
+		s, onSwitch := in.Cur.Ports[n]
 		if onSwitch {
 			port.Switch = "down"
 			if s.OperUp {
@@ -61,7 +59,7 @@ func Join(cam *perception.Result, prev, cur *discovery.SwitchState, ids *discove
 			for _, src := range s.Sources {
 				port.Sources = append(port.Sources, src)
 			}
-			card, err := blast.Assess(n, prev, cur, ids, rules)
+			card, err := blast.Assess(n, in)
 			if err != nil {
 				return nil, err
 			}
@@ -70,7 +68,7 @@ func Join(cam *perception.Result, prev, cur *discovery.SwitchState, ids *discove
 				port.Sources = append(port.Sources, d.Sources...)
 			}
 		}
-		if onCamera && onSwitch {
+		if onCamera && onSwitch && port.Blast.Unknown == "" {
 			switch {
 			case c.Occupied == s.OperUp:
 				port.Status = Consistent

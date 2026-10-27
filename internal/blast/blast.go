@@ -2,12 +2,14 @@ package blast
 
 import (
 	"fmt"
+	"net"
 	"path"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
 )
 
@@ -26,6 +28,19 @@ const (
 	DoNotTouch Verdict = "do-not-touch"
 )
 
+type Tagger interface {
+	Tags(mac string) (tags []string, found bool, err error)
+}
+
+type Inputs struct {
+	Prev, Cur      *discovery.SwitchState
+	Camera         *perception.Result
+	AttributionMin float64
+	IDs            *discovery.Identities
+	Tags           Tagger
+	Rules          policy.Rules
+}
+
 type Card struct {
 	Port        int
 	Devices     []discovery.Device
@@ -37,30 +52,49 @@ type Card struct {
 	Liveness    Liveness
 	Criticality []string
 	Verdict     Verdict
+	Unknown     string
 	Inputs      []string
 }
 
-func Assess(num int, prev, cur *discovery.SwitchState, ids *discovery.Identities, rules policy.Rules) (Card, error) {
-	now, ok := cur.Ports[num]
+func Assess(num int, in Inputs) (Card, error) {
+	now, ok := in.Cur.Ports[num]
 	if !ok {
 		return Card{}, fmt.Errorf("port %d not on the switch", num)
 	}
-	before, ok := prev.Ports[num]
+	before, ok := in.Prev.Ports[num]
 	if !ok {
 		return Card{}, fmt.Errorf("port %d missing from the earlier poll", num)
 	}
-	card := Card{Port: num, Behind: len(now.MACs), Window: cur.Polled.Sub(prev.Polled)}
+	card := Card{Port: num, Behind: len(now.MACs), Window: in.Cur.Polled.Sub(in.Prev.Polled)}
 	for _, mac := range now.MACs {
-		card.Devices = append(card.Devices, ids.Lookup(mac))
+		card.Devices = append(card.Devices, in.IDs.Lookup(mac))
+	}
+
+	camIndex := slices.IndexFunc(in.Camera.Ports, func(p perception.Port) bool { return p.Num == num })
+	switch {
+	case camIndex < 0:
+		card.Unknown = fmt.Sprintf("camera cannot see port %d", num)
+	case in.Camera.Ports[camIndex].Confidence == nil:
+		card.Unknown = "camera attribution has no confidence"
+	case *in.Camera.Ports[camIndex].Confidence < in.AttributionMin:
+		card.Unknown = fmt.Sprintf("camera attribution confidence %.2f < OWL_ATTRIBUTION_MIN %.2f", *in.Camera.Ports[camIndex].Confidence, in.AttributionMin)
+	default:
+		card.Inputs = append(card.Inputs, fmt.Sprintf("camera sees port %d, confidence %.2f >= %.2f (camera)", num, *in.Camera.Ports[camIndex].Confidence, in.AttributionMin))
 	}
 
 	var caps []string
+	macs := slices.Clone(now.MACs)
 	if now.LLDP != nil {
 		card.Neighbor = now.LLDP.SysName
 		if card.Neighbor == "" {
 			card.Neighbor = now.LLDP.ChassisID
 		}
 		caps = now.LLDP.Capabilities
+		for _, id := range []string{now.LLDP.PortID, now.LLDP.ChassisID} {
+			if _, err := net.ParseMAC(id); err == nil && !slices.Contains(macs, id) {
+				macs = append(macs, id)
+			}
+		}
 	}
 	switch {
 	case card.Behind > 1:
@@ -87,44 +121,86 @@ func Assess(num int, prev, cur *discovery.SwitchState, ids *discovery.Identities
 	// Counter32 wraps at 2^32; an agent reset also reads as a large delta, which errs toward caution.
 	card.DeltaBytes = (now.InOctets-before.InOctets)&0xffffffff + (now.OutOctets-before.OutOctets)&0xffffffff
 	card.Liveness = Idle
-	if card.DeltaBytes >= rules.LivenessActiveBytes {
+	if card.DeltaBytes >= in.Rules.LivenessActiveBytes {
 		card.Liveness = Active
 	}
-	card.Inputs = append(card.Inputs, fmt.Sprintf("in+out %d B over %s vs liveness_active_bytes %d -> %s (snmp)", card.DeltaBytes, card.Window.Round(time.Second), rules.LivenessActiveBytes, card.Liveness))
+	card.Inputs = append(card.Inputs, fmt.Sprintf("in+out %d B over %s vs liveness_active_bytes %d -> %s (snmp)", card.DeltaBytes, card.Window.Round(time.Second), in.Rules.LivenessActiveBytes, card.Liveness))
 
-	var uplinkBy []string
-	for _, c := range caps {
-		if slices.Contains(rules.UplinkCapabilities, c) {
-			uplinkBy = append(uplinkBy, c)
-		}
-	}
-	if len(uplinkBy) > 0 {
-		card.Criticality = append(card.Criticality, "uplink")
-		card.Inputs = append(card.Inputs, fmt.Sprintf("LLDP neighbor %s advertises %s, in uplink_capabilities (lldp)", card.Neighbor, strings.Join(uplinkBy, ", ")))
-	} else {
-		card.Inputs = append(card.Inputs, fmt.Sprintf("no LLDP neighbor capability in uplink_capabilities (neighbor %q, capabilities %v)", card.Neighbor, caps))
-	}
-
-	names := []string{card.Neighbor}
-	for _, d := range card.Devices {
-		names = append(names, d.Hostname)
-	}
-	var matched []string
-	for _, name := range names {
-		for _, pattern := range rules.CriticalNames {
-			if ok, _ := path.Match(pattern, strings.ToLower(name)); ok && name != "" {
-				matched = append(matched, fmt.Sprintf("%s ~ %s", name, pattern))
+	tagged, netboxNote := false, "netbox not configured"
+	if in.Tags != nil {
+		netboxNote = "netbox has no device for these MACs"
+		var hits []string
+		for _, mac := range macs {
+			tags, found, err := in.Tags.Tags(mac)
+			if err != nil {
+				tagged, hits, netboxNote = false, nil, "netbox unavailable: "+err.Error()
+				break
+			}
+			if !found {
+				continue
+			}
+			tagged = true
+			for _, t := range tags {
+				switch t {
+				case "uplink":
+					card.Criticality = append(card.Criticality, "uplink")
+				case "critical", "backup-target":
+					card.Criticality = append(card.Criticality, "critical")
+				default:
+					continue
+				}
+				hits = append(hits, mac+" tagged "+t)
 			}
 		}
+		if tagged {
+			slices.Sort(card.Criticality)
+			card.Criticality = slices.Compact(card.Criticality)
+			if len(hits) > 0 {
+				card.Inputs = append(card.Inputs, "netbox tags: "+strings.Join(hits, ", ")+" (netbox)")
+			} else {
+				card.Inputs = append(card.Inputs, "netbox knows the port's devices; none tagged uplink, critical or backup-target (netbox)")
+			}
+		} else {
+			card.Criticality = nil
+		}
 	}
-	if len(matched) > 0 {
-		card.Criticality = append(card.Criticality, "critical")
-		card.Inputs = append(card.Inputs, "critical_names match: "+strings.Join(matched, ", "))
-	} else {
-		card.Inputs = append(card.Inputs, fmt.Sprintf("no name matches critical_names %v", rules.CriticalNames))
+	if !tagged {
+		card.Inputs = append(card.Inputs, netboxNote+"; criticality from policy/rules.yaml")
+		var uplinkBy []string
+		for _, c := range caps {
+			if slices.Contains(in.Rules.UplinkCapabilities, c) {
+				uplinkBy = append(uplinkBy, c)
+			}
+		}
+		if len(uplinkBy) > 0 {
+			card.Criticality = append(card.Criticality, "uplink")
+			card.Inputs = append(card.Inputs, fmt.Sprintf("LLDP neighbor %s advertises %s, in uplink_capabilities (lldp)", card.Neighbor, strings.Join(uplinkBy, ", ")))
+		} else {
+			card.Inputs = append(card.Inputs, fmt.Sprintf("no LLDP neighbor capability in uplink_capabilities (neighbor %q, capabilities %v)", card.Neighbor, caps))
+		}
+
+		names := []string{card.Neighbor}
+		for _, d := range card.Devices {
+			names = append(names, d.Hostname)
+		}
+		var matched []string
+		for _, name := range names {
+			for _, pattern := range in.Rules.CriticalNames {
+				if ok, _ := path.Match(pattern, strings.ToLower(name)); ok && name != "" {
+					matched = append(matched, fmt.Sprintf("%s ~ %s", name, pattern))
+				}
+			}
+		}
+		if len(matched) > 0 {
+			card.Criticality = append(card.Criticality, "critical")
+			card.Inputs = append(card.Inputs, "critical_names match: "+strings.Join(matched, ", "))
+		} else {
+			card.Inputs = append(card.Inputs, fmt.Sprintf("no name matches critical_names %v", in.Rules.CriticalNames))
+		}
 	}
 
 	switch {
+	case card.Unknown != "":
 	case len(card.Criticality) > 0:
 		card.Verdict = DoNotTouch
 	case card.Liveness == Active || card.Behind > 1:
