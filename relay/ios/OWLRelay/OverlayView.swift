@@ -23,7 +23,7 @@ struct OverlayView: View {
                 guard !pts.isEmpty else { continue }
                 let x = pts.map { $0[0] }.reduce(0, +) / Double(pts.count) * size.width
                 let y = pts.map { $0[1] }.min()! * size.height
-                let text = Text("\(label.text) · \(label.verdict)")
+                let text = Text("\(label.text) · \(label.verdict.title)")
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                 let resolved = ctx.resolve(text)

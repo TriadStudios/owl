@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {"id": "f-101", "severity": "critical", "port": 1, "title": "Single uplink for 3 VLANs", "detail": "Gi1/0/1 is the only path to core-sw-2. Pulling it drops 212 hosts.", "ts": "2026-10-27T18:41:07Z"},
+    {"id": "f-102", "severity": "warning", "port": 5, "title": "Link up, nothing learned", "detail": "Gi1/0/5 has carrier but no MAC in the FDB for 6 hours.", "ts": "2026-10-27T18:30:00Z"},
+    {"id": "f-103", "severity": "warning", "port": 4, "title": "Camera and SNMP disagree", "detail": "Camera sees a cable in Gi1/0/4 colored blue; last walk recorded yellow.", "ts": "2026-10-27T17:55:12Z"},
+    {"id": "f-104", "severity": "info", "port": null, "title": "16 ports unused", "detail": "Ports 9–24 have been down since the last 30 polls.", "ts": "2026-10-27T16:02:44Z"}
+  ]
+}

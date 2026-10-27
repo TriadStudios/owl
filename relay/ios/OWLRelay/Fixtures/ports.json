@@ -1,0 +1,87 @@
+{
+  "closet": {"name": "IDF-2 East"},
+  "switch": {"name": "idf2-acc-1", "model": "Cisco C9300-24P", "ports_total": 24, "ports_in_use": 8, "last_poll": "2026-10-27T18:41:07.512Z"},
+  "ports": [
+    {
+      "num": 1, "name": "Gi1/0/1", "color": "#5E5CE6", "verdict": "do_not_touch",
+      "verdict_inputs": ["LLDP neighbor core-sw-2 Te1/1/4", "Carries 212 MACs", "Only uplink for VLANs 10, 20, 30"],
+      "device": {"name": "core-sw-2", "vendor": "Cisco", "ip": "10.20.0.2"},
+      "behind": [
+        {"mac": "00:1b:54:aa:10:02", "vendor": "Cisco", "ip": "10.20.0.2"},
+        {"mac": "3c:22:fb:91:4e:10", "vendor": "Apple", "ip": "10.20.10.44"},
+        {"mac": "f4:39:09:1c:2a:88", "vendor": "HP", "ip": "10.20.20.15"}
+      ],
+      "liveness": "active", "criticality": "high",
+      "sources": {"device": "lldp", "vendor": "oui", "ip": "arp", "behind": "fdb"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    },
+    {
+      "num": 2, "name": "Gi1/0/2", "color": "#BF5AF2", "verdict": "caution",
+      "verdict_inputs": ["Wireless AP serving 14 clients", "PoE draw 12.4 W"],
+      "device": {"name": "ap-2e-hall", "vendor": "Ubiquiti", "ip": "10.20.30.12"},
+      "behind": [{"mac": "78:8a:20:4c:11:9e", "vendor": "Ubiquiti", "ip": "10.20.30.12"}],
+      "liveness": "active", "criticality": "medium",
+      "sources": {"device": "lldp", "vendor": "oui", "ip": "arp"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    },
+    {
+      "num": 3, "name": "Gi1/0/3", "color": "#64D2FF", "verdict": "safe",
+      "verdict_inputs": ["Single workstation", "Idle for 3 days"],
+      "device": {"name": null, "vendor": "Dell", "ip": "10.20.10.87"},
+      "behind": [{"mac": "b0:83:fe:61:20:3a", "vendor": "Dell", "ip": "10.20.10.87"}],
+      "liveness": "idle", "criticality": "low",
+      "sources": {"vendor": "oui", "ip": "arp"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    },
+    {
+      "num": 4, "name": "Gi1/0/4", "color": "#FF7AB2", "verdict": "do_not_touch",
+      "verdict_inputs": ["Hypervisor host esx-02", "Carries 9 VM MACs"],
+      "device": {"name": "esx-02", "vendor": "Supermicro", "ip": "10.20.0.22"},
+      "behind": [
+        {"mac": "ac:1f:6b:30:aa:01", "vendor": "Supermicro", "ip": "10.20.0.22"},
+        {"mac": "00:50:56:9a:01:11", "vendor": "VMware", "ip": "10.20.0.101"},
+        {"mac": "00:50:56:9a:01:12", "vendor": "VMware", "ip": "10.20.0.102"}
+      ],
+      "liveness": "active", "criticality": "high",
+      "sources": {"device": "lldp", "vendor": "oui", "ip": "arp", "behind": "fdb"},
+      "last_verified": "2026-10-27T18:39:51Z", "evidence_url": null
+    },
+    {
+      "num": 5, "name": "Gi1/0/5", "color": "#AC8E68", "verdict": "unknown",
+      "verdict_inputs": ["Link up, no MAC learned"],
+      "device": null, "behind": [],
+      "liveness": "active", "criticality": "unknown",
+      "sources": {},
+      "last_verified": null, "evidence_url": null
+    },
+    {
+      "num": 6, "name": "Gi1/0/6", "color": "#66D4CF", "verdict": "safe",
+      "verdict_inputs": ["Printer", "No traffic outside business hours"],
+      "device": {"name": "prn-2e-01", "vendor": "Brother", "ip": "10.20.20.40"},
+      "behind": [{"mac": "30:05:5c:7e:90:12", "vendor": "Brother", "ip": "10.20.20.40"}],
+      "liveness": "idle", "criticality": "low",
+      "sources": {"device": "snmp", "vendor": "oui", "ip": "arp"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    },
+    {
+      "num": 7, "name": "Gi1/0/7", "color": "#A7A3FF", "verdict": "caution",
+      "verdict_inputs": ["IP phone with PC behind it", "Voice VLAN 40"],
+      "device": {"name": "SEP0023AB11CC22", "vendor": "Cisco", "ip": "10.20.40.31"},
+      "behind": [
+        {"mac": "00:23:ab:11:cc:22", "vendor": "Cisco", "ip": "10.20.40.31"},
+        {"mac": "54:bf:64:22:19:7a", "vendor": "Dell", "ip": "10.20.10.93"}
+      ],
+      "liveness": "active", "criticality": "medium",
+      "sources": {"device": "cdp", "vendor": "oui", "ip": "arp", "behind": "fdb"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    },
+    {
+      "num": 8, "name": "Gi1/0/8", "color": "#D1D1D6", "verdict": "safe",
+      "verdict_inputs": ["Link down for 21 days"],
+      "device": null, "behind": [],
+      "liveness": "down", "criticality": "low",
+      "sources": {"liveness": "snmp"},
+      "last_verified": "2026-10-27T18:41:07Z", "evidence_url": null
+    }
+  ]
+}

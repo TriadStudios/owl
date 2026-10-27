@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 final class RelayClient: NSObject, URLSessionWebSocketDelegate {
@@ -99,20 +98,6 @@ final class RelayClient: NSObject, URLSessionWebSocketDelegate {
     }
 
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let trust = challenge.protectionSpace.serverTrust,
-              let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
-              let leaf = chain.first,
-              let pin = queue.sync(execute: { pairing?.pin }) else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
-        }
-        let digest = SHA256.hash(data: SecCertificateCopyData(leaf) as Data)
-        let hex = digest.map { String(format: "%02x", $0) }.joined()
-        if hex == pin {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-        } else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-        }
+        Pinning.handle(challenge, pin: queue.sync { pairing?.pin }, completion: completionHandler)
     }
 }

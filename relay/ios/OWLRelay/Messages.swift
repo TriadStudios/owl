@@ -9,7 +9,7 @@ struct OverlayPolygon: Decodable {
 struct OverlayLabel: Decodable {
     let port: Int
     let text: String
-    let verdict: String
+    let verdict: Verdict
 }
 
 struct Overlay: Decodable {
