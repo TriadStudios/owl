@@ -189,14 +189,20 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         if abs(y - row_y) <= socket_height / 2
     ]
     for cable_index, cable in enumerate(results[CABLE_PROMPT]):
-        strip = decode_rle(cable["mask_rle"])[max(top, 0):bottom]
+        mask = decode_rle(cable["mask_rle"])
+        rows = np.flatnonzero(mask.any(axis=1))
+        if rows.size == 0 or rows[0] >= bottom:
+            continue
+        # SAM's cable mask often stops just short of the plug, so read the plug end from where the mask starts, not only inside the row band.
+        plug_top = max(int(rows[0]), top, 0)
+        strip = mask[plug_top:plug_top + bottom - top]
         count, _, stats, _ = cv2.connectedComponentsWithStats(strip)
         for x, y, w, h, area in stats[1:count]:
             if area < 0.15 * socket_height * socket_width:
                 continue
             plugs = max(1, round(w / socket_width))
             for i in range(plugs):
-                box = [x + i * w / plugs, top + y, x + (i + 1) * w / plugs, top + y + h]
+                box = [x + i * w / plugs, plug_top + y, x + (i + 1) * w / plugs, plug_top + y + h]
                 candidates = [
                     c for c in candidates
                     if min(c["box"][2], box[2]) - max(c["box"][0], box[0])
