@@ -29,6 +29,7 @@ const (
 	oidLLDPRemPortSubtype    = "1.0.8802.1.1.2.1.4.1.1.6"
 	oidLLDPRemPortID         = "1.0.8802.1.1.2.1.4.1.1.7"
 	oidLLDPRemSysName        = "1.0.8802.1.1.2.1.4.1.1.9"
+	oidLLDPRemSysCapEnabled  = "1.0.8802.1.1.2.1.4.1.1.12"
 )
 
 var walkRoots = []string{
@@ -47,6 +48,7 @@ var walkRoots = []string{
 	oidLLDPRemPortSubtype,
 	oidLLDPRemPortID,
 	oidLLDPRemSysName,
+	oidLLDPRemSysCapEnabled,
 }
 
 type Config struct {

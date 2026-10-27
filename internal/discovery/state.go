@@ -33,7 +33,12 @@ type PortState struct {
 	Sources   map[string]string
 }
 
-type Neighbor struct{ SysName, ChassisID, PortID string }
+type Neighbor struct {
+	SysName, ChassisID, PortID string
+	Capabilities               []string
+}
+
+var LLDPCapabilities = []string{"other", "repeater", "bridge", "wlan-access-point", "router", "telephone", "docsis", "station", "c-vlan", "s-vlan", "two-port-mac-relay"}
 
 var trailingNumber = regexp.MustCompile(`(\d+)$`)
 
@@ -171,6 +176,17 @@ func Build(vars []Var, polled time.Time) (*SwitchState, error) {
 		}
 		if n.ChassisID, err = decodeID(tables[oidLLDPRemChassisID][suffix], tables[oidLLDPRemChassisSubtype][suffix] == lldpChassisSubtypeMAC); err != nil {
 			return nil, fmt.Errorf("LLDP chassis ID %s: %w", suffix, err)
+		}
+		if raw, ok := tables[oidLLDPRemSysCapEnabled][suffix]; ok {
+			bits, err := decodeText(raw)
+			if err != nil {
+				return nil, fmt.Errorf("LLDP capabilities %s: %w", suffix, err)
+			}
+			for i, name := range LLDPCapabilities {
+				if i/8 < len(bits) && bits[i/8]&(0x80>>(i%8)) != 0 {
+					n.Capabilities = append(n.Capabilities, name)
+				}
+			}
 		}
 		p.LLDP = &n
 		p.Sources["lldp"] = "lldp"
