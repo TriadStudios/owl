@@ -16,6 +16,7 @@ import numpy as np
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from reachy_mini.vision.face_detector import FaceDetector
+from reachy_mini.utils import create_head_pose
 from reachy_mini.vision.face_tracking import Tracker
 from starlette.concurrency import run_in_threadpool
 
@@ -40,9 +41,9 @@ ELEVENLABS_DEFAULT_VOICE = "21m00Tcm4TlvDq8ikWAM"
 PCM_CHUNK_BYTES = 3200
 MOTION_SIZE = (160, 90)
 MOTION_PIXEL = 25
-MOTION_FRACTION = 0.01
+MOTION_FRACTION = 0.004
 MOTION_SAME_FRAME = 0.5
-MOTION_FRESH_S = 0.4
+MOTION_FRESH_S = 1.0
 PRESENCE_FRESH_S = 1.0
 FACE_WIDTH = 640
 FACE_EVERY_S = 0.2
@@ -55,6 +56,11 @@ ANTENNA_RAD = 0.35
 ANTENNA_EVERY_S = 0.45
 FACE_SEARCH_Y = 0.3
 FACE_SEARCH_STEPS = 2
+DAEMON_PORT = 8000
+DOA_EVERY_S = 0.1
+VOICE_QUIET_AFTER_SAY_S = 1.0
+VOICE_MAX_YAW_DEG = 55
+VOICE_PITCH_DEG = -10
 FACE_SEARCH_WAIT_S = 0.5
 FACE_SEARCH_SIDE = 0.5
 FACE_SEARCH_TOP = 0.25
@@ -67,6 +73,7 @@ app = FastAPI()
 state: dict[str, object] = {
     "mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "face_box": None, "centroid": [0.5, 0.5],
     "frame_at": 0.0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
+    "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0,
 }
 audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
 audio_lock = threading.Lock()
@@ -143,10 +150,11 @@ def debug_frame(frame: np.ndarray, now: float) -> None:
         cv2.drawMarker(image, (cx, cy), (0, 165, 255), cv2.MARKER_CROSS, 18, 2)
     if state["look"] and now - state["look"][2] < 1.0:
         cv2.circle(image, (int(state["look"][0] * w), int(state["look"][1] * h)), 10, (0, 0, 255), 2)
+    voice = f"{state['voice_angle']:.2f} rad" if now - state["voice_at"] < PRESENCE_FRESH_S else "no"
     lines = [
         datetime.now().strftime("%H:%M:%S.%f")[:-3],
         f"{state['activity']}",
-        f"face {'yes' if face else 'no'}  motion {'yes' if moving else 'no'}  tracking {'on' if state['tracking'] else 'off'}  head {'moving' if now < state['head_busy_until'] else 'still'}",
+        f"face {'yes' if face else 'no'}  motion {'yes' if moving else 'no'}  voice {voice}  tracking {'on' if state['tracking'] else 'off'}  head {'moving' if now < state['head_busy_until'] else 'still'}",
     ]
     for i, line in enumerate(lines):
         cv2.putText(image, line[:90], (8, 18 + 18 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 3, cv2.LINE_AA)
@@ -357,7 +365,7 @@ def say(text: str) -> dict[str, object]:
             else:
                 time.sleep(ANTENNA_EVERY_S)
         move_head(lambda: m.goto_target(antennas=[0.0, 0.0], duration=0.3), 0.3, busy=False)
-        state["activity"] = "idle"
+        state["activity"], state["said_until"] = "idle", time.monotonic() + VOICE_QUIET_AFTER_SAY_S
         voice = "elevenlabs" if key else "windows"
         debug_event("say", text=text, voice=voice, seconds=round(seconds, 2), first_audio_ms=round(((first[0] if first else time.monotonic()) - requested) * 1000))
     return {"ok": True, "seconds": round(seconds, 1), "voice": voice}
@@ -367,6 +375,29 @@ def face_seen(within: float) -> bool:
     return time.monotonic() - state["face_at"] < within
 
 
+def voice_heard(within: float) -> bool:
+    return time.monotonic() - state["voice_at"] < within
+
+
+def watch_voice(host: str) -> None:
+    url = f"http://{host}:{DAEMON_PORT}/api/state/doa"
+    failing = False
+    while True:
+        time.sleep(DOA_EVERY_S)
+        try:
+            with urllib.request.urlopen(url, timeout=1) as response:
+                doa = json.load(response)
+        except (OSError, ValueError) as error:
+            if not failing:
+                print(f"voice direction unavailable: {error}", flush=True)
+            failing = True
+            continue
+        failing = False
+        now = time.monotonic()
+        if doa and doa.get("speech_detected") and not state["activity"].startswith("saying") and now > state["said_until"]:
+            state["voice_at"], state["voice_angle"] = now, float(doa["angle"])
+
+
 def turn(x: float, y: float) -> dict[str, object]:
     m = mini()
     debug_start()
@@ -374,10 +405,18 @@ def turn(x: float, y: float) -> dict[str, object]:
     how = "face"
     if face_seen(PRESENCE_FRESH_S):
         x, y = state["face"]
+    elif voice_heard(PRESENCE_FRESH_S):
+        x, how = 0.5, "voice"
     else:
         y, how = FACE_SEARCH_Y, "motion x, looking up"
-    debug_event("turn", target=[round(x, 3), round(y, 3)], how=how)
-    look(m, x, y, TURN_S)
+    if how == "voice":
+        yaw = float(np.clip(np.degrees(np.pi / 2 - state["voice_angle"]), -VOICE_MAX_YAW_DEG, VOICE_MAX_YAW_DEG))
+        debug_event("turn", how=how, doa_rad=round(state["voice_angle"], 3), yaw_deg=round(yaw, 1), pitch_deg=VOICE_PITCH_DEG)
+        pose = create_head_pose(yaw=yaw, pitch=VOICE_PITCH_DEG)
+        move_head(lambda: m.goto_target(head=pose, duration=TURN_S), TURN_S)
+    else:
+        debug_event("turn", target=[round(x, 3), round(y, 3)], how=how)
+        look(m, x, y, TURN_S)
     time.sleep(TURN_S + SETTLE_S)
     for step in range(FACE_SEARCH_STEPS):
         time.sleep(FACE_SEARCH_WAIT_S)
@@ -425,7 +464,8 @@ def motion() -> dict[str, object]:
     now = time.monotonic()
     face = now - state["face_at"] < PRESENCE_FRESH_S
     moving = now - state["moving_at"] < MOTION_FRESH_S
-    return {"moving": face or moving, "face": face, "centroid": state["face"] if face else state["centroid"]}
+    voice = now - state["voice_at"] < PRESENCE_FRESH_S
+    return {"moving": face or moving or voice, "face": face, "voice": voice, "voice_angle": round(state["voice_angle"], 3), "centroid": state["face"] if face else state["centroid"]}
 
 
 @app.post("/turn")
@@ -464,4 +504,5 @@ def main() -> None:
     speech_model()
     threading.Thread(target=watch_audio, args=(m,), daemon=True).start()
     threading.Thread(target=watch_camera, args=(m,), daemon=True).start()
+    threading.Thread(target=watch_voice, args=(segment.load_env().get("OWL_REACHY_HOST", "").strip(),), daemon=True).start()
     uvicorn.run(app, host="127.0.0.1", port=8702)
