@@ -33,7 +33,7 @@ const (
 	quietBeforeIdle = 10 * time.Second
 	silenceEnd      = 20 * time.Second
 	maxUnclear      = 3
-	narrateBudget   = 1500 * time.Millisecond
+	narrateBudget   = 2500 * time.Millisecond
 	missLine        = "I didn't catch a port. Say port and a number, or the device's name."
 	followUp        = "Anything else?"
 	closing         = "Okay. I'll keep watching."
@@ -82,6 +82,7 @@ type Guardian struct {
 	lastSpeech  time.Time
 	heard       string
 	unclear     int
+	greeting    <-chan string
 	history     []narrate.Turn
 }
 
@@ -107,7 +108,11 @@ func (g *Guardian) Step(now time.Time) {
 			g.motionSince = now
 		}
 		if now.Sub(g.motionSince) >= wakeAfter {
+			g.history, g.unclear = nil, 0
+			greeting := make(chan string, 1)
+			go func() { greeting <- g.chat("greeting", "", greetings[rand.IntN(len(greetings))]) }()
 			g.Robot.Turn(g.Camera.Frame().Centroid)
+			g.greeting = greeting
 			g.state = Wake
 		}
 	case Sleep:
@@ -115,8 +120,7 @@ func (g *Guardian) Step(now time.Time) {
 			g.state, g.motionSince = Idle, time.Time{}
 		}
 	case Wake:
-		g.history, g.unclear = nil, 0
-		g.say(g.chat("greeting", "", greetings[rand.IntN(len(greetings))]))
+		g.say(<-g.greeting)
 		g.heard, g.lastSpeech = g.Robot.Listen(), now
 		g.state = Ask
 	default:

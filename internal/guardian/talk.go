@@ -79,7 +79,7 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 		}
 	default:
 		if err = narrate.CheckChat(r.Line); err == nil {
-			return r.Line, 0, r.Goodbye || bye
+			return r.Line, 0, r.Goodbye
 		}
 	}
 	switch {

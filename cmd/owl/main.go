@@ -1132,8 +1132,22 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 	}
 	narrator := "templates only, OWL_META_API_KEY not set"
 	if key := os.Getenv("OWL_META_API_KEY"); key != "" {
-		g.Narrator = &narrate.Client{URL: narrate.DefaultURL, Model: narrate.DefaultModel, Key: key, HTTP: &http.Client{Timeout: 10 * time.Second}}
-		narrator = narrate.DefaultModel
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.IdleConnTimeout = 2 * time.Minute
+		client := &narrate.Client{URL: narrate.DefaultURL, Model: narrate.DefaultModel, Key: key, HTTP: &http.Client{Timeout: 10 * time.Second, Transport: transport}}
+		g.Narrator, narrator = client, narrate.DefaultModel
+		go func() {
+			for {
+				if err := client.Warm(ctx); err != nil && ctx.Err() == nil {
+					log.Warn("narrate warm", "err", err)
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(20 * time.Second):
+				}
+			}
+		}()
 	}
 	log.Info("guardian watching", "robot", robotURL, "narrator", narrator)
 	state := g.State()

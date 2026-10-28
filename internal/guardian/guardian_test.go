@@ -15,13 +15,17 @@ import (
 )
 
 type fakeRobot struct {
+	turnFor time.Duration
 	homes   int
 	turns   []Point
 	said    []string
 	replies []string
 }
 
-func (r *fakeRobot) Turn(to Point)   { r.turns = append(r.turns, to) }
+func (r *fakeRobot) Turn(to Point) {
+	time.Sleep(r.turnFor)
+	r.turns = append(r.turns, to)
+}
 func (r *fakeRobot) Home()           { r.homes++ }
 func (r *fakeRobot) Say(text string) { r.said = append(r.said, text) }
 func (r *fakeRobot) Listen() string {
@@ -56,7 +60,7 @@ func awake(state State, robot *fakeRobot, cam *fakeCamera, now time.Time) *Guard
 }
 
 func TestIdleWakesOnOneSecondOfMotionAndTurnsToIt(t *testing.T) {
-	robot, cam := &fakeRobot{}, &fakeCamera{centroid: Point{0.2, 0.7}}
+	robot, cam := &fakeRobot{turnFor: time.Second}, &fakeCamera{centroid: Point{0.2, 0.7}}
 	g := &Guardian{Robot: robot, Camera: cam, Table: table}
 	t0 := time.Now()
 	cam.moving = true
@@ -69,9 +73,15 @@ func TestIdleWakesOnOneSecondOfMotionAndTurnsToIt(t *testing.T) {
 	if g.State() != Idle {
 		t.Fatalf("woke after motion broken by a still frame: state %s", g.State())
 	}
+	g.Narrator = &fakeNarrator{delay: time.Second, reply: narrate.Reply{Line: "Morning. What brings you to the rack?"}}
+	start := time.Now()
 	g.Step(t0.Add(1600 * time.Millisecond))
 	if g.State() != Wake || len(robot.turns) != 1 || robot.turns[0] != cam.centroid {
 		t.Fatalf("state %s turns %v, want wake and one turn to %v", g.State(), robot.turns, cam.centroid)
+	}
+	g.Step(t0.Add(2 * time.Second))
+	if len(robot.said) != 1 || robot.said[0] != "Morning. What brings you to the rack?" || time.Since(start) > 1500*time.Millisecond {
+		t.Fatalf("said %q after %s, want the model greeting fetched while the head turned", robot.said, time.Since(start))
 	}
 }
 
@@ -79,6 +89,9 @@ func TestWakeGreetsAsksAndListens(t *testing.T) {
 	now := time.Now()
 	robot, cam := &fakeRobot{replies: []string{"I'm pulling port 3"}}, &fakeCamera{}
 	g := awake(Wake, robot, cam, now)
+	greeting := make(chan string, 1)
+	greeting <- greetings[0]
+	g.greeting = greeting
 	g.Step(now.Add(time.Second))
 	if g.State() != Ask || len(robot.said) != 1 || !slices.Contains(greetings, robot.said[0]) || g.heard != "I'm pulling port 3" {
 		t.Fatalf("state %s said %q heard %q", g.State(), robot.said, g.heard)
@@ -182,7 +195,7 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 		{"model finds the port by device name", "the NAS please", fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is the NAS, it's safe."}}, "Port 3 is the NAS, it's safe."},
 		{"model says safe for a do-not-touch port", "pulling port 2", fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is safe to pull."}}, template},
 		{"model picks another port than the one said", "pulling port 2", fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe."}}, template},
-		{"model slower than the budget", "pulling port 2", fakeNarrator{delay: 2 * time.Second, reply: narrate.Reply{Port: 2, Line: "Port 2, do not touch."}}, template},
+		{"model slower than the budget", "pulling port 2", fakeNarrator{delay: 3 * time.Second, reply: narrate.Reply{Port: 2, Line: "Port 2, do not touch."}}, template},
 		{"model error", "pulling port 2", fakeNarrator{err: errors.New("503")}, template},
 		{"model chat with a verdict and no port", "hello", fakeNarrator{reply: narrate.Reply{Line: "Hi! Everything here is safe."}}, missLine},
 		{"model chat", "hello", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "Hi! Which cable are you after?"}}, "Hi! Which cable are you after?"},

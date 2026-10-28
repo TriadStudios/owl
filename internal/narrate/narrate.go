@@ -132,6 +132,26 @@ func (c *Client) Reply(ctx context.Context, req Request) (Reply, error) {
 	return parse(text.String())
 }
 
+func (c *Client) Warm(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimSuffix(c.URL, "/responses")+"/models", nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.Key)
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return fmt.Errorf("narrate warm: %w", err)
+	}
+	defer resp.Body.Close()
+	if _, err := io.Copy(io.Discard, io.LimitReader(resp.Body, maxReply)); err != nil {
+		return fmt.Errorf("narrate warm: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("narrate warm: %s", resp.Status)
+	}
+	return nil
+}
+
 func parse(text string) (Reply, error) {
 	text = strings.TrimSpace(text)
 	text = strings.TrimPrefix(strings.TrimPrefix(text, "```json"), "```")
