@@ -39,6 +39,8 @@ WAIT_FOR_SPEECH_S = 6.0
 MAX_UTTERANCE_S = 8.0
 PLAYBACK_TAIL_S = 0.4
 MAX_SAY_CHARS = 500
+MAX_ALERTS = 40
+ALERT_ANTENNA_RAD = 0.8
 SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
 SCRIBE_MODEL = "scribe_v1"
 SCRIBE_TIMEOUT_S = 2.0
@@ -87,7 +89,7 @@ app = FastAPI()
 state: dict[str, object] = {
     "mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "face_box": None, "centroid": [0.5, 0.5],
     "frame_at": 0.0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
-    "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0,
+    "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0, "alert_until": 0.0,
 }
 audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
 audio_lock = threading.Lock()
@@ -98,6 +100,7 @@ debug: dict[str, object] = {
     "preroll": collections.deque(maxlen=DEBUG_PREROLL_S * DEBUG_FPS), "grid": collections.deque(), "grid_session": [],
 }
 debug_lock = threading.Lock()
+alerts: dict[str, np.ndarray] = {}
 
 
 def debug_start() -> None:
@@ -429,6 +432,8 @@ def say(text: str) -> dict[str, object]:
         def play(samples: np.ndarray) -> None:
             if not first:
                 first.append(time.monotonic())
+            if time.monotonic() < state["alert_until"]:
+                return
             m.media.push_audio_sample(samples)
             pushed[0] += len(samples)
 
@@ -451,6 +456,48 @@ def say(text: str) -> dict[str, object]:
         voice = "elevenlabs" if key else "windows"
         debug_event("say", text=text, voice=voice, seconds=round(seconds, 2), first_audio_ms=round(((first[0] if first else time.monotonic()) - requested) * 1000))
     return {"ok": True, "seconds": round(seconds, 1), "voice": voice}
+
+
+def synthesize(text: str) -> np.ndarray:
+    env = segment.load_env()
+    key = env.get("ELEVENLABS_API_KEY", "").strip()
+    chunks: list[np.ndarray] = []
+    if key:
+        elevenlabs(text, key, env.get("OWL_ELEVENLABS_VOICE", ELEVENLABS_DEFAULT_VOICE).strip(), chunks.append)
+    else:
+        windows_voice(text, chunks.append)
+    if not chunks:
+        raise RuntimeError(f"no audio synthesized for {text!r}")
+    return np.concatenate(chunks)
+
+
+def prepare(texts: list[str]) -> dict[str, object]:
+    for text in texts:
+        if text not in alerts:
+            alerts[text] = synthesize(text)
+    return {"ready": len(texts)}
+
+
+def alert(text: str) -> dict[str, object]:
+    m = mini()
+    start = time.monotonic()
+    cached = text in alerts
+    pcm = alerts[text] if cached else synthesize(text)
+    alerts[text] = pcm
+    seconds = len(pcm) / AUDIO_RATE
+    state["alert_until"] = time.monotonic() + seconds
+    state["said_until"] = state["alert_until"] + VOICE_QUIET_AFTER_SAY_S
+    clear = getattr(m.media.audio, "clear_player", None)
+    if clear:
+        clear()
+    m.media.push_audio_sample(pcm)
+    played_ms = round((time.monotonic() - start) * 1000)
+    move_head(lambda: m.goto_target(antennas=[ALERT_ANTENNA_RAD, -ALERT_ANTENNA_RAD], duration=0.15), 0.15, busy=False)
+    time.sleep(max(0.0, seconds - 0.15))
+    move_head(lambda: m.goto_target(antennas=[0.0, 0.0], duration=0.3), 0.3, busy=False)
+    print(f"alert {text!r} cached={cached} audio queued in {played_ms} ms", flush=True)
+    debug_event("alert", text=text, cached=cached, queued_ms=played_ms, seconds=round(seconds, 2))
+    return {"ok": True, "cached": cached, "queued_ms": played_ms}
 
 
 def face_seen(within: float) -> bool:
@@ -570,6 +617,22 @@ async def say_text(request: Request) -> dict[str, object]:
     if not isinstance(text, str) or not text.strip() or len(text) > MAX_SAY_CHARS:
         raise HTTPException(400, f"want {{text}} of 1-{MAX_SAY_CHARS} characters")
     return await run(say, text.strip())
+
+
+@app.post("/prepare")
+async def prepare_alerts(request: Request) -> dict[str, object]:
+    texts = (await request.json()).get("texts")
+    if not isinstance(texts, list) or len(texts) > MAX_ALERTS or not all(isinstance(t, str) and 0 < len(t) <= MAX_SAY_CHARS for t in texts):
+        raise HTTPException(400, f"want {{texts}}: at most {MAX_ALERTS} lines of 1-{MAX_SAY_CHARS} characters")
+    return await run(prepare, texts)
+
+
+@app.post("/alert")
+async def alert_now(request: Request) -> dict[str, object]:
+    text = (await request.json()).get("text")
+    if not isinstance(text, str) or not text.strip() or len(text) > MAX_SAY_CHARS:
+        raise HTTPException(400, f"want {{text}} of 1-{MAX_SAY_CHARS} characters")
+    return await run(alert, text)
 
 
 @app.post("/listen")

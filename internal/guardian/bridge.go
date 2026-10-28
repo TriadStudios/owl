@@ -111,3 +111,11 @@ func (b *Bridge) Frame() Frame {
 	c := b.motion().Centroid
 	return Frame{Centroid: Point{c[0], c[1]}}
 }
+
+func (b *Bridge) Prepare(texts []string) error {
+	return b.call(http.MethodPost, "/prepare", map[string][]string{"texts": texts}, nil)
+}
+
+func (b *Bridge) Alert(text string) error {
+	return b.call(http.MethodPost, "/alert", map[string]string{"text": text}, nil)
+}

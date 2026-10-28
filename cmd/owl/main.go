@@ -62,6 +62,7 @@ const (
 	framesDir       = "data/frames"
 	tlsDir          = "data/tls"
 	evidenceDir     = "data/evidence"
+	trackFPS        = 10
 )
 
 const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl bench -expect XXX...X. [-captures 20] [-frames 5] [-every 30s] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
@@ -1155,12 +1156,52 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		}()
 	}
 	log.Info("guardian watching", "robot", robotURL, "narrator", narrator)
+	trackClient := &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{}}
+	reach := &guardian.Reach{
+		Track: func(ctx context.Context) (<-chan perception.TrackFrame, error) {
+			return trackClient.Track(ctx, frame.Row, trackFPS)
+		},
+		Alert: bridge.Alert,
+		Clip:  func() (string, error) { return cam.Clip(ctx) },
+		Log:   log,
+	}
+	startReach := func(a *guardian.Approach, cur []reconcile.Port) context.CancelFunc {
+		rctx, cancel := context.WithCancel(ctx)
+		go reach.Run(rctx, a, cur)
+		return cancel
+	}
+	var stopReach context.CancelFunc
+	defer func() {
+		if stopReach != nil {
+			stopReach()
+		}
+	}()
 	state := g.State()
 	for ctx.Err() == nil {
 		g.Step(time.Now())
 		if g.State() != state {
 			log.Info("guardian", "from", state, "to", g.State())
 			state = g.State()
+			switch {
+			case state == guardian.Answer && stopReach == nil:
+				mu.Lock()
+				cur := ports
+				mu.Unlock()
+				a := approachFor(frame, cur, log)
+				bridge.Home()
+				lines := guardian.WarningLines(a, cur)
+				go func() {
+					if err := bridge.Prepare(lines); err != nil {
+						log.Warn("prepare warnings", "err", err)
+					}
+				}()
+				log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
+				stopReach = startReach(a, cur)
+			case (state == guardian.Sleep || state == guardian.Idle) && stopReach != nil:
+				stopReach()
+				stopReach = nil
+				log.Info("reach watch stopped")
+			}
 		}
 		select {
 		case <-ctx.Done():
@@ -1168,6 +1209,32 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		}
 	}
 	return nil
+}
+
+func approachFor(frame *perception.Result, ports []reconcile.Port, log *slog.Logger) *guardian.Approach {
+	a := &guardian.Approach{RowY0: frame.Row[0], RowY1: frame.Row[1], DoNotTouch: map[int]bool{}, Populated: map[int]bool{}, JobPorts: map[int]int{}}
+	for _, c := range frame.Ports {
+		a.Ports = append(a.Ports, guardian.PortBox{Num: c.Num, X0: c.Box[0], X1: c.Box[2]})
+		if c.Occupied {
+			a.Populated[c.Num] = true
+		}
+	}
+	for _, p := range ports {
+		if p.Blast != nil && p.Blast.Unknown == "" && p.Blast.Verdict == blast.DoNotTouch {
+			a.DoNotTouch[p.Num] = true
+		}
+	}
+	jobs, err := job.Load(jobsPath)
+	if err != nil {
+		log.Error("jobs", "err", err)
+	}
+	now := time.Now()
+	for _, j := range jobs {
+		if j.Closed.IsZero() && !now.Before(j.Start) && !now.After(j.End) {
+			a.JobPorts[j.Port] = j.ID
+		}
+	}
+	return a
 }
 
 func saveEvidence(hash string, frame []byte) error {

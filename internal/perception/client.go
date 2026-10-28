@@ -1,6 +1,7 @@
 package perception
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -191,4 +192,75 @@ func Decode(r io.Reader) (*Result, error) {
 		return nil, fmt.Errorf("perception: %d LEDs for %d ports", len(res.LEDs), len(res.Ports))
 	}
 	return &res, nil
+}
+
+type TrackFrame struct {
+	T      time.Time
+	Hand   *[4]float64
+	Source string
+	Score  float64
+	Frozen bool
+}
+
+func (c *Client) Track(ctx context.Context, row [2]float64, fps float64) (<-chan TrackFrame, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/track?row=%g,%g&fps=%g", c.BaseURL, row[0], row[1], fps), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("perception: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		msg, _ := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
+		return nil, fmt.Errorf("perception track: %s: %s", resp.Status, bytes.TrimSpace(msg))
+	}
+	frames := make(chan TrackFrame)
+	go func() {
+		defer close(frames)
+		defer resp.Body.Close()
+		scan := bufio.NewScanner(resp.Body)
+		for scan.Scan() {
+			var line struct {
+				T      float64     `json:"t"`
+				Hand   *[4]float64 `json:"hand"`
+				Source string      `json:"source"`
+				Score  float64     `json:"score"`
+				Frozen bool        `json:"frozen"`
+				Error  string      `json:"error"`
+			}
+			if err := json.Unmarshal(scan.Bytes(), &line); err != nil || line.Error != "" {
+				return
+			}
+			if line.Hand != nil && (line.Hand[2] <= line.Hand[0] || line.Hand[3] <= line.Hand[1]) {
+				line.Hand = nil
+			}
+			f := TrackFrame{T: time.UnixMilli(int64(line.T * 1000)), Hand: line.Hand, Source: line.Source, Score: line.Score, Frozen: line.Frozen}
+			select {
+			case frames <- f:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return frames, nil
+}
+
+func (c *Client) Clip(ctx context.Context) (string, error) {
+	body, err := c.post(ctx, "/track/clip", nil, "")
+	if err != nil {
+		return "", err
+	}
+	defer body.Close()
+	var res struct {
+		Hash string `json:"hash"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, maxResponseBytes)).Decode(&res); err != nil {
+		return "", fmt.Errorf("perception: decode clip: %w", err)
+	}
+	if !frameHash.MatchString(res.Hash) {
+		return "", fmt.Errorf("perception: bad clip hash %q", res.Hash)
+	}
+	return res.Hash, nil
 }
