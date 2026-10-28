@@ -57,9 +57,14 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 		r.Log.Error("track", "err", err)
 		return
 	}
+	defer r.Log.Info("reach", "event", "tracking stopped")
 	var seenAt, lockedAt time.Time
 	frozen := false
 	for f := range frames {
+		if f.Err != "" {
+			r.Log.Error("track stream ended", "err", f.Err)
+			return
+		}
 		if f.Frozen != frozen {
 			frozen = f.Frozen
 			r.Log.Info("attribution", "frozen", frozen, "at", f.T)

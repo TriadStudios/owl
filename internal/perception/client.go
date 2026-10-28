@@ -195,6 +195,7 @@ func Decode(r io.Reader) (*Result, error) {
 }
 
 type TrackFrame struct {
+	Err    string
 	T      time.Time
 	Hand   *[4]float64
 	Source string
@@ -231,6 +232,14 @@ func (c *Client) Track(ctx context.Context, row [2]float64, fps float64) (<-chan
 				Error  string      `json:"error"`
 			}
 			if err := json.Unmarshal(scan.Bytes(), &line); err != nil || line.Error != "" {
+				msg := line.Error
+				if err != nil {
+					msg = "bad track line: " + err.Error()
+				}
+				select {
+				case frames <- TrackFrame{Err: msg}:
+				case <-ctx.Done():
+				}
 				return
 			}
 			if line.Hand != nil && (line.Hand[2] <= line.Hand[0] || line.Hand[3] <= line.Hand[1]) {

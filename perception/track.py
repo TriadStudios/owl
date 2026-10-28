@@ -17,6 +17,7 @@ HAND_PROMPT = "hand"
 HAND_MIN_SCORE = 0.4
 FOLLOW_MIN_SCORE = 0.5
 FOLLOW_SEARCH = 1.0
+MIN_TEMPLATE = 8
 REGION_DOWN = 1.0
 CLIP_SECONDS = 15
 CLIP_WIDTH = 640
@@ -51,6 +52,8 @@ def region(height: int, width: int) -> list[int]:
 
 def follow(gray: np.ndarray, template: np.ndarray, box: list[float]) -> tuple[list[float], float] | None:
     h, w = template.shape
+    if h < MIN_TEMPLATE or w < MIN_TEMPLATE:
+        return None
     x0, y0 = int(max(box[0] - FOLLOW_SEARCH * w, 0)), int(max(box[1] - FOLLOW_SEARCH * h, 0))
     x1, y1 = int(min(box[2] + FOLLOW_SEARCH * w, gray.shape[1])), int(min(box[3] + FOLLOW_SEARCH * h, gray.shape[0]))
     window = gray[y0:y1, x0:x1]
@@ -114,8 +117,10 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                     used = seen["seq"]
                     if seen["hand"] is not None:
                         box, score = seen["hand"]
+                        h, w = seen["gray"].shape
+                        box = [min(max(box[0], 0), w), min(max(box[1], 0), h), min(max(box[2], 0), w), min(max(box[3], 0), h)]
                         x0, y0, x1, y1 = (int(round(v)) for v in box)
-                        template = seen["gray"][y0:y1, x0:x1] if x1 - x0 > 4 and y1 - y0 > 4 else None
+                        template = seen["gray"][y0:y1, x0:x1] if x1 - x0 >= MIN_TEMPLATE and y1 - y0 >= MIN_TEMPLATE else None
                         source = "sam3"
                         followed = follow(gray, template, box) if template is not None else None
                         if followed:
