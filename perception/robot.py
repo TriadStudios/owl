@@ -586,7 +586,7 @@ def main() -> None:
     m = capture.connect(segment.load_env())
     m.__enter__()
     state["mini"] = m
-    capture.home(m)
+    move_head(lambda: capture.home(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
     speech_model()
     threading.Thread(target=watch_audio, args=(m,), daemon=True).start()
     threading.Thread(target=watch_camera, args=(m,), daemon=True).start()
