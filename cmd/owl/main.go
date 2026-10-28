@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"sort"
@@ -38,7 +39,8 @@ const (
 	pulseCycles     = 10
 	pulseSample     = time.Second
 	maxPingTargets  = 4
-	pingersPerIP    = 64
+	pulseRate       = 256 << 10
+	pingPayload     = 64000
 	enrollBurst     = 10 * time.Second
 	touchMinChange  = 12.0
 	touchDominance  = 1.5
@@ -286,26 +288,48 @@ func run(args []string) error {
 				ifIndex[p.Num] = sp.IfIndex
 			}
 		}
+		// The router hands out the leases and has none itself, but the closet box's ARP table knows its address.
+		arp := map[string]string{}
+		arpCmd := exec.Command("arp", "-a")
+		if runtime.GOOS == "linux" {
+			arpCmd = exec.Command("ip", "neigh")
+		}
+		if out, err := arpCmd.Output(); err == nil {
+			ipv4, mac := regexp.MustCompile(`\b\d{1,3}(\.\d{1,3}){3}\b`), regexp.MustCompile(`(?i)\b[0-9a-f]{2}([-:][0-9a-f]{2}){5}\b`)
+			for _, line := range strings.Split(string(out), "\n") {
+				if ip, m := ipv4.FindString(line), mac.FindString(line); ip != "" && m != "" {
+					arp[strings.ToLower(strings.ReplaceAll(m, "-", ":"))] = ip
+				}
+			}
+		}
 		for i := range ports {
 			p := &ports[i]
 			if p.Status == enroll.Verified || !p.Occupied || p.Num == self || !slices.Contains(lit, p.Num) || ids == nil {
 				continue
 			}
-			var macs []string
+			// With an LLDP neighbor, ping only it so Wi-Fi clients behind an AP or router are not flooded.
+			macs, missing := p.MACs, "; no known IP to ping"
 			if sp := cur.Ports[p.Num]; sp.LLDP != nil {
-				macs = append(macs, sp.LLDP.PortID)
+				macs, missing = []string{sp.LLDP.PortID, sp.LLDP.ChassisID}, fmt.Sprintf("; LLDP neighbor %s has no known IP to ping", sp.LLDP.SysName)
 			}
-			var ips []string
-			for _, mac := range append(macs, p.MACs...) {
-				if d := ids.Lookup(mac); d.Online && !slices.Contains(ips, d.IP) && len(ips) < maxPingTargets {
-					ips = append(ips, d.IP)
+			var ips, from []string
+			for _, mac := range macs {
+				ip, source := "", ""
+				if d := ids.Lookup(mac); d.Online {
+					ip, source = d.IP, "lease"
+				} else if a, ok := arp[mac]; ok {
+					ip, source = a, "arp"
+				}
+				if ip != "" && !slices.Contains(ips, ip) && len(ips) < maxPingTargets {
+					ips, from = append(ips, ip), append(from, source)
 				}
 			}
 			if len(ips) == 0 {
-				p.Reason += "; no known IP to ping"
+				p.Reason += missing
 				continue
 			}
-			fmt.Printf("pinging port %d, %d x %s on / %s off ...\n", p.Num, pulseCycles, pulseOn, pulseOff)
+			pingers := max(1, pulseRate/pingPayload/len(ips))
+			fmt.Printf("pinging port %d (%d target, IP from %s), %d KiB/s for %s on / %s off x%d ...\n", p.Num, len(ips), strings.Join(from, ","), pingers*len(ips)*pingPayload>>10, pulseOn, pulseOff, pulseCycles)
 			first, err := discovery.Counters(cfg, ifIndex)
 			if err != nil {
 				return err
@@ -333,14 +357,15 @@ func run(args []string) error {
 				var wg sync.WaitGroup
 				var mu sync.Mutex
 				for _, ip := range ips {
-					for range pingersPerIP {
+					for range pingers {
 						wg.Add(1)
 						go func() {
 							defer wg.Done()
 							count := strconv.Itoa(int(pulseOn.Seconds()))
-							args := []string{"-c", count, "-s", "65000", "-W", "1", ip}
+							size := strconv.Itoa(pingPayload)
+							args := []string{"-c", count, "-s", size, "-W", "1", ip}
 							if runtime.GOOS == "windows" {
-								args = []string{"-n", count, "-l", "65000", "-w", "1000", ip}
+								args = []string{"-n", count, "-l", size, "-w", "1000", ip}
 							}
 							err := exec.CommandContext(phase, "ping", args...).Run()
 							var exit *exec.ExitError
