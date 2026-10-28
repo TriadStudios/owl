@@ -1,4 +1,5 @@
 import base64
+import functools
 import hashlib
 import json
 import os
@@ -19,7 +20,8 @@ SPEND_PATH = CACHE / "spend.json"
 ROI_PATH = ROOT / "data" / "port-roi.json"
 ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
 META_API_URL = "https://api.meta.ai/v1/responses"
-LOCAL_MODEL = "unsloth/sam3.1"
+LOCAL_MODEL = "facebook/sam3"
+LOCAL_LONG_SIDE = 1280
 SOCKET_PROMPTS = ("ethernet port", "network port")
 CABLE_PROMPT = "cable"
 PROMPTS = (*SOCKET_PROMPTS, CABLE_PROMPT)
@@ -139,16 +141,26 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
     return results
 
 
-def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+@functools.cache
+def local_model():
     import torch
     from transformers import Sam3Model, Sam3Processor
 
-    height, width = rgb.shape[:2]
     processor = Sam3Processor.from_pretrained(LOCAL_MODEL)
     model = Sam3Model.from_pretrained(LOCAL_MODEL, dtype=torch.float16).to("cuda").eval()
+    return processor, model
+
+
+def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+    import torch
+
+    height, width = rgb.shape[:2]
+    scale = min(1.0, LOCAL_LONG_SIDE / max(height, width))
+    small = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else rgb
+    processor, model = local_model()
     results: dict[str, list[Instance]] = {}
     for prompt in PROMPTS:
-        inputs = processor(images=rgb, text=prompt, return_tensors="pt").to("cuda", torch.float16)
+        inputs = processor(images=small, text=prompt, return_tensors="pt").to("cuda", torch.float16)
         with torch.inference_mode():
             outputs = model(**inputs)
         result = processor.post_process_instance_segmentation(outputs, target_sizes=[(height, width)])[0]
