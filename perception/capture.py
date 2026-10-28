@@ -14,6 +14,8 @@ import segment
 ROOT = Path(__file__).resolve().parent.parent
 HOME_POSE = ROOT / "data" / "home-pose.json"
 HOME_MOVE_S = 1.0
+HOME_PASSES = 4
+HOME_TOLERANCE_DEG = 1.5
 FIRST_FRAME_TIMEOUT_S = 10
 FRAME_INTERVAL_S = 1 / 30
 
@@ -32,8 +34,15 @@ def home(mini: ReachyMini) -> None:
     if head.shape != (4, 4):
         raise RuntimeError(f"{HOME_POSE.name} must hold a 4x4 head pose")
     mini.enable_motors()
-    mini.goto_target(head, duration=HOME_MOVE_S)
-    time.sleep(HOME_MOVE_S + 0.3)
+    # The head sags under load and keeps creeping while held, and a goto to the current target does not move it, so correct from the measured pose.
+    target = head
+    for _ in range(HOME_PASSES):
+        mini.goto_target(target, duration=HOME_MOVE_S)
+        time.sleep(HOME_MOVE_S + 0.3)
+        actual = mini.get_current_head_pose()
+        if np.degrees(np.arccos(np.clip((np.trace(actual[:3, :3].T @ head[:3, :3]) - 1) / 2, -1, 1))) < HOME_TOLERANCE_DEG:
+            return
+        target = target @ np.linalg.inv(actual) @ head
 
 
 def frames(mini: ReachyMini, seconds: float) -> Iterator[np.ndarray]:
