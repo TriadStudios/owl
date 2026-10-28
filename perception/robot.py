@@ -1,4 +1,5 @@
 import collections
+import http.client
 import json
 import os
 import subprocess
@@ -58,6 +59,7 @@ FACE_SEARCH_Y = 0.3
 FACE_SEARCH_STEPS = 2
 DAEMON_PORT = 8000
 DOA_EVERY_S = 0.1
+DOA_TIMEOUT_S = 2.0
 VOICE_QUIET_AFTER_SAY_S = 1.0
 VOICE_MAX_YAW_DEG = 55
 VOICE_PITCH_DEG = -10
@@ -380,19 +382,19 @@ def voice_heard(within: float) -> bool:
 
 
 def watch_voice(host: str) -> None:
-    url = f"http://{host}:{DAEMON_PORT}/api/state/doa"
-    failing = False
+    conn = http.client.HTTPConnection(host, DAEMON_PORT, timeout=DOA_TIMEOUT_S)
+    failures = 0
     while True:
         time.sleep(DOA_EVERY_S)
         try:
-            with urllib.request.urlopen(url, timeout=1) as response:
-                doa = json.load(response)
-        except (OSError, ValueError) as error:
-            if not failing:
-                print(f"voice direction unavailable: {error}", flush=True)
-            failing = True
+            conn.request("GET", "/api/state/doa")
+            doa = json.loads(conn.getresponse().read())
+        except (OSError, ValueError, http.client.HTTPException) as error:
+            conn.close()
+            failures += 1
+            if failures in (1, 10, 100) or failures % 1000 == 0:
+                print(f"voice direction unavailable ({failures} failures): {error}", flush=True)
             continue
-        failing = False
         now = time.monotonic()
         if doa and doa.get("speech_detected") and not state["activity"].startswith("saying") and now > state["said_until"]:
             state["voice_at"], state["voice_angle"] = now, float(doa["angle"])
