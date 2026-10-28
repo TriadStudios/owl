@@ -1,4 +1,5 @@
 import hashlib
+import itertools
 import json
 import threading
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
 POLYGON_EPSILON_PX = 1.5
 FRAMES = segment.ROOT / "data" / "frames"
+DEBUG = segment.ROOT / "data" / "debug"
 
 app = FastAPI()
 analyze_lock = threading.Lock()
@@ -54,6 +56,28 @@ def describe(image_bytes: bytes) -> dict[str, object]:
         ports.append(entry)
     row_top, row_bottom = row[0]["row_band"]
     return {"ports": ports, "row": [row_top / 2 + rect[1], row_bottom / 2 + rect[1]], "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
+
+
+def debug_frame(kind: str, frame: np.ndarray, rects: list[list[float]], labels: list[str], lit: list[bool]) -> None:
+    image = frame.copy()
+    for rect, label, on in zip(rects, labels, lit):
+        x0, y0, x1, y1 = (int(round(v)) for v in rect)
+        color = (0, 255, 0) if on else (0, 0, 255)
+        cv2.rectangle(image, (x0, y0), (x1, y1), color, 1)
+        cv2.putText(image, label, (x0, max(y0 - 4, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
+    DEBUG.mkdir(parents=True, exist_ok=True)
+    path = DEBUG / f"{datetime.now():%Y%m%dT%H%M%S%f}-{kind}.png"
+    cv2.imwrite(str(path), image)
+    print(f"debug frame {path.name}")
+
+
+def watch(kind: str, frames, boxes: list[list[float]]) -> list[dict[str, object]]:
+    first = next(frames)
+    result = leds.leds(itertools.chain([first], frames), boxes)
+    height, width = first.shape[:2]
+    bands = [[left, top, right, bottom] for top, bottom, left, right in (leds.band(box, height, width) for box in boxes)]
+    debug_frame(kind, first, bands, [f"{r['num']} {'on' if r['link_on'] else 'off'} {r['activity_energy']}" for r in result], [r["link_on"] for r in result])
+    return result
 
 
 def led_boxes(result: dict[str, object]) -> list[list[float]]:
@@ -94,7 +118,7 @@ def describe_camera(burst: float) -> dict[str, object]:
                     raise ValueError(f"{CAMERA_ATTEMPTS} camera frames rejected, last: {error}") from error
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
-        result["leds"] = leds.leds(capture.frames(mini, burst), led_boxes(result))
+        result["leds"] = watch("segment-leds", capture.frames(mini, burst), led_boxes(result))
     return result
 
 
@@ -106,6 +130,8 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
             capture.home(mini)
             base = None
             for frame in capture.frames(mini, MAX_RECORD_S):
+                if base is None:
+                    debug_frame("touch-start", frame, regions, [f"r{i + 1}" for i in range(len(regions))], [True] * len(regions))
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
                 if base is None:
                     base = gray
@@ -113,6 +139,8 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
                 for i, (x0, y0, x1, y1) in enumerate(regions):
                     changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
                 if stop.is_set():
+                    peak = max(changes)
+                    debug_frame("touch-end", frame, regions, [f"r{i + 1} {c:.1f}" for i, c in enumerate(changes)], [c == peak for c in changes])
                     return
     except Exception as error:
         state["error"] = str(error)
@@ -150,7 +178,7 @@ def stop_recording() -> dict[str, object]:
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
         capture.home(mini)
-        return {"leds": leds.leds(capture.frames(mini, seconds), boxes)}
+        return {"leds": watch("leds", capture.frames(mini, seconds), boxes)}
 
 
 async def run(fn, *args) -> dict[str, object]:
