@@ -54,6 +54,8 @@ ANTENNA_EVERY_S = 0.45
 FACE_SEARCH_Y = 0.15
 FACE_SEARCH_STEPS = 2
 FACE_SEARCH_WAIT_S = 0.5
+FACE_SEARCH_SIDE = 0.5
+FACE_SEARCH_TOP = 0.05
 DEBUG_DIR = segment.ROOT / "data" / "debug" / "robot"
 DEBUG_FPS = 10
 DEBUG_SIZE = (640, 360)
@@ -162,10 +164,15 @@ def mini():
     return state["mini"]
 
 
-def move_head(fn, seconds: float) -> None:
+def move_head(fn, seconds: float, busy: bool = True) -> None:
     with head_lock:
-        state["head_busy_until"] = time.monotonic() + seconds + SETTLE_S
-        fn()
+        if busy:
+            state["head_busy_until"] = time.monotonic() + seconds + SETTLE_S
+        try:
+            fn()
+        except TimeoutError as error:
+            print(f"move skipped: {error}", flush=True)
+            debug_event("move_timeout", seconds=seconds, err=str(error))
 
 
 def watch_camera(m) -> None:
@@ -338,10 +345,12 @@ def say(text: str) -> dict[str, object]:
         side = 1
         while time.monotonic() < end:
             if time.monotonic() > state["head_busy_until"]:
-                m.goto_target(antennas=[side * ANTENNA_RAD, -side * ANTENNA_RAD], duration=ANTENNA_EVERY_S * 0.9)
+                angles = [side * ANTENNA_RAD, -side * ANTENNA_RAD]
+                move_head(lambda: m.goto_target(antennas=angles, duration=ANTENNA_EVERY_S * 0.9), ANTENNA_EVERY_S, busy=False)
                 side = -side
-            time.sleep(ANTENNA_EVERY_S)
-        m.goto_target(antennas=[0.0, 0.0], duration=0.3)
+            else:
+                time.sleep(ANTENNA_EVERY_S)
+        move_head(lambda: m.goto_target(antennas=[0.0, 0.0], duration=0.3), 0.3, busy=False)
         state["activity"] = "idle"
         voice = "elevenlabs" if key else "windows"
         debug_event("say", text=text, voice=voice, seconds=round(seconds, 2), first_audio_ms=round(((first[0] if first else time.monotonic()) - requested) * 1000))
@@ -369,7 +378,7 @@ def turn(x: float, y: float) -> dict[str, object]:
         if face_seen(FACE_SEARCH_WAIT_S + SETTLE_S):
             break
         debug_event("search", step=step + 1)
-        look(m, 0.5, FACE_SEARCH_Y, TURN_S)
+        look(m, 0.5 + (x - 0.5) * FACE_SEARCH_SIDE, FACE_SEARCH_TOP, TURN_S)
         time.sleep(TURN_S + SETTLE_S)
     found = face_seen(1.5)
     if found:
