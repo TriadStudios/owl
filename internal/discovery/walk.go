@@ -61,7 +61,7 @@ type Var struct {
 	Value string
 }
 
-func Walk(cfg Config) ([]Var, error) {
+func dial(cfg Config) (*gosnmp.GoSNMP, error) {
 	if cfg.Host == "" || cfg.Community == "" {
 		return nil, fmt.Errorf("switch host and community are required")
 	}
@@ -77,6 +77,14 @@ func Walk(cfg Config) ([]Var, error) {
 	if err := snmp.Connect(); err != nil {
 		return nil, fmt.Errorf("connect %s: %w", cfg.Host, err)
 	}
+	return snmp, nil
+}
+
+func Walk(cfg Config) ([]Var, error) {
+	snmp, err := dial(cfg)
+	if err != nil {
+		return nil, err
+	}
 	defer snmp.Conn.Close()
 
 	var vars []Var
@@ -90,6 +98,47 @@ func Walk(cfg Config) ([]Var, error) {
 		}
 	}
 	return vars, nil
+}
+
+type Sample struct {
+	At      time.Time
+	In, Out map[int]uint64
+}
+
+// Counters reads only the octet counters of the given ports (port number to ifIndex), quick enough to sample every second.
+func Counters(cfg Config, ifIndex map[int]int) (Sample, error) {
+	snmp, err := dial(cfg)
+	if err != nil {
+		return Sample{}, err
+	}
+	defer snmp.Conn.Close()
+	port := map[string]int{}
+	var oids []string
+	for num, idx := range ifIndex {
+		for _, root := range []string{oidIfInOctets, oidIfOutOctets} {
+			oid := root + "." + strconv.Itoa(idx)
+			port[oid] = num
+			oids = append(oids, oid)
+		}
+	}
+	pkt, err := snmp.Get(oids)
+	if err != nil {
+		return Sample{}, fmt.Errorf("get counters: %w", err)
+	}
+	s := Sample{At: time.Now(), In: map[int]uint64{}, Out: map[int]uint64{}}
+	for _, v := range pkt.Variables {
+		oid := strings.TrimPrefix(v.Name, ".")
+		num, ok := port[oid]
+		if !ok || v.Type == gosnmp.NoSuchInstance || v.Type == gosnmp.NoSuchObject {
+			return Sample{}, fmt.Errorf("counter %s missing", oid)
+		}
+		if strings.HasPrefix(oid, oidIfInOctets+".") {
+			s.In[num] = gosnmp.ToBigInt(v.Value).Uint64()
+		} else {
+			s.Out[num] = gosnmp.ToBigInt(v.Value).Uint64()
+		}
+	}
+	return s, nil
 }
 
 func formatValue(pdu gosnmp.SnmpPDU) string {

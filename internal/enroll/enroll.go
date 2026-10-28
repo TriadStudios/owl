@@ -19,10 +19,11 @@ const (
 )
 
 const (
-	matchTolerance = 0.3
-	swapMargin     = 0.15
-	minExcessBytes = 512 << 10
-	excessRatio    = 3.0
+	matchTolerance      = 0.3
+	swapMargin          = 0.15
+	pulseMinCorrelation = 0.8
+	pulseMaxOther       = 0.4
+	pulseStep           = 50 * time.Millisecond
 )
 
 type Port struct {
@@ -188,40 +189,77 @@ func Best(cam *perception.Result, windows []Window, now time.Time) ([]Port, erro
 	return best, nil
 }
 
-type Probe struct {
-	Target    int
-	LEDs      []perception.LED
-	Prev, Cur *discovery.SwitchState
+type Pulse struct {
+	Start   time.Time
+	On, Off time.Duration
+	Cycles  int
+	Samples []discovery.Sample
 }
 
-func Induced(ports []Port, probe Probe, others []int) (bool, string) {
-	seconds := probe.Cur.Polled.Sub(probe.Prev.Polled).Seconds()
-	measure := func(num int) (excess, rise float64) {
-		after, before := probe.Cur.Ports[num], probe.Prev.Ports[num]
-		if after == nil || before == nil {
-			return 0, 0
+func (p Pulse) on(t time.Time) bool {
+	since := t.Sub(p.Start)
+	period := p.On + p.Off
+	return since >= 0 && since < time.Duration(p.Cycles)*period && since%period < p.On
+}
+
+// Correlate gives the Pearson correlation of a port's per-interval in and out byte rates with the share of each interval the ping was on.
+func (p Pulse) Correlate(num int) (in, out float64) {
+	var pattern, rateIn, rateOut []float64
+	for k := 1; k < len(p.Samples); k++ {
+		a, b := p.Samples[k-1], p.Samples[k]
+		seconds := b.At.Sub(a.At).Seconds()
+		if seconds <= 0 {
+			continue
 		}
-		delta := (after.InOctets-before.InOctets)&0xffffffff + (after.OutOctets-before.OutOctets)&0xffffffff
-		for _, p := range ports {
-			if p.Num == num {
-				excess = float64(delta) - p.BaseRate*seconds
-				rise = -p.BaseEnergy
+		var on, steps float64
+		for t := a.At; t.Before(b.At); t = t.Add(pulseStep) {
+			steps++
+			if p.on(t) {
+				on++
 			}
 		}
-		for _, l := range probe.LEDs {
-			if l.Num == num {
-				rise += l.ActivityEnergy
-			}
-		}
-		return excess, rise
+		pattern = append(pattern, on/steps)
+		rateIn = append(rateIn, float64((b.In[num]-a.In[num])&0xffffffff)/seconds)
+		rateOut = append(rateOut, float64((b.Out[num]-a.Out[num])&0xffffffff)/seconds)
 	}
-	excess, rise := measure(probe.Target)
-	var otherExcess, otherRise float64
+	return pearson(pattern, rateIn), pearson(pattern, rateOut)
+}
+
+func pearson(x, y []float64) float64 {
+	n := float64(len(x))
+	if n < 3 {
+		return 0
+	}
+	var mx, my float64
+	for i := range x {
+		mx, my = mx+x[i]/n, my+y[i]/n
+	}
+	var sxy, sxx, syy float64
+	for i := range x {
+		sxy += (x[i] - mx) * (y[i] - my)
+		sxx += (x[i] - mx) * (x[i] - mx)
+		syy += (y[i] - my) * (y[i] - my)
+	}
+	if sxx == 0 || syy == 0 {
+		return 0
+	}
+	return sxy / math.Sqrt(sxx*syy)
+}
+
+func Pulsed(p Pulse, target int, others []int) (bool, string) {
+	in, out := p.Correlate(target)
+	other, otherPort := math.Inf(-1), 0
 	for _, n := range others {
-		e, r := measure(n)
-		otherExcess, otherRise = math.Max(otherExcess, e), math.Max(otherRise, r)
+		oi, oo := p.Correlate(n)
+		if m := math.Max(oi, oo); m > other {
+			other, otherPort = m, n
+		}
 	}
-	ok := excess >= minExcessBytes && excess >= excessRatio*otherExcess && rise > 0 && rise >= otherRise
-	return ok, fmt.Sprintf("ping spike on port %d: %+.0f KiB, LED %+.2f; largest elsewhere %+.0f KiB, LED %+.2f",
-		probe.Target, excess/1024, rise, otherExcess/1024, otherRise)
+	elsewhere := "no other lit port"
+	if otherPort != 0 {
+		elsewhere = fmt.Sprintf("largest elsewhere r=%.2f on port %d", other, otherPort)
+	}
+	ok := in >= pulseMinCorrelation && out >= pulseMinCorrelation && (otherPort == 0 || other < pulseMaxOther)
+	return ok, fmt.Sprintf("ping pulsed %s on/%s off x%d: port %d in r=%.2f, out r=%.2f (need >= %.1f); %s (need < %.1f)",
+		p.On, p.Off, p.Cycles, target, in, out, pulseMinCorrelation, elsewhere, pulseMaxOther)
 }

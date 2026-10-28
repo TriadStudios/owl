@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"text/tabwriter"
 	"time"
 
@@ -32,9 +33,12 @@ import (
 
 const (
 	passiveWindows  = 3
-	inducedWindow   = 5 * time.Second
+	pulseOn         = 2 * time.Second
+	pulseOff        = 2 * time.Second
+	pulseCycles     = 10
+	pulseSample     = time.Second
 	maxPingTargets  = 4
-	pingersPerIP    = 4
+	pingersPerIP    = 16
 	enrollBurst     = 10 * time.Second
 	touchMinChange  = 12.0
 	touchDominance  = 1.5
@@ -218,6 +222,15 @@ func run(args []string) error {
 		}
 		cur := windows[len(windows)-1].Cur
 
+		rf, err := os.Open(*rulesPath)
+		if err != nil {
+			return err
+		}
+		rules, err := policy.Load(rf)
+		rf.Close()
+		if err != nil {
+			return fmt.Errorf("%s: %w", *rulesPath, err)
+		}
 		local := map[string]bool{}
 		ifaces, err := net.Interfaces()
 		if err != nil {
@@ -229,9 +242,26 @@ func run(args []string) error {
 			}
 		}
 		self := 0
-		for n, sp := range cur.Ports {
-			if slices.ContainsFunc(sp.MACs, func(m string) bool { return local[m] }) {
-				self = n
+		notes := map[int]string{}
+		for i := range ports {
+			p := &ports[i]
+			sp := cur.Ports[p.Num]
+			if sp == nil {
+				continue
+			}
+			if i := slices.IndexFunc(sp.MACs, func(m string) bool { return local[m] }); i >= 0 {
+				self = p.Num
+				notes[p.Num] += fmt.Sprintf("; the closet box's own port: its MAC %s is in the FDB here (snmp fdb), so pinging cannot isolate it", sp.MACs[i])
+			}
+			if sp.LLDP != nil {
+				if i := slices.IndexFunc(sp.LLDP.Capabilities, func(c string) bool { return slices.Contains(rules.UplinkCapabilities, c) }); i >= 0 {
+					// Mesh APs advertise router too; an AP is aggregation, not the uplink.
+					if slices.Contains(sp.LLDP.Capabilities, "wlan-access-point") {
+						notes[p.Num] += fmt.Sprintf("; not the uplink: LLDP neighbor %s advertises %s but is also a wlan-access-point (lldp)", sp.LLDP.SysName, sp.LLDP.Capabilities[i])
+					} else {
+						notes[p.Num] += fmt.Sprintf("; uplink: LLDP neighbor %s advertises %s (lldp)", sp.LLDP.SysName, sp.LLDP.Capabilities[i])
+					}
+				}
 			}
 		}
 		var ids *discovery.Identities
@@ -247,21 +277,18 @@ func run(args []string) error {
 			}
 		}
 		var lit []int
+		ifIndex := map[int]int{}
 		for _, p := range ports {
 			if p.Occupied && p.OperUp && p.LinkOn && p.Num != self {
 				lit = append(lit, p.Num)
 			}
+			if sp := cur.Ports[p.Num]; sp != nil {
+				ifIndex[p.Num] = sp.IfIndex
+			}
 		}
 		for i := range ports {
 			p := &ports[i]
-			if p.Status == enroll.Verified || !p.Occupied {
-				continue
-			}
-			if p.Num == self {
-				p.Reason += "; the closet box's own port, pinging cannot isolate it"
-				continue
-			}
-			if !slices.Contains(lit, p.Num) || ids == nil {
+			if p.Status == enroll.Verified || !p.Occupied || p.Num == self || !slices.Contains(lit, p.Num) || ids == nil {
 				continue
 			}
 			var macs []string
@@ -278,45 +305,64 @@ func run(args []string) error {
 				p.Reason += "; no known IP to ping"
 				continue
 			}
-			prev, err := discovery.Poll(cfg)
+			fmt.Printf("pinging port %d, %d x %s on / %s off ...\n", p.Num, pulseCycles, pulseOn, pulseOff)
+			first, err := discovery.Counters(cfg, ifIndex)
 			if err != nil {
 				return err
 			}
-			pingCtx, cancel := context.WithTimeout(ctx, inducedWindow+2*time.Second)
-			pings := make(chan error, len(ips)*pingersPerIP)
-			for _, ip := range ips {
-				for range pingersPerIP {
-					go func() {
-						count := strconv.Itoa(int(inducedWindow.Seconds()))
-						args := []string{"-c", count, "-s", "65000", "-W", "1", ip}
-						if runtime.GOOS == "windows" {
-							args = []string{"-n", count, "-l", "65000", "-w", "1000", ip}
-						}
-						err := exec.CommandContext(pingCtx, "ping", args...).Run()
-						var exit *exec.ExitError
-						if errors.As(err, &exit) {
-							err = nil
-						}
-						pings <- err
-					}()
+			pulse := enroll.Pulse{Start: time.Now(), On: pulseOn, Off: pulseOff, Cycles: pulseCycles, Samples: []discovery.Sample{first}}
+			end := pulse.Start.Add(time.Duration(pulseCycles) * (pulseOn + pulseOff))
+			sampled := make(chan error, 1)
+			go func() {
+				for next := pulse.Start.Add(pulseSample); !next.After(end.Add(pulseSample)); next = next.Add(pulseSample) {
+					time.Sleep(time.Until(next))
+					s, err := discovery.Counters(cfg, ifIndex)
+					if err != nil {
+						sampled <- err
+						return
+					}
+					pulse.Samples = append(pulse.Samples, s)
 				}
-			}
-			leds, ledErr := cam.LEDs(ctx, boxes, inducedWindow)
-			for range len(ips) * pingersPerIP {
-				if err := <-pings; err != nil && ledErr == nil {
-					ledErr = fmt.Errorf("ping: %w", err)
+				sampled <- nil
+			}()
+			var pingErr error
+			for c := range pulseCycles {
+				on := pulse.Start.Add(time.Duration(c) * (pulseOn + pulseOff))
+				time.Sleep(time.Until(on))
+				phase, cancel := context.WithDeadline(ctx, on.Add(pulseOn))
+				var wg sync.WaitGroup
+				var mu sync.Mutex
+				for _, ip := range ips {
+					for range pingersPerIP {
+						wg.Add(1)
+						go func() {
+							defer wg.Done()
+							count := strconv.Itoa(int(pulseOn.Seconds()))
+							args := []string{"-c", count, "-s", "65000", "-W", "1", ip}
+							if runtime.GOOS == "windows" {
+								args = []string{"-n", count, "-l", "65000", "-w", "1000", ip}
+							}
+							err := exec.CommandContext(phase, "ping", args...).Run()
+							var exit *exec.ExitError
+							if err != nil && !errors.As(err, &exit) && phase.Err() == nil {
+								mu.Lock()
+								pingErr = err
+								mu.Unlock()
+							}
+						}()
+					}
 				}
+				wg.Wait()
+				cancel()
 			}
-			cancel()
-			if ledErr != nil {
-				return ledErr
-			}
-			after, err := discovery.Poll(cfg)
-			if err != nil {
+			if err := <-sampled; err != nil {
 				return err
+			}
+			if pingErr != nil {
+				return fmt.Errorf("ping: %w", pingErr)
 			}
 			others := slices.DeleteFunc(slices.Clone(lit), func(n int) bool { return n == p.Num })
-			ok, why := enroll.Induced(ports, enroll.Probe{Target: p.Num, LEDs: leds, Prev: prev, Cur: after}, others)
+			ok, why := enroll.Pulsed(pulse, p.Num, others)
 			if ok {
 				p.Status, p.Source, p.VerifiedAt, p.Reason = enroll.Verified, "camera+snmp+ping", time.Now(), why
 			} else {
@@ -387,6 +433,9 @@ func run(args []string) error {
 			}
 		}
 
+		for i := range ports {
+			ports[i].Reason += notes[ports[i].Num]
+		}
 		for i := range ports {
 			p := &ports[i]
 			iface, err := nb.SwitchInterface(*switchName, p.Num)
