@@ -41,6 +41,8 @@ PCM_CHUNK_BYTES = 3200
 MOTION_SIZE = (160, 90)
 MOTION_PIXEL = 25
 MOTION_FRACTION = 0.01
+MOTION_SAME_FRAME = 0.5
+MOTION_FRESH_S = 0.4
 PRESENCE_FRESH_S = 1.0
 FACE_WIDTH = 640
 FACE_EVERY_S = 0.2
@@ -51,11 +53,11 @@ TURN_S = 1.0
 SETTLE_S = 0.3
 ANTENNA_RAD = 0.35
 ANTENNA_EVERY_S = 0.45
-FACE_SEARCH_Y = 0.15
+FACE_SEARCH_Y = 0.3
 FACE_SEARCH_STEPS = 2
 FACE_SEARCH_WAIT_S = 0.5
 FACE_SEARCH_SIDE = 0.5
-FACE_SEARCH_TOP = 0.05
+FACE_SEARCH_TOP = 0.25
 DEBUG_DIR = segment.ROOT / "data" / "debug" / "robot"
 DEBUG_FPS = 10
 DEBUG_SIZE = (640, 360)
@@ -128,7 +130,7 @@ def debug_frame(frame: np.ndarray, now: float) -> None:
     image = cv2.resize(frame, DEBUG_SIZE, interpolation=cv2.INTER_AREA)
     w, h = DEBUG_SIZE
     face = now - state["face_at"] < PRESENCE_FRESH_S
-    moving = now - state["moving_at"] < PRESENCE_FRESH_S
+    moving = now - state["moving_at"] < MOTION_FRESH_S
     if state["tracking"]:
         dx, dy = TRACK_DEADBAND
         cv2.rectangle(image, (int((0.5 - dx) * w), int((0.5 - dy) * h)), (int((0.5 + dx) * w), int((0.5 + dy) * h)), (255, 255, 0), 1)
@@ -177,20 +179,24 @@ def move_head(fn, seconds: float, busy: bool = True) -> None:
 
 def watch_camera(m) -> None:
     detector, tracker = FaceDetector(), Tracker()
-    previous, next_face, next_track = None, 0.0, 0.0
+    history: collections.deque[np.ndarray] = collections.deque(maxlen=2)
+    next_face, next_track = 0.0, 0.0
     try:
         for frame in capture.frames(m, float("inf")):
             now = time.monotonic()
             height, width = frame.shape[:2]
             state["frame_size"], state["frame_at"] = (width, height), now
             gray = cv2.cvtColor(cv2.resize(frame, MOTION_SIZE, interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY).astype(np.int16)
-            if previous is not None and now > state["head_busy_until"]:
-                changed = np.abs(gray - previous) > MOTION_PIXEL
-                if changed.mean() > MOTION_FRACTION:
-                    ys, xs = np.nonzero(changed)
-                    state["centroid"] = [float(xs.mean() + 0.5) / MOTION_SIZE[0], float(ys.mean() + 0.5) / MOTION_SIZE[1]]
-                    state["moving_at"] = now
-            previous = gray
+            if now <= state["head_busy_until"]:
+                history.clear()
+            elif not history or np.abs(gray - history[-1]).mean() >= MOTION_SAME_FRAME:
+                if len(history) == 2:
+                    moved = (np.abs(history[1] - history[0]) > MOTION_PIXEL) & (np.abs(gray - history[0]) > MOTION_PIXEL)
+                    if moved.mean() > MOTION_FRACTION:
+                        ys, xs = np.nonzero(moved)
+                        state["centroid"] = [float(xs.mean() + 0.5) / MOTION_SIZE[0], float(ys.mean() + 0.5) / MOTION_SIZE[1]]
+                        state["moving_at"] = now
+                history.append(gray)
             if now >= next_face:
                 next_face = now + FACE_EVERY_S
                 scale = FACE_WIDTH / width
@@ -418,7 +424,7 @@ def motion() -> dict[str, object]:
         raise HTTPException(503, str(state["error"]))
     now = time.monotonic()
     face = now - state["face_at"] < PRESENCE_FRESH_S
-    moving = now - state["moving_at"] < PRESENCE_FRESH_S
+    moving = now - state["moving_at"] < MOTION_FRESH_S
     return {"moving": face or moving, "face": face, "centroid": state["face"] if face else state["centroid"]}
 
 
