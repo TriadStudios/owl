@@ -22,11 +22,14 @@ CAMERA_ATTEMPTS = 3
 POLYGON_EPSILON_PX = 1.5
 FRAMES = segment.ROOT / "data" / "frames"
 DEBUG = segment.ROOT / "data" / "debug"
+ALIGN_SCALE = 0.5
+ALIGN_CRITERIA = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1e-5)
 
 app = FastAPI()
 analyze_lock = threading.Lock()
 camera_lock = threading.Lock()
 recording: dict[str, object] = {}
+reference: dict[str, np.ndarray] = {}
 
 
 def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
@@ -71,8 +74,34 @@ def debug_frame(kind: str, frame: np.ndarray, rects: list[list[float]], labels: 
     print(f"debug frame {path.name}")
 
 
+def small_gray(frame: np.ndarray) -> np.ndarray:
+    return cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), None, fx=ALIGN_SCALE, fy=ALIGN_SCALE, interpolation=cv2.INTER_AREA).astype(np.float32)
+
+
+def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
+    # The head lands a little differently every session, so move the boxes from the segmented frame onto this one.
+    if "gray" not in reference:
+        return rects
+    ref, cur = reference["gray"], small_gray(frame)
+    (dx, dy), _ = cv2.phaseCorrelate(ref, cur, cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
+    warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
+    try:
+        _, warp = cv2.findTransformECC(ref, cur, warp, cv2.MOTION_EUCLIDEAN, ALIGN_CRITERIA, None, 5)
+    except cv2.error:
+        pass
+    warp[:, 2] /= ALIGN_SCALE
+    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px, rotation {np.degrees(np.arctan2(warp[1, 0], warp[0, 0])):.2f} deg")
+    moved = []
+    for x0, y0, x1, y1 in rects:
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        nx, ny = warp @ np.array([cx, cy, 1.0])
+        moved.append([max(x0 + nx - cx, 0.0), max(y0 + ny - cy, 0.0), x1 + nx - cx, y1 + ny - cy])
+    return moved
+
+
 def watch(kind: str, frames, boxes: list[list[float]]) -> list[dict[str, object]]:
     first = next(frames)
+    boxes = align(first, boxes)
     result = leds.leds(itertools.chain([first], frames), boxes)
     height, width = first.shape[:2]
     bands = [[left, top, right, bottom] for top, bottom, left, right in (leds.band(box, height, width) for box in boxes)]
@@ -107,15 +136,18 @@ def describe_camera(burst: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
         capture.home(mini)
         for attempt in range(1, CAMERA_ATTEMPTS + 1):
-            ok, encoded = cv2.imencode(".png", next(capture.frames(mini, 0)))
+            frame = next(capture.frames(mini, 0))
+            ok, encoded = cv2.imencode(".png", frame)
             if not ok:
                 raise ValueError("failed to encode the camera frame")
             try:
                 result = describe(encoded.tobytes())
                 break
             except ValueError as error:
+                debug_frame("segment-rejected", frame, [], [], [])
                 if attempt == CAMERA_ATTEMPTS:
                     raise ValueError(f"{CAMERA_ATTEMPTS} camera frames rejected, last: {error}") from error
+        reference["gray"] = small_gray(frame)
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
         result["leds"] = watch("segment-leds", capture.frames(mini, burst), led_boxes(result))
@@ -131,6 +163,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
             base = None
             for frame in capture.frames(mini, MAX_RECORD_S):
                 if base is None:
+                    regions = [[int(round(v)) for v in r] for r in align(frame, regions)]
                     debug_frame("touch-start", frame, regions, [f"r{i + 1}" for i in range(len(regions))], [True] * len(regions))
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
                 if base is None:
