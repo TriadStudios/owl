@@ -1,6 +1,7 @@
 import hashlib
 import itertools
 import json
+import queue
 import threading
 import time
 from datetime import datetime, timezone
@@ -9,11 +10,13 @@ import cv2
 import numpy as np
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
 import capture
 import leds
 import segment
+import track
 
 MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
@@ -21,6 +24,8 @@ MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
 MAX_CAPTURE_FRAMES = 10
+MAX_TRACK_FPS = 15
+TRACK_BACKLOG = 64
 POLYGON_EPSILON_PX = 1.5
 HOLD_INTERVAL_S = 1.0
 HOLD_SETTLE_S = 0.4
@@ -264,8 +269,41 @@ async def run(fn, *args) -> dict[str, object]:
         raise HTTPException(503, str(error)) from error
 
 
+def refuse_while_frozen() -> None:
+    if track.frozen():
+        raise HTTPException(409, "attribution frozen: a hand is over the port row")
+
+
+@app.get("/track")
+def track_stream(row: str, fps: float = 10) -> StreamingResponse:
+    try:
+        band = [float(v) for v in row.split(",")]
+    except ValueError:
+        band = []
+    if len(band) != 2 or band[0] >= band[1] or not 1 <= fps <= MAX_TRACK_FPS:
+        raise HTTPException(400, f"want row=y0,y1 in frame pixels and fps in 1..{MAX_TRACK_FPS}")
+    lines: queue.Queue = queue.Queue(maxsize=TRACK_BACKLOG)
+    stop = threading.Event()
+    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock), daemon=True).start()
+
+    def stream():
+        try:
+            while (line := lines.get()) is not None:
+                yield line
+        finally:
+            stop.set()
+
+    return StreamingResponse(stream(), media_type="application/x-ndjson")
+
+
+@app.post("/track/clip")
+async def track_clip() -> dict[str, object]:
+    return {"hash": await run(track.save_clip)}
+
+
 @app.post("/segment")
 async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]:
+    refuse_while_frozen()
     image_bytes = await request.body()
     if burst:
         if image_bytes or not 0 < burst <= MAX_BURST_S:
@@ -300,6 +338,7 @@ async def motion_stop() -> dict[str, object]:
 
 @app.post("/leds")
 async def leds_burst(request: Request) -> dict[str, object]:
+    refuse_while_frozen()
     body = await request.json()
     boxes, seconds = body.get("boxes"), body.get("seconds")
     if (
