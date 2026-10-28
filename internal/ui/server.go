@@ -95,6 +95,13 @@ func (s *Server) Run(ctx context.Context) {
 	for {
 		start := time.Now()
 		s.poll(ctx)
+		stale, err := StalePairCodes(s.Devices.Path, start)
+		if err != nil {
+			s.Log.Error("pairing QR check", "err", err)
+		}
+		for _, code := range stale {
+			s.Log.Warn("unused pairing QR older than 10 min holds a live token; scan it or delete it", "path", code)
+		}
 		select {
 		case <-ctx.Done():
 			return

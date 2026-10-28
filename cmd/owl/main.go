@@ -629,7 +629,17 @@ func run(args []string) error {
 			}
 			fmt.Fprintf(tw, "%s\t%s\t%s\n", d.Name, d.Created.Local().Format(time.DateTime), seen)
 		}
-		return tw.Flush()
+		if err := tw.Flush(); err != nil {
+			return err
+		}
+		stale, err := ui.StalePairCodes(devicesPath, time.Now())
+		if err != nil {
+			return err
+		}
+		for _, code := range stale {
+			fmt.Printf("warning: %s is over 10 min old and unused; it holds a live token, scan it or delete it\n", code)
+		}
+		return nil
 	case "pair revoke":
 		if fset.NArg() != 1 {
 			return errors.New("usage: owl pair revoke NAME")
@@ -777,7 +787,7 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	if err != nil {
 		return err
 	}
-	pngPath := filepath.Join("data", "pair-"+name+".png")
+	pngPath := ui.PairCodePath(devicesPath, name)
 	f, err := os.OpenFile(pngPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
@@ -790,7 +800,7 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 		return err
 	}
 	fmt.Print(qr.Terminal(code))
-	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token, delete it once scanned\n", name, relayURL, fingerprint, pngPath)
+	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token and is deleted on the device's first connection\n", name, relayURL, fingerprint, pngPath)
 	return nil
 }
 
