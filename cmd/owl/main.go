@@ -29,6 +29,7 @@ import (
 	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/enroll"
+	"github.com/triadstudios/owl/internal/job"
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
@@ -52,11 +53,12 @@ const (
 	touchStripDepth = 1.0
 	baselinePath    = "data/baseline.json"
 	devicesPath     = "data/devices.json"
+	jobsPath        = "data/jobs.json"
 	tlsDir          = "data/tls"
 	evidenceDir     = "data/evidence"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -71,6 +73,8 @@ func run(args []string) error {
 	case len(args) >= 2 && (args[0] == "snmp" || args[0] == "netbox" || args[0] == "policy"):
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 2 && args[0] == "pair" && (args[1] == "list" || args[1] == "revoke"):
+		cmd, args = args[0]+" "+args[1], args[2:]
+	case len(args) >= 2 && args[0] == "job" && (args[1] == "add" || args[1] == "list" || args[1] == "close"):
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
@@ -96,6 +100,9 @@ func run(args []string) error {
 	addr := fset.String("addr", "0.0.0.0:8080", "serve listen address")
 	robotURL := fset.String("robot", "http://127.0.0.1:8702", "robot bridge URL")
 	pairName := fset.String("name", "phone", "paired device name")
+	tech := fset.String("tech", "", "technician doing the job")
+	window := fset.String("window", "", "job window HH:MM-HH:MM, today local; an end before the start is tomorrow")
+	note := fset.String("note", "", "job note")
 	pairURL := fset.String("url", "", "relay URL in the pairing QR (default wss://<this box's address toward the switch>:<addr port>)")
 	if err := fset.Parse(args); err != nil {
 		return err
@@ -648,6 +655,45 @@ func run(args []string) error {
 			return err
 		}
 		fmt.Printf("revoked %s\n", fset.Arg(0))
+		return nil
+	case "job add":
+		start, end, err := job.ParseWindow(*window, time.Now())
+		if err != nil {
+			return err
+		}
+		j, err := job.Add(jobsPath, job.Job{Port: *port, Tech: *tech, Start: start, End: end, Note: *note, Created: time.Now().UTC()})
+		if err != nil {
+			return err
+		}
+		fmt.Printf("job %d: port %d, %s, %s-%s\n", j.ID, j.Port, j.Tech, j.Start.Format("Jan 2 15:04"), j.End.Format("Jan 2 15:04"))
+		return nil
+	case "job list":
+		jobs, err := job.Load(jobsPath)
+		if err != nil {
+			return err
+		}
+		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(tw, "ID\tPORT\tTECH\tWINDOW\tSTATE\tNOTE")
+		for _, j := range jobs {
+			state := "open"
+			if !j.Closed.IsZero() {
+				state = "closed " + j.Closed.Local().Format("Jan 2 15:04")
+			}
+			fmt.Fprintf(tw, "%d\t%d\t%s\t%s-%s\t%s\t%s\n", j.ID, j.Port, j.Tech, j.Start.Local().Format("Jan 2 15:04"), j.End.Local().Format("Jan 2 15:04"), state, j.Note)
+		}
+		return tw.Flush()
+	case "job close":
+		if fset.NArg() != 1 {
+			return errors.New("usage: owl job close ID")
+		}
+		id, err := strconv.Atoi(fset.Arg(0))
+		if err != nil {
+			return fmt.Errorf("job id %q: %w", fset.Arg(0), err)
+		}
+		if err := job.Close(jobsPath, id, time.Now()); err != nil {
+			return err
+		}
+		fmt.Printf("closed job %d\n", id)
 		return nil
 	case "policy lint":
 		rf, err := os.Open(*rulesPath)
