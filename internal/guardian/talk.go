@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,7 +13,10 @@ import (
 	"github.com/triadstudios/owl/internal/reconcile"
 )
 
-const maxHistory = 8
+const (
+	maxHistory = 8
+	maxVendors = 5
+)
 
 var goodbye = regexp.MustCompile(`(?i)\b(bye|goodbye|that's all|that is all|that's it|nothing else|thanks|thank you|i'm done|all done)\b`)
 
@@ -128,6 +132,11 @@ func (g *Guardian) narratePorts(ports []reconcile.Port) []narrate.Port {
 		}
 		if p.Blast != nil {
 			np.Reasons = append(np.Reasons, fmt.Sprintf("%d %s behind it", d.Behind, plural(d.Behind, "device")), fmt.Sprintf("traffic %s", d.Liveness))
+			for _, dev := range p.Blast.Devices {
+				if dev.Vendor != "" && !slices.Contains(np.Vendors, dev.Vendor) && len(np.Vendors) < maxVendors {
+					np.Vendors = append(np.Vendors, dev.Vendor)
+				}
+			}
 		}
 		if d.Color != "" {
 			np.Reasons = append(np.Reasons, d.Color+" cable")

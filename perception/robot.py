@@ -217,9 +217,9 @@ def move_head(fn, seconds: float, busy: bool = True) -> None:
             state["head_busy_until"] = time.monotonic() + seconds + SETTLE_S
         try:
             fn()
-        except TimeoutError as error:
+        except Exception as error:
             print(f"move skipped: {error}", flush=True)
-            debug_event("move_timeout", seconds=seconds, err=str(error))
+            debug_event("move_failed", seconds=seconds, err=str(error))
 
 
 def watch_camera(m) -> None:
