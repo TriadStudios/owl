@@ -19,12 +19,20 @@ const (
 	maxLine      = 400
 )
 
-const instructions = `You are OWL, the guardian robot watching a network closet. You talk with the technician in short, natural spoken sentences: one to three sentences, no lists, no markdown, no emoji.
+const instructions = `You are OWL, a small robot that watches a network closet and keeps technicians from pulling the wrong cable. Talk like a helpful colleague standing next to them: short, natural spoken sentences, usually one or two, no lists, no markdown, no emoji. Answer what they actually said and what they are about to do. Don't follow a fixed formula and don't repeat details you already gave.
 
-Each request is JSON. kind is "greeting", "reply" or "closing". utterance is what the technician just said. ports is the live port table: num, position from the left, device, the hardware vendors seen on it, verdict and reasons. open_jobs are logged jobs. history is the recent conversation.
+Each request is JSON. kind is "greeting", "reply" or "closing". utterance is what the technician just said, from speech to text, so it may be misheard or cut off. ports is the live port table: num, position from the left, device, vendors, verdict and reasons. open_jobs are logged jobs. history is this conversation so far. scene, when present, is what the camera sees right now: hand_port is the port their hand is at or reaching for, and warnings_spoken are warnings you already called out during this visit.
 
-greeting: greet them briefly and ask what they are here for. Vary the wording.
-reply: work out which port they mean, by number, by a device name, or by a vendor or brand from the table (an "MSI laptop" is a port whose vendor is Micro-Star). If it is clear, set port to that number and tell them about it. Say "port" followed by the number in digits, say its verdict word exactly as the table gives it (safe, caution, do not touch, or unknown), its position, and the main reason. If an open job covers that port, mention it. Never state, soften or imply any verdict other than the one in the table, and never mention a verdict word for any other port. If they did not name a port or it is ambiguous, set port to null and unclear to true and ask one short question without any verdict words. If they are done or say goodbye, set goodbye to true and say a short goodbye.
+greeting: greet them briefly and ask what they are here to do. Vary the wording.
+
+reply: set port to the port the conversation is about now. Work it out from the utterance, from history ("it", "that one" or "the cable" usually mean the port you just talked about), from a device or vendor name in the table (an "MSI laptop" is a port whose vendor is Micro-Star), or from scene.hand_port when they say "this one". Only when none of that settles it, set port to null and unclear to true and ask one short question.
+The first time you talk about a port, say "port" and its number in digits, then its verdict word exactly as the table gives it (safe, caution, do not touch or unknown) and what matters in a few words: what is on it and what would break. After that, talk naturally; you don't have to repeat the verdict.
+If scene.hand_port is set and is not the port they want, tell them straight away that their hand is on the wrong port and which way to move (left or right, how many over).
+If they say they are about to unplug something, respond to that: for caution say what will drop off, for do not touch tell them not to, for safe tell them to go ahead.
+If a warning in warnings_spoken is about what they are doing, acknowledge it briefly.
+Never state, soften or imply a verdict other than the table's. Every verdict word you say must come after the port number it belongs to, and before any other port number.
+If they are done or say goodbye, set goodbye to true and say a short goodbye.
+
 closing: they have gone quiet; say a short goodbye.
 
 Return only JSON: {"port": number or null, "unclear": boolean, "goodbye": boolean, "line": string}`
@@ -57,6 +65,12 @@ type Request struct {
 	Ports     []Port `json:"ports"`
 	Jobs      []Job  `json:"open_jobs"`
 	History   []Turn `json:"history,omitempty"`
+	Scene     *Scene `json:"scene,omitempty"`
+}
+
+type Scene struct {
+	HandPort int      `json:"hand_port,omitempty"`
+	Warnings []string `json:"warnings_spoken,omitempty"`
 }
 
 type Reply struct {
@@ -194,30 +208,38 @@ func SpokenVerdict(verdict string) string {
 	return verdict
 }
 
-func Check(line string, port int, verdict string) error {
-	if !regexp.MustCompile(`(?i)\bport\s+` + strconv.Itoa(port) + `\b`).MatchString(line) {
-		return fmt.Errorf("line does not say port %d", port)
-	}
-	want, ok := verdictWords[verdict]
-	if !ok {
-		return fmt.Errorf("no spoken form for verdict %q", verdict)
-	}
-	if !want.MatchString(line) {
-		return fmt.Errorf("line does not say the verdict %q", verdict)
-	}
-	for word, re := range verdictWords {
-		if word != verdict && re.MatchString(line) {
-			return fmt.Errorf("line says %q but the verdict is %q", word, verdict)
-		}
-	}
-	return nil
-}
+var portMention = regexp.MustCompile(`(?i)\bport\s+(\d+)\b`)
 
-func CheckChat(line string) error {
-	for word, re := range verdictWords {
-		if re.MatchString(line) {
-			return fmt.Errorf("line says %q without naming a port", word)
+func Check(line string, focus int, verdicts map[int]string, mustSay bool) error {
+	marks := portMention.FindAllStringSubmatchIndex(line, -1)
+	said := false
+	for i := -1; i < len(marks); i++ {
+		port, from, to := focus, 0, len(line)
+		if i >= 0 {
+			port, _ = strconv.Atoi(line[marks[i][2]:marks[i][3]])
+			from = marks[i][1]
 		}
+		if i+1 < len(marks) {
+			to = marks[i+1][0]
+		}
+		want := ""
+		if port != 0 {
+			want = verdicts[port]
+		}
+		for word, re := range verdictWords {
+			if !re.MatchString(line[from:to]) {
+				continue
+			}
+			if word != want {
+				return fmt.Errorf("line says %q about port %d, whose verdict is %q", word, port, want)
+			}
+			if i >= 0 && port == focus {
+				said = true
+			}
+		}
+	}
+	if mustSay && !said {
+		return fmt.Errorf("line does not say port %d and its verdict %q", focus, verdicts[focus])
 	}
 	return nil
 }

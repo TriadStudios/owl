@@ -39,6 +39,22 @@ func (g *Guardian) remember(who, text string) {
 	}
 }
 
+func (g *Guardian) ports() []reconcile.Port {
+	if g.visit != nil {
+		return g.visit
+	}
+	return g.Table()
+}
+
+func (g *Guardian) verdicts(ports []reconcile.Port) map[int]string {
+	out := map[int]string{}
+	for _, p := range ports {
+		verdict, _ := facts(p.Num, ports, g.Colors[p.Num])
+		out[p.Num] = narrate.SpokenVerdict(verdict)
+	}
+	return out
+}
+
 func (g *Guardian) ask(kind, utterance string, ports []reconcile.Port) (narrate.Reply, time.Duration, error) {
 	if g.Narrator == nil {
 		return narrate.Reply{}, 0, fmt.Errorf("no narrator")
@@ -50,14 +66,21 @@ func (g *Guardian) ask(kind, utterance string, ports []reconcile.Port) (narrate.
 	ctx, cancel := context.WithTimeout(context.Background(), narrateBudget)
 	defer cancel()
 	start := time.Now()
-	r, err := g.Narrator.Reply(ctx, narrate.Request{Kind: kind, Utterance: utterance, Ports: g.narratePorts(ports), Jobs: jobs, History: g.history})
+	req := narrate.Request{Kind: kind, Utterance: utterance, Ports: g.narratePorts(ports), Jobs: jobs, History: g.history}
+	if g.Scene != nil {
+		if s := g.Scene(); s.HandPort != 0 || len(s.Warnings) > 0 {
+			req.Scene = &s
+		}
+	}
+	r, err := g.Narrator.Reply(ctx, req)
 	return r, time.Since(start), err
 }
 
 func (g *Guardian) chat(kind, utterance, fallback string) string {
-	r, took, err := g.ask(kind, utterance, g.Table())
+	ports := g.ports()
+	r, took, err := g.ask(kind, utterance, ports)
 	if err == nil {
-		err = narrate.CheckChat(r.Line)
+		err = narrate.Check(r.Line, 0, g.verdicts(ports), false)
 	}
 	if err != nil {
 		g.log().Info("narrate fallback", "kind", kind, "reason", err.Error(), "took_ms", took.Milliseconds())
@@ -68,7 +91,7 @@ func (g *Guardian) chat(kind, utterance, fallback string) string {
 
 func (g *Guardian) respond(heard string) (string, int, bool) {
 	g.remember("tech", heard)
-	ports := g.Table()
+	ports := g.ports()
 	parsed := ParseUtterance(heard, ports)
 	bye := goodbye.MatchString(heard)
 	r, took, err := g.ask("reply", heard, ports)
@@ -78,12 +101,13 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 		err = fmt.Errorf("model chose port %d, the utterance says port %d", r.Port, parsed)
 	case r.Port != 0:
 		verdict, _ := facts(r.Port, ports, g.Colors[r.Port])
-		if err = narrate.Check(r.Line, r.Port, narrate.SpokenVerdict(verdict)); err == nil {
+		if err = narrate.Check(r.Line, r.Port, g.verdicts(ports), !g.told[r.Port]); err == nil {
+			g.tell(r.Port)
 			g.logSafety(heard, r.Port, verdict, "model", r.Line, "", took, ports)
 			return r.Line, r.Port, r.Goodbye
 		}
 	default:
-		if err = narrate.CheckChat(r.Line); err == nil {
+		if err = narrate.Check(r.Line, 0, g.verdicts(ports), false); err == nil {
 			return r.Line, 0, r.Goodbye
 		}
 	}
@@ -91,6 +115,7 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 	case parsed != 0:
 		verdict, _ := facts(parsed, ports, g.Colors[parsed])
 		line := Line(parsed, ports, g.Colors[parsed]) + " " + followUp
+		g.tell(parsed)
 		g.logSafety(heard, parsed, verdict, "template", line, errText(err), took, ports)
 		return line, parsed, false
 	case bye:
@@ -100,6 +125,13 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 		g.log().Info("narrate fallback", "kind", "reply", "reason", errText(err), "took_ms", took.Milliseconds())
 		return missLine, 0, false
 	}
+}
+
+func (g *Guardian) tell(port int) {
+	if g.told == nil {
+		g.told = map[int]bool{}
+	}
+	g.told[port] = true
 }
 
 func (g *Guardian) logSafety(heard string, port int, verdict, source, line, fallback string, took time.Duration, ports []reconcile.Port) {

@@ -1173,39 +1173,36 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		Clip:  func() (string, error) { return cam.Clip(ctx) },
 		Log:   log,
 	}
-	startReach := func(a *guardian.Approach, cur []reconcile.Port) context.CancelFunc {
-		rctx, cancel := context.WithCancel(ctx)
-		go reach.Run(rctx, a, cur)
-		return cancel
-	}
 	var stopReach context.CancelFunc
 	defer func() {
 		if stopReach != nil {
 			stopReach()
 		}
 	}()
+	g.Scene = reach.Scene
+	g.Watch = func(cur []reconcile.Port) {
+		if stopReach != nil {
+			return
+		}
+		rctx, cancel := context.WithCancel(ctx)
+		stopReach = cancel
+		a := approachFor(frame, cur, log)
+		log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
+		go func() {
+			bridge.Home()
+			if err := bridge.Prepare(guardian.WarningLines(a, cur)); err != nil {
+				log.Warn("prepare warnings", "err", err)
+			}
+		}()
+		go reach.Run(rctx, a, cur)
+	}
 	state := g.State()
 	for ctx.Err() == nil {
 		g.Step(time.Now())
 		if g.State() != state {
 			log.Info("guardian", "from", state, "to", g.State())
 			state = g.State()
-			switch {
-			case state == guardian.Answer && stopReach == nil:
-				mu.Lock()
-				cur := ports
-				mu.Unlock()
-				a := approachFor(frame, cur, log)
-				bridge.Home()
-				lines := guardian.WarningLines(a, cur)
-				go func() {
-					if err := bridge.Prepare(lines); err != nil {
-						log.Warn("prepare warnings", "err", err)
-					}
-				}()
-				log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
-				stopReach = startReach(a, cur)
-			case (state == guardian.Sleep || state == guardian.Idle) && stopReach != nil:
+			if (state == guardian.Sleep || state == guardian.Idle) && stopReach != nil {
 				stopReach()
 				stopReach = nil
 				log.Info("reach watch stopped")

@@ -74,6 +74,8 @@ type Guardian struct {
 	Jobs     func() []narrate.Job
 	Narrator Narrator
 	Colors   map[int]string
+	Scene    func() narrate.Scene
+	Watch    func(ports []reconcile.Port)
 	Log      *slog.Logger
 
 	state       State
@@ -84,6 +86,8 @@ type Guardian struct {
 	unclear     int
 	greeting    <-chan string
 	history     []narrate.Turn
+	visit       []reconcile.Port
+	told        map[int]bool
 }
 
 func (g *Guardian) State() State {

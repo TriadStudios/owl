@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
+	"sync"
 	"time"
 
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/reconcile"
 )
@@ -15,6 +18,30 @@ type Reach struct {
 	Alert func(text string) error
 	Clip  func() (string, error)
 	Log   *slog.Logger
+
+	mu     sync.Mutex
+	hand   int
+	warned []string
+}
+
+const maxWarnings = 3
+
+func (r *Reach) Scene() narrate.Scene {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return narrate.Scene{HandPort: r.hand, Warnings: slices.Clone(r.warned)}
+}
+
+func (r *Reach) see(port int) {
+	r.mu.Lock()
+	r.hand = port
+	r.mu.Unlock()
+}
+
+func (r *Reach) reset() {
+	r.mu.Lock()
+	r.hand, r.warned = 0, nil
+	r.mu.Unlock()
 }
 
 func StopLine(port int, ports []reconcile.Port) string {
@@ -58,6 +85,8 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 		return
 	}
 	defer r.Log.Info("reach", "event", "tracking stopped")
+	r.reset()
+	defer r.reset()
 	var seenAt, lockedAt time.Time
 	frozen := false
 	for f := range frames {
@@ -80,10 +109,12 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "source", f.Source)
 			case TargetLocked:
 				lockedAt = f.T
+				r.see(e.Port)
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance))
 			case Expected:
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID)
 			case Withdrawn:
+				r.see(0)
 				r.Log.Info("reach", "event", e.Kind, "at", f.T)
 			case Stop, Deviation:
 				text := StopLine(e.Port, ports)
@@ -103,6 +134,12 @@ func (r *Reach) warn(e ApproachEvent, text string, decided, seenAt, lockedAt tim
 		r.Log.Error("warning", "port", e.Port, "err", err)
 		return
 	}
+	r.mu.Lock()
+	r.warned = append(r.warned, text)
+	if len(r.warned) > maxWarnings {
+		r.warned = r.warned[1:]
+	}
+	r.mu.Unlock()
 	r.Log.Info("reach", "event", "warning spoken", "at", time.Now(), "port", e.Port, "kind", e.Kind,
 		"alert_ms", time.Since(start).Milliseconds(), "since_lock_ms", start.Sub(lockedAt).Milliseconds(), "since_seen_ms", start.Sub(seenAt).Milliseconds(), "decided_at", decided)
 	hash, err := r.Clip()
