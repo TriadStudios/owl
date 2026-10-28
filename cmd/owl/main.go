@@ -3,15 +3,18 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -29,7 +32,9 @@ import (
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
+	"github.com/triadstudios/owl/internal/qr"
 	"github.com/triadstudios/owl/internal/reconcile"
+	"github.com/triadstudios/owl/internal/ui"
 )
 
 const (
@@ -46,9 +51,12 @@ const (
 	touchDominance  = 1.5
 	touchStripDepth = 1.0
 	baselinePath    = "data/baseline.json"
+	devicesPath     = "data/devices.json"
+	tlsDir          = "data/tls"
+	evidenceDir     = "data/evidence"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE]"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -62,7 +70,9 @@ func run(args []string) error {
 	switch {
 	case len(args) >= 2 && (args[0] == "snmp" || args[0] == "netbox" || args[0] == "policy"):
 		cmd, args = args[0]+" "+args[1], args[2:]
-	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll"):
+	case len(args) >= 2 && args[0] == "pair" && (args[1] == "list" || args[1] == "revoke"):
+		cmd, args = args[0]+" "+args[1], args[2:]
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
@@ -83,6 +93,10 @@ func run(args []string) error {
 	switchName := fset.String("switch", "DSW250-8P-2X", "switch device name in NetBox")
 	uplink := fset.String("uplink", "GS-BE18000", "comma-separated client names to tag uplink")
 	critical := fset.String("critical", "closet-box", "comma-separated client names to tag critical")
+	addr := fset.String("addr", "0.0.0.0:8080", "serve listen address")
+	robotURL := fset.String("robot", "http://127.0.0.1:8702", "robot bridge URL")
+	pairName := fset.String("name", "phone", "paired device name")
+	pairURL := fset.String("url", "", "relay URL in the pairing QR (default wss://<this box's address toward the switch>:<addr port>)")
 	if err := fset.Parse(args); err != nil {
 		return err
 	}
@@ -597,6 +611,34 @@ func run(args []string) error {
 		}
 		fmt.Printf("seeded %s with %d interfaces and %d clients from %s\n", *switchName, netbox.CopperPort+netbox.SFPPorts, n, *leases)
 		return nil
+	case "serve":
+		return serve(cfg, *addr, *image, *perceptionURL, *leases, *rulesPath, *robotURL)
+	case "pair":
+		return pair(cfg, *pairName, *pairURL, *addr)
+	case "pair list":
+		devices, err := ui.LoadDevices(devicesPath)
+		if err != nil {
+			return err
+		}
+		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(tw, "NAME\tCREATED\tLAST SEEN")
+		for _, d := range devices {
+			seen := "never"
+			if !d.LastSeen.IsZero() {
+				seen = d.LastSeen.Local().Format(time.DateTime)
+			}
+			fmt.Fprintf(tw, "%s\t%s\t%s\n", d.Name, d.Created.Local().Format(time.DateTime), seen)
+		}
+		return tw.Flush()
+	case "pair revoke":
+		if fset.NArg() != 1 {
+			return errors.New("usage: owl pair revoke NAME")
+		}
+		if err := ui.Revoke(devicesPath, fset.Arg(0)); err != nil {
+			return err
+		}
+		fmt.Printf("revoked %s\n", fset.Arg(0))
+		return nil
 	case "policy lint":
 		rf, err := os.Open(*rulesPath)
 		if err != nil {
@@ -613,18 +655,146 @@ func run(args []string) error {
 	}
 }
 
-func newNetbox() (*netbox.Client, error) {
-	base, token := os.Getenv("OWL_NETBOX_URL"), os.Getenv("OWL_NETBOX_TOKEN")
-	if base == "" || token == "" {
-		return nil, errors.New("OWL_NETBOX_URL and OWL_NETBOX_TOKEN are required")
+func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPath, robotURL string) error {
+	if leasesPath == "" {
+		return errors.New("need -leases or OWL_DHCP_LEASES")
 	}
-	return &netbox.Client{BaseURL: strings.TrimSuffix(base, "/"), Token: token, HTTP: &http.Client{Timeout: 30 * time.Second}}, nil
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	rf, err := os.Open(rulesPath)
+	if err != nil {
+		return err
+	}
+	rules, err := policy.Load(rf)
+	rf.Close()
+	if err != nil {
+		return fmt.Errorf("%s: %w", rulesPath, err)
+	}
+	in, err := thresholds()
+	if err != nil {
+		return err
+	}
+	sc := ui.Config{
+		Switch:         cfg,
+		Perception:     &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 30 * time.Second}},
+		RobotURL:       robotURL,
+		LeasesPath:     leasesPath,
+		Rules:          rules,
+		AttributionMin: in.AttributionMin,
+		AggregationMin: in.AggregationMin,
+		EvidenceDir:    evidenceDir,
+		Devices:        &ui.Registry{Path: devicesPath},
+		Log:            log,
+	}
+	if nb, err := newNetbox(); err == nil {
+		sc.Tags = nb
+	}
+	srv, err := ui.New(sc)
+	if err != nil {
+		return err
+	}
+	if image != "" {
+		frame, err := os.ReadFile(image)
+		if err != nil {
+			return err
+		}
+		res, err := sc.Perception.Segment(context.Background(), frame, http.DetectContentType(frame))
+		if err != nil {
+			return fmt.Errorf("%s: %w", image, err)
+		}
+		srv.SetCamera(res)
+		log.Info("camera seeded", "image", image, "frame_hash", res.FrameHash, "ports", len(res.Ports))
+	}
+	cert, fingerprint, err := ui.LoadOrCreateCert(tlsDir)
+	if err != nil {
+		return err
+	}
+	// The relay WebSocket hijacks the connection, which HTTP/2 does not allow.
+	var protocols http.Protocols
+	protocols.SetHTTP1(true)
+	hs := &http.Server{
+		Addr:              addr,
+		Handler:           srv.Handler(),
+		TLSConfig:         &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12},
+		Protocols:         &protocols,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      time.Minute,
+		IdleTimeout:       2 * time.Minute,
+		MaxHeaderBytes:    16 << 10,
+		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	go srv.Run(ctx)
+	go func() {
+		<-ctx.Done()
+		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := hs.Shutdown(shutdown); err != nil {
+			log.Warn("shutdown", "err", err)
+		}
+	}()
+	log.Info("serving", "addr", addr, "cert_sha256", fingerprint)
+	if err := hs.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
 }
 
-func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPath string) (blast.Inputs, error) {
-	if image == "" || leasesPath == "" {
-		return blast.Inputs{}, errors.New("need -image and -leases (or OWL_DHCP_LEASES)")
+func pair(cfg discovery.Config, name, relayURL, addr string) error {
+	if relayURL == "" {
+		if cfg.Host == "" {
+			return errors.New("need -url or OWL_SWITCH_HOST to pick the address the phone should dial")
+		}
+		// Dialing UDP sends nothing; it only asks the OS which local address routes toward the switch.
+		conn, err := net.Dial("udp", net.JoinHostPort(cfg.Host, "161"))
+		if err != nil {
+			return err
+		}
+		local := conn.LocalAddr().(*net.UDPAddr).IP
+		conn.Close()
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return err
+		}
+		relayURL = "wss://" + net.JoinHostPort(local.String(), port)
 	}
+	if !strings.HasPrefix(relayURL, "wss://") {
+		return fmt.Errorf("-url %q: the relay app only accepts wss://", relayURL)
+	}
+	_, fingerprint, err := ui.LoadOrCreateCert(tlsDir)
+	if err != nil {
+		return err
+	}
+	token, err := ui.Pair(devicesPath, name, time.Now())
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(map[string]string{"url": relayURL, "token": token, "cert_sha256": fingerprint})
+	if err != nil {
+		return err
+	}
+	code, err := qr.Encode(payload)
+	if err != nil {
+		return err
+	}
+	pngPath := filepath.Join("data", "pair-"+name+".png")
+	f, err := os.OpenFile(pngPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return err
+	}
+	if err := qr.PNG(f, code, 8); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	fmt.Print(qr.Terminal(code))
+	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token, delete it once scanned\n", name, relayURL, fingerprint, pngPath)
+	return nil
+}
+
+func thresholds() (blast.Inputs, error) {
 	in := blast.Inputs{AttributionMin: 0.6, AggregationMin: 3}
 	if v := os.Getenv("OWL_ATTRIBUTION_MIN"); v != "" {
 		min, err := strconv.ParseFloat(v, 64)
@@ -639,6 +809,25 @@ func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPa
 			return blast.Inputs{}, fmt.Errorf("OWL_AGGREGATION_MIN %q: want a positive integer", v)
 		}
 		in.AggregationMin = min
+	}
+	return in, nil
+}
+
+func newNetbox() (*netbox.Client, error) {
+	base, token := os.Getenv("OWL_NETBOX_URL"), os.Getenv("OWL_NETBOX_TOKEN")
+	if base == "" || token == "" {
+		return nil, errors.New("OWL_NETBOX_URL and OWL_NETBOX_TOKEN are required")
+	}
+	return &netbox.Client{BaseURL: strings.TrimSuffix(base, "/"), Token: token, HTTP: &http.Client{Timeout: 30 * time.Second}}, nil
+}
+
+func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPath string) (blast.Inputs, error) {
+	if image == "" || leasesPath == "" {
+		return blast.Inputs{}, errors.New("need -image and -leases (or OWL_DHCP_LEASES)")
+	}
+	in, err := thresholds()
+	if err != nil {
+		return blast.Inputs{}, err
 	}
 	frame, err := os.ReadFile(image)
 	if err != nil {
