@@ -1130,6 +1130,11 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		},
 		Log: log,
 	}
+	bridge.Keyterms = func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return guardian.DeviceTerms(ports)
+	}
 	narrator := "templates only, OWL_META_API_KEY not set"
 	if key := os.Getenv("OWL_META_API_KEY"); key != "" {
 		transport := http.DefaultTransport.(*http.Transport).Clone()

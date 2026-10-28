@@ -249,6 +249,15 @@ func TestSleepWaitsForAQuietRoomBeforeIdle(t *testing.T) {
 	}
 }
 
+func TestDeviceTermsAreSpeakableAndUnique(t *testing.T) {
+	ports := append(table(), reconcile.Port{Num: 5, Blast: &blast.Card{Neighbor: "nas-01", Devices: []discovery.Device{{Hostname: "Dillon's iPhone"}, {Hostname: "tv"}}}})
+	got := DeviceTerms(ports)
+	want := []string{"Deco AP", "GS BE18000", "NAS 01", "Dillon s iPhone"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("terms %q, want %q", got, want)
+	}
+}
+
 func TestParseUtterance(t *testing.T) {
 	cases := []struct {
 		text string

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/triadstudios/owl/internal/narrate"
@@ -141,4 +142,27 @@ func plural(n int, word string) string {
 		return word
 	}
 	return word + "s"
+}
+
+const maxDeviceTerms = 25
+
+func DeviceTerms(ports []reconcile.Port) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, p := range ports {
+		for _, name := range names(p) {
+			term := strings.Join(strings.FieldsFunc(name, func(r rune) bool {
+				return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9')
+			}), " ")
+			if len(term) < 3 || len(term) > 40 || seen[strings.ToLower(term)] {
+				continue
+			}
+			seen[strings.ToLower(term)] = true
+			out = append(out, term)
+			if len(out) == maxDeviceTerms {
+				return out
+			}
+		}
+	}
+	return out
 }

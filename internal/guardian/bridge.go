@@ -12,9 +12,10 @@ import (
 const maxBridgeReply = 64 << 10
 
 type Bridge struct {
-	BaseURL string
-	HTTP    *http.Client
-	Log     *slog.Logger
+	BaseURL  string
+	HTTP     *http.Client
+	Log      *slog.Logger
+	Keyterms func() []string
 }
 
 type motionReply struct {
@@ -79,12 +80,17 @@ func (b *Bridge) Say(text string) {
 func (b *Bridge) Listen() string {
 	var reply struct {
 		Text string `json:"text"`
+		STT  string `json:"stt"`
 	}
-	if err := b.call(http.MethodPost, "/listen", nil, &reply); err != nil {
+	var body any
+	if b.Keyterms != nil {
+		body = map[string][]string{"keyterms": b.Keyterms()}
+	}
+	if err := b.call(http.MethodPost, "/listen", body, &reply); err != nil {
 		b.Log.Error("listen", "err", err)
 		return ""
 	}
-	b.Log.Info("heard", "text", reply.Text)
+	b.Log.Info("heard", "text", reply.Text, "stt", reply.STT)
 	return reply.Text
 }
 

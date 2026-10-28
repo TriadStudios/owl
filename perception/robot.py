@@ -1,13 +1,16 @@
 import collections
 import http.client
+import io
 import json
 import os
+import re
 import subprocess
 import tempfile
 import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 import wave
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +39,12 @@ WAIT_FOR_SPEECH_S = 6.0
 MAX_UTTERANCE_S = 8.0
 PLAYBACK_TAIL_S = 0.4
 MAX_SAY_CHARS = 500
+SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
+SCRIBE_MODEL = "scribe_v1"
+SCRIBE_TIMEOUT_S = 2.0
+MAX_KEYTERMS = 40
+KEYTERM = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ]{0,39}")
+BASE_KEYTERMS = ["port", "pull", "unplug", "uplink", "cable", *(f"port {n}" for n in ("one", "two", "three", "four", "five", "six", "seven", "eight"))]
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice}/stream?output_format=pcm_16000"
 ELEVENLABS_MODEL = "eleven_flash_v2_5"
 ELEVENLABS_DEFAULT_VOICE = "21m00Tcm4TlvDq8ikWAM"
@@ -306,7 +315,41 @@ def frame_rms(samples: np.ndarray) -> np.ndarray:
     return np.sqrt((samples[:usable].reshape(-1, n) ** 2).mean(axis=1)) if usable else np.zeros(0)
 
 
-def listen() -> dict[str, object]:
+def wav_bytes(samples: np.ndarray) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(AUDIO_RATE)
+        w.writeframes((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
+    return buf.getvalue()
+
+
+def scribe(clip: np.ndarray, key: str, keyterms: list[str]) -> str:
+    boundary = uuid.uuid4().hex
+    fields = [("model_id", SCRIBE_MODEL), ("language_code", "en"), ("tag_audio_events", "false")] + [("keyterms", k) for k in keyterms]
+    body = b"".join(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode() for name, value in fields)
+    body += f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="heard.wav"\r\nContent-Type: audio/wav\r\n\r\n'.encode() + wav_bytes(clip) + f"\r\n--{boundary}--\r\n".encode()
+    request = urllib.request.Request(SCRIBE_URL, data=body, headers={"xi-api-key": key, "Content-Type": f"multipart/form-data; boundary={boundary}"})
+    try:
+        with urllib.request.urlopen(request, timeout=SCRIBE_TIMEOUT_S) as response:
+            return str(json.load(response).get("text", "")).strip()
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"Scribe returned {error.code}: {error.read().decode(errors='replace')[:200]}") from error
+
+
+def transcribe(clip: np.ndarray, keyterms: list[str]) -> tuple[str, str]:
+    key = segment.load_env().get("ELEVENLABS_API_KEY", "").strip()
+    if key:
+        try:
+            return scribe(clip, key, BASE_KEYTERMS + keyterms), "scribe"
+        except (OSError, ValueError, RuntimeError) as error:
+            print(f"scribe failed, using whisper: {error}", flush=True)
+            debug_event("scribe_fallback", err=str(error)[:200])
+    return speech_model()({"raw": clip, "sampling_rate": AUDIO_RATE}, generate_kwargs={"max_new_tokens": 48})["text"].strip(), "whisper"
+
+
+def listen(keyterms: list[str]) -> dict[str, object]:
     with voice_lock:
         mini()
         state["activity"] = "listening"
@@ -330,14 +373,17 @@ def listen() -> dict[str, object]:
             if quiet * VAD_FRAME_S >= SPEECH_END_S or (len(loud) - began) * VAD_FRAME_S >= MAX_UTTERANCE_S:
                 break
         samples = audio_since(start)
+        stt, stt_s = "", 0.0
         if began is not None:
             clip = samples[max(0, int((began * VAD_FRAME_S - 0.3) * AUDIO_RATE)):]
-            text = speech_model()({"raw": clip, "sampling_rate": AUDIO_RATE}, generate_kwargs={"max_new_tokens": 48})["text"].strip()
+            stt_start = time.monotonic()
+            text, stt = transcribe(clip, keyterms)
+            stt_s = time.monotonic() - stt_start
         took = time.monotonic() - start
-        print(f"heard {text!r} after {took:.1f} s (threshold {threshold:.3f}, floor {floor:.3f}, speech {'yes' if began is not None else 'no'})", flush=True)
+        print(f"heard {text!r} via {stt or '-'} in {stt_s:.2f} s, {took:.1f} s total (threshold {threshold:.3f}, floor {floor:.3f})", flush=True)
         state["activity"] = f"heard: {text}"
-        debug_event("listen", text=text, took_s=round(took, 2), threshold=round(threshold, 4), floor=round(floor, 4), speech_at_s=None if began is None else round(began * VAD_FRAME_S, 2), clip=debug_clip(samples))
-    return {"text": text}
+        debug_event("listen", text=text, stt=stt, stt_s=round(stt_s, 2), took_s=round(took, 2), threshold=round(threshold, 4), floor=round(floor, 4), speech_at_s=None if began is None else round(began * VAD_FRAME_S, 2), clip=debug_clip(samples))
+    return {"text": text, "stt": stt}
 
 
 def elevenlabs(text: str, key: str, voice: str, play) -> None:
@@ -527,8 +573,12 @@ async def say_text(request: Request) -> dict[str, object]:
 
 
 @app.post("/listen")
-async def listen_once() -> dict[str, object]:
-    return await run(listen)
+async def listen_once(request: Request) -> dict[str, object]:
+    body = await request.body()
+    keyterms = json.loads(body).get("keyterms", []) if body else []
+    if not isinstance(keyterms, list) or len(keyterms) > MAX_KEYTERMS or not all(isinstance(k, str) and KEYTERM.fullmatch(k) for k in keyterms):
+        raise HTTPException(400, f"keyterms: at most {MAX_KEYTERMS} strings of letters, digits and spaces, 1-40 long")
+    return await run(listen, keyterms)
 
 
 def main() -> None:
