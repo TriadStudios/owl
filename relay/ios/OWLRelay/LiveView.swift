@@ -19,7 +19,7 @@ struct LiveView: View {
                     .background(.black.opacity(0.6), in: Capsule())
                 if let label = model.bannerLabel {
                     HStack(spacing: 10) {
-                        Image(systemName: label.verdict == .do_not_touch ? "hand.raised.fill" : "info.circle.fill")
+                        Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
                         Text("\(label.verdict.title.uppercased()) · \(label.text)")
                             .lineLimit(1)
                     }
@@ -42,7 +42,7 @@ struct LiveView: View {
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, minHeight: 64)
-                    .background(model.talking ? Verdict.do_not_touch.color : Theme.accent, in: RoundedRectangle(cornerRadius: 16))
+                    .background(model.talking ? Verdict.doNotTouch.color : Theme.accent, in: RoundedRectangle(cornerRadius: 16))
                     .gesture(DragGesture(minimumDistance: 0)
                         .onChanged { _ in model.beginTalk() }
                         .onEnded { _ in model.endTalk() })

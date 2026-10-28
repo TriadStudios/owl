@@ -171,6 +171,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "OWL Relay";
 				INFOPLIST_KEY_NSCameraUsageDescription = "OWL Relay streams the camera to your OWL server to identify rack ports.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "OWL Relay listens while you hold the talk button.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "OWL Relay connects to the OWL server in your network closet.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "OWL Relay transcribes what you say while you hold the talk button.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -200,6 +201,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "OWL Relay";
 				INFOPLIST_KEY_NSCameraUsageDescription = "OWL Relay streams the camera to your OWL server to identify rack ports.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "OWL Relay listens while you hold the talk button.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "OWL Relay connects to the OWL server in your network closet.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "OWL Relay transcribes what you say while you hold the talk button.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

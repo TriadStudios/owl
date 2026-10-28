@@ -11,15 +11,8 @@ final class AppModel: ObservableObject {
     @Published var pairings: [Pairing]
     @Published var activeID: String?
     @Published var showPair: Bool
-    @Published var mock: Bool {
-        didSet {
-            API.mock = mock
-            ports = nil
-            findings = []
-            if !mock && active == nil { showPair = true }
-            Task { await refresh() }
-        }
-    }
+    @Published var health: Health?
+    @Published var healthAt = Date()
     @Published var ports: PortsResponse?
     @Published var findings: [Finding] = []
     @Published var loadError: String?
@@ -58,8 +51,7 @@ final class AppModel: ObservableObject {
         let activeID = PairingStore.activeURL ?? pairings.first?.id
         self.pairings = pairings
         self.activeID = activeID
-        mock = API.mock
-        showPair = activeID == nil && !API.mock
+        showPair = activeID == nil
         let savedFPS = UserDefaults.standard.integer(forKey: "fps")
         fps = savedFPS == 0 ? 5 : savedFPS
         voice = UserDefaults.standard.object(forKey: "voice") as? Bool ?? true
@@ -95,24 +87,38 @@ final class AppModel: ObservableObject {
         }
     }
 
+    var lastPoll: Date? {
+        health?.last_poll_age_s.map { healthAt.addingTimeInterval(-$0) }
+    }
+
     func refresh() async {
-        let pairing = active
-        guard pairing != nil || mock else { return }
-        do {
-            async let p: PortsResponse = API.get("/api/ports", from: pairing)
-            async let f: FindingsResponse = API.get("/api/findings", from: pairing)
-            let (pr, fr) = try await (p, f)
-            ports = pr
-            findings = fr.findings
-            loadError = nil
-            if !mock, var pairing, pairing.name != pr.closet.name {
-                pairing.name = pr.closet.name
-                PairingStore.save(pairing)
-                pairings = PairingStore.loadAll()
-            }
-        } catch {
-            loadError = error.localizedDescription
+        guard let pairing = active else { return }
+        async let h: Result<Health, Error> = fetch("/api/health", pairing)
+        async let p: Result<PortsResponse, Error> = fetch("/api/ports", pairing)
+        async let f: Result<FindingsResponse, Error> = fetch("/api/findings", pairing)
+        let (hr, pr, fr) = await (h, p, f)
+        guard pairing.id == activeID else { return }
+        var errors: [String] = []
+        switch hr {
+        case .success(let v):
+            health = v
+            healthAt = Date()
+        case .failure(let e): errors.append(e.localizedDescription)
         }
+        switch pr {
+        case .success(let v): ports = v
+        case .failure(let e): errors.append(e.localizedDescription)
+        }
+        switch fr {
+        case .success(let v): findings = v.findings
+        case .failure(let e): errors.append(e.localizedDescription)
+        }
+        var seen = Set<String>()
+        loadError = errors.isEmpty ? nil : errors.filter { seen.insert($0).inserted }.joined(separator: "\n")
+    }
+
+    private nonisolated func fetch<T: Decodable>(_ path: String, _ pairing: Pairing) async -> Result<T, Error> {
+        do { return .success(try await API.get(path, from: pairing)) } catch { return .failure(error) }
     }
 
     func pair(with code: String) -> Bool {
@@ -128,8 +134,10 @@ final class AppModel: ObservableObject {
     func activate(_ pairing: Pairing) {
         activeID = pairing.id
         PairingStore.activeURL = pairing.id
+        health = nil
         ports = nil
         findings = []
+        loadError = nil
         overlay = Overlay()
         relay.connect(pairing)
         Task { await refresh() }
@@ -146,11 +154,11 @@ final class AppModel: ObservableObject {
         activeID = nil
         relay.disconnect()
         overlay = Overlay()
-        if !mock {
-            ports = nil
-            findings = []
-            showPair = true
-        }
+        health = nil
+        ports = nil
+        findings = []
+        loadError = nil
+        showPair = true
     }
 
     func startLive() {
@@ -181,9 +189,9 @@ final class AppModel: ObservableObject {
     private func handle(_ msg: ServerMessage) {
         switch msg {
         case .overlay(let o):
-            let had = overlay.labels.contains { $0.verdict == .do_not_touch }
+            let had = overlay.labels.contains { $0.verdict == .doNotTouch }
             overlay = o
-            if !had && o.labels.contains(where: { $0.verdict == .do_not_touch }) {
+            if !had && o.labels.contains(where: { $0.verdict == .doNotTouch }) {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
             }
         case .say(let text):

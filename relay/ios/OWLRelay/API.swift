@@ -32,45 +32,77 @@ final class PinnedDelegate: NSObject, URLSessionDelegate {
     }
 }
 
-enum API {
-    static var mock: Bool {
-        get { UserDefaults.standard.bool(forKey: "OWLMock") }
-        set { UserDefaults.standard.set(newValue, forKey: "OWLMock") }
+enum APIError: LocalizedError {
+    case notPaired
+    case unauthorized
+    case server(Int, String?)
+    case pinMismatch
+
+    var errorDescription: String? {
+        switch self {
+        case .notPaired: "No closet paired."
+        case .unauthorized: "The closet rejected this phone's token. Re-pair to continue."
+        case .server(let code, let message): message.map { "Server: \($0)" } ?? "Server returned HTTP \(code)."
+        case .pinMismatch: "The closet's certificate doesn't match the pairing. Re-pair to continue."
+        }
     }
+}
+
+enum API {
+    private static let fraction = try! NSRegularExpression(pattern: #"(\.\d{3})\d+"#)
 
     static let decoder: JSONDecoder = {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .custom { dec in
-            let s = try dec.singleValueContainer().decode(String.self)
+            let raw = try dec.singleValueContainer().decode(String.self)
+            let s = fraction.stringByReplacingMatches(in: raw, range: NSRange(raw.startIndex..., in: raw), withTemplate: "$1")
             let f = ISO8601DateFormatter()
             f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             if let date = f.date(from: s) { return date }
             f.formatOptions = [.withInternetDateTime]
             if let date = f.date(from: s) { return date }
-            throw DecodingError.dataCorrupted(.init(codingPath: dec.codingPath, debugDescription: "bad date \(s)"))
+            throw DecodingError.dataCorrupted(.init(codingPath: dec.codingPath, debugDescription: "bad date \(raw)"))
         }
         return d
     }()
 
-    static func get<T: Decodable>(_ path: String, from pairing: Pairing?) async throws -> T {
-        if mock {
-            let name = path.split(separator: "/").last.map(String.init) ?? path
-            guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { throw URLError(.fileDoesNotExist) }
-            return try decoder.decode(T.self, from: Data(contentsOf: url))
+    private static var sessions: [String: URLSession] = [:]
+    private static let lock = NSLock()
+
+    private static func session(pin: String) -> URLSession {
+        lock.withLock {
+            if let s = sessions[pin] { return s }
+            let config = URLSessionConfiguration.ephemeral
+            config.timeoutIntervalForRequest = 10
+            let s = URLSession(configuration: config, delegate: PinnedDelegate(pin: pin), delegateQueue: nil)
+            sessions[pin] = s
+            return s
         }
-        return try decoder.decode(T.self, from: try await data(path, from: pairing))
+    }
+
+    static func get<T: Decodable>(_ path: String, from pairing: Pairing?) async throws -> T {
+        try decoder.decode(T.self, from: try await data(path, from: pairing))
     }
 
     static func data(_ path: String, from pairing: Pairing?) async throws -> Data {
-        guard let pairing, let base = pairing.apiBase, let url = URL(string: path, relativeTo: base) else {
-            throw URLError(.badURL)
-        }
+        guard let pairing else { throw APIError.notPaired }
+        guard let base = pairing.apiBase, let url = URL(string: path, relativeTo: base) else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(pairing.token)", forHTTPHeaderField: "Authorization")
-        let session = URLSession(configuration: .ephemeral, delegate: PinnedDelegate(pin: pairing.pin), delegateQueue: nil)
-        defer { session.finishTasksAndInvalidate() }
-        let (data, response) = try await session.data(for: request)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
-        return data
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session(pin: pairing.pin).data(for: request)
+        } catch let error as URLError where !Task.isCancelled && (error.code == .cancelled || error.code == .serverCertificateUntrusted) {
+            throw APIError.pinMismatch
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        switch status {
+        case 200: return data
+        case 401: throw APIError.unauthorized
+        default:
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
+            throw APIError.server(status, message)
+        }
     }
 }

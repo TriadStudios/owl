@@ -3,6 +3,11 @@ import SwiftUI
 enum Theme {
     static let accent = Color(hex: "#0A84FF")
     static let card = Color(white: 0.11)
+    static let palette = ["#5E5CE6", "#BF5AF2", "#64D2FF", "#FF7AB2", "#AC8E68", "#66D4CF", "#A7A3FF", "#D1D1D6", "#DA70D6"]
+
+    static func portColor(_ num: Int) -> String {
+        palette[((num - 1) % palette.count + palette.count) % palette.count]
+    }
 }
 
 extension Verdict {
@@ -10,7 +15,7 @@ extension Verdict {
         switch self {
         case .safe: Color(hex: "#30D158")
         case .caution: Color(hex: "#FF9F0A")
-        case .do_not_touch: Color(hex: "#FF453A")
+        case .doNotTouch: Color(hex: "#FF453A")
         case .unknown: Color(hex: "#8E8E93")
         }
     }
@@ -19,7 +24,7 @@ extension Verdict {
 extension Severity {
     var color: Color {
         switch self {
-        case .critical: Verdict.do_not_touch.color
+        case .critical: Verdict.doNotTouch.color
         case .warning: Verdict.caution.color
         case .info: Theme.accent
         }
@@ -28,7 +33,6 @@ extension Severity {
 
 struct PortChip: View {
     let num: Int
-    let color: String
     let verdict: Verdict
     var size: CGFloat = 48
 
@@ -37,7 +41,7 @@ struct PortChip: View {
             .font(.system(size: size * 0.38, weight: .semibold).monospacedDigit())
             .foregroundStyle(.black)
             .frame(width: size, height: size)
-            .background(Color(hex: color), in: Circle())
+            .background(Color(hex: Theme.portColor(num)), in: Circle())
             .padding(4)
             .overlay(Circle().strokeBorder(verdict.color, lineWidth: 3))
     }
