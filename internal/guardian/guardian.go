@@ -1,7 +1,10 @@
 package guardian
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
+	"math/rand/v2"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,6 +13,7 @@ import (
 	"unicode"
 
 	"github.com/triadstudios/owl/internal/blast"
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/reconcile"
 )
 
@@ -27,12 +31,18 @@ const (
 	wakeAfter       = time.Second
 	sleepAfter      = 60 * time.Second
 	quietBeforeIdle = 10 * time.Second
-	maxMisses       = 1
-	greeting        = "Hi, I'm watching this switch. What are you here for?"
+	silenceEnd      = 20 * time.Second
+	narrateBudget   = 1500 * time.Millisecond
 	missLine        = "I didn't catch a port. Say port and a number, or the device's name."
 	followUp        = "Anything else?"
 	closing         = "Okay. I'll keep watching."
 )
+
+var greetings = []string{
+	"Hi, I'm watching this switch. What are you here for?",
+	"Hey there. What are you working on today?",
+	"Hello. Which cable are you after?",
+}
 
 type Point struct{ X, Y float64 }
 
@@ -52,17 +62,25 @@ type Camera interface {
 	Motion() bool
 }
 
+type Narrator interface {
+	Reply(ctx context.Context, req narrate.Request) (narrate.Reply, error)
+}
+
 type Guardian struct {
-	Robot  Robot
-	Camera Camera
-	Table  func() []reconcile.Port
-	Colors map[int]string
+	Robot    Robot
+	Camera   Camera
+	Table    func() []reconcile.Port
+	Jobs     func() []narrate.Job
+	Narrator Narrator
+	Colors   map[int]string
+	Log      *slog.Logger
 
 	state       State
 	motionSince time.Time
 	lastMotion  time.Time
+	lastSpeech  time.Time
 	heard       string
-	misses      int
+	history     []narrate.Turn
 }
 
 func (g *Guardian) State() State {
@@ -94,31 +112,35 @@ func (g *Guardian) Step(now time.Time) {
 		if now.Sub(g.lastMotion) >= quietBeforeIdle {
 			g.state, g.motionSince = Idle, time.Time{}
 		}
+	case Wake:
+		g.history = nil
+		g.say(g.chat("greeting", "", greetings[rand.IntN(len(greetings))]))
+		g.heard, g.lastSpeech = g.Robot.Listen(), now
+		g.state = Ask
 	default:
-		if now.Sub(g.lastMotion) >= sleepAfter {
-			g.Robot.Home()
-			g.state = Sleep
-			return
-		}
-		ports := g.Table()
-		num := ParseUtterance(g.heard, ports)
 		switch {
-		case g.state == Wake:
-			g.Robot.Say(greeting)
-			g.heard, g.misses = g.Robot.Listen(), 0
-			g.state = Ask
-		case num != 0:
-			g.Robot.Say(Line(num, ports, g.Colors[num]) + " " + followUp)
-			g.heard = g.Robot.Listen()
-			g.state = Answer
-		case g.state == Ask && g.misses < maxMisses:
-			g.Robot.Say(missLine)
-			g.heard = g.Robot.Listen()
-			g.misses++
-		default:
-			g.Robot.Say(closing)
+		case now.Sub(g.lastMotion) >= sleepAfter:
 			g.Robot.Home()
 			g.state = Sleep
+		case g.heard == "" && now.Sub(g.lastSpeech) >= silenceEnd:
+			g.say(g.chat("closing", "", closing))
+			g.Robot.Home()
+			g.state = Sleep
+		case g.heard == "":
+			g.heard = g.Robot.Listen()
+		default:
+			g.lastSpeech = now
+			line, port, bye := g.respond(g.heard)
+			g.say(line)
+			if bye {
+				g.Robot.Home()
+				g.state = Sleep
+				return
+			}
+			if port != 0 {
+				g.state = Answer
+			}
+			g.heard = g.Robot.Listen()
 		}
 	}
 }
@@ -211,7 +233,7 @@ var lines = template.Must(template.New("").Parse(`
 {{- define "do-not-touch"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Do not touch: {{.Reason}}. {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
 {{- define "caution"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{.Downstream}}. Caution: {{.Liveness}}, {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
 {{- define "safe"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{.Downstream}}, {{.Liveness}}. Safe.{{end}}
-{{- define "unknown"}}Port {{.Num}}: I can't tell whether it's safe, {{.Reason}}.{{end}}`))
+{{- define "unknown"}}Port {{.Num}}: unknown. I can't tell, {{.Reason}}.{{end}}`))
 
 type lineData struct {
 	Num        int
@@ -224,6 +246,15 @@ type lineData struct {
 }
 
 func Line(num int, ports []reconcile.Port, color string) string {
+	verdict, d := facts(num, ports, color)
+	var b strings.Builder
+	if err := lines.ExecuteTemplate(&b, verdict, d); err != nil {
+		return fmt.Sprintf("Port %d: unknown. I can't tell, %v.", num, err)
+	}
+	return b.String()
+}
+
+func facts(num int, ports []reconcile.Port, color string) (string, lineData) {
 	d := lineData{Num: num, Color: color, Reason: fmt.Sprintf("port %d is not on the switch", num)}
 	verdict := "unknown"
 	position := 0
@@ -255,11 +286,7 @@ func Line(num int, ports []reconcile.Port, color string) string {
 		}
 	}
 	d.Position = ordinal(position)
-	var b strings.Builder
-	if err := lines.ExecuteTemplate(&b, verdict, d); err != nil {
-		return fmt.Sprintf("Port %d: I can't tell whether it's safe, %v.", num, err)
-	}
-	return b.String()
+	return verdict, d
 }
 
 func ordinal(n int) string {

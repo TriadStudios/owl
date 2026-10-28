@@ -33,6 +33,7 @@ import (
 	"github.com/triadstudios/owl/internal/finding"
 	"github.com/triadstudios/owl/internal/guardian"
 	"github.com/triadstudios/owl/internal/job"
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
@@ -1112,8 +1113,29 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 			defer mu.Unlock()
 			return ports
 		},
+		Jobs: func() []narrate.Job {
+			jobs, err := job.Load(jobsPath)
+			if err != nil {
+				log.Error("jobs", "err", err)
+				return nil
+			}
+			now := time.Now()
+			var open []narrate.Job
+			for _, j := range jobs {
+				if j.Closed.IsZero() && !now.Before(j.Start) && !now.After(j.End) {
+					open = append(open, narrate.Job{ID: j.ID, Port: j.Port, Tech: j.Tech, Note: j.Note, Until: j.End.Local().Format("15:04")})
+				}
+			}
+			return open
+		},
+		Log: log,
 	}
-	log.Info("guardian watching", "robot", robotURL)
+	narrator := "templates only, OWL_META_API_KEY not set"
+	if key := os.Getenv("OWL_META_API_KEY"); key != "" {
+		g.Narrator = &narrate.Client{URL: narrate.DefaultURL, Model: narrate.DefaultModel, Key: key, HTTP: &http.Client{Timeout: 10 * time.Second}}
+		narrator = narrate.DefaultModel
+	}
+	log.Info("guardian watching", "robot", robotURL, "narrator", narrator)
 	state := g.State()
 	for ctx.Err() == nil {
 		g.Step(time.Now())
