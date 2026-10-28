@@ -43,6 +43,11 @@ class AdjacentPlugsFrame(unittest.TestCase):
         row = segment.ports(sam["results"])
         self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "XXX...X.")
 
+    def test_socket_box_in_the_gap_between_neighbouring_plugs_is_not_a_port(self) -> None:
+        sam = json.loads((TESTDATA / "sam-switch-face-2-gap.json").read_text())
+        row = segment.ports(sam["results"])
+        self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "XXX...X.")
+
 
 if __name__ == "__main__":
     unittest.main()

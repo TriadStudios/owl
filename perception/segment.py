@@ -234,8 +234,8 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         for s, y in zip(sockets, centers_y)
         if abs(y - row_y) <= socket_height / 2
     ]
-    # Small boxes off the row (the SFP cages' LEDs) pull the all-socket median down, and a 1.5-socket plug end then splits into two ports.
-    socket_width = float(np.median([c["box"][2] - c["box"][0] for c in candidates]))
+    # Small boxes off the row (the SFP cages' LEDs) pull the all-socket median down and the console port and merged double boxes in the row push it up; the row's lower quartile tracks the real sockets.
+    socket_width = float(np.percentile([c["box"][2] - c["box"][0] for c in candidates], 25))
     for cable_index, cable in enumerate(results[CABLE_PROMPT]):
         mask = decode_rle(cable["mask_rle"])
         rows = np.flatnonzero(mask.any(axis=1))
@@ -257,6 +257,11 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
                     < 0.5 * min(c["box"][2] - c["box"][0], box[2] - box[0])
                 ]
                 candidates.append({"box": box, "occupied": True, "cable": cable_index, "score": cable["score"]})
+
+    # The gap between two neighbouring plugs can read as a socket that overlaps neither plug by half; no port fits between neighbours.
+    plugs = sorted(((c["box"][0] + c["box"][2]) / 2, c["box"][2] - c["box"][0]) for c in candidates if c["occupied"])
+    between = [(a, b) for (a, wa), (b, wb) in zip(plugs, plugs[1:]) if b - a < wa + wb]
+    candidates = [c for c in candidates if c["occupied"] or not any(a < (c["box"][0] + c["box"][2]) / 2 < b for a, b in between)]
 
     candidates.sort(key=lambda c: c["box"][0] + c["box"][2])
     runs: list[list[dict[str, object]]] = []
