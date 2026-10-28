@@ -13,7 +13,7 @@ import (
 
 const maxHistory = 8
 
-var goodbye = regexp.MustCompile(`(?i)\b(bye|goodbye|that's all|that is all|nothing else|no thanks|no,? thank you|i'm done|all done)\b`)
+var goodbye = regexp.MustCompile(`(?i)\b(bye|goodbye|that's all|that is all|that's it|nothing else|thanks|thank you|i'm done|all done)\b`)
 
 func (g *Guardian) log() *slog.Logger {
 	if g.Log == nil {

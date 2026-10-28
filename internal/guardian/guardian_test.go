@@ -120,7 +120,7 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 	if g.State() != Ask || g.heard != "port 3" || robot.said[0] != missLine {
 		t.Fatalf("unparsed utterance: state %s said %q heard %q, want a re-ask", g.State(), robot.said, g.heard)
 	}
-	g.heard = "ok bye then"
+	g.heard = "Okay, thank you."
 	g.Step(now.Add(2 * time.Second))
 	if g.State() != Sleep || robot.said[1] != closing || robot.homes != 1 {
 		t.Fatalf("goodbye: state %s said %q homes %d, want a closing line and home", g.State(), robot.said, robot.homes)
