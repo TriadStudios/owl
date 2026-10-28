@@ -156,6 +156,7 @@ func TestParseUtterance(t *testing.T) {
 		{"PORT 12 please", 12},
 		{"I'm pulling port two.", 2},
 		{"port forwarding", 0},
+		{"Hello. Need a pool port too.", 2},
 		{"the nas-01 box", 3},
 		{"working on nas zero one", 0},
 		{"nas 01", 3},
