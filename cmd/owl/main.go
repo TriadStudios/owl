@@ -38,7 +38,7 @@ const (
 	pulseCycles     = 10
 	pulseSample     = time.Second
 	maxPingTargets  = 4
-	pingersPerIP    = 16
+	pingersPerIP    = 64
 	enrollBurst     = 10 * time.Second
 	touchMinChange  = 12.0
 	touchDominance  = 1.5
@@ -251,7 +251,7 @@ func run(args []string) error {
 			}
 			if i := slices.IndexFunc(sp.MACs, func(m string) bool { return local[m] }); i >= 0 {
 				self = p.Num
-				notes[p.Num] += fmt.Sprintf("; the closet box's own port: its MAC %s is in the FDB here (snmp fdb), so pinging cannot isolate it", sp.MACs[i])
+				notes[p.Num] += fmt.Sprintf("; the closet box's own port: its MAC %s is in the FDB here (snmp fdb)", sp.MACs[i])
 			}
 			if sp.LLDP != nil {
 				if i := slices.IndexFunc(sp.LLDP.Capabilities, func(c string) bool { return slices.Contains(rules.UplinkCapabilities, c) }); i >= 0 {
@@ -361,12 +361,32 @@ func run(args []string) error {
 			if pingErr != nil {
 				return fmt.Errorf("ping: %w", pingErr)
 			}
+			if err := os.MkdirAll("data/debug", 0o755); err != nil {
+				return err
+			}
+			dump, err := json.MarshalIndent(pulse, "", " ")
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(filepath.Join("data/debug", pulse.Start.Format("20060102T150405")+"-pulse.json"), dump, 0o644); err != nil {
+				return err
+			}
 			others := slices.DeleteFunc(slices.Clone(lit), func(n int) bool { return n == p.Num })
 			ok, why := enroll.Pulsed(pulse, p.Num, others)
 			if ok {
 				p.Status, p.Source, p.VerifiedAt, p.Reason = enroll.Verified, "camera+snmp+ping", time.Now(), why
 			} else {
 				p.Reason += "; " + why
+			}
+			// Every echo and reply also crosses the closet box's own port, so the same pulse must show up there and nowhere else.
+			if s := slices.IndexFunc(ports, func(q enroll.Port) bool { return q.Num == self }); s >= 0 && ports[s].Occupied && ports[s].Status != enroll.Verified {
+				sp := &ports[s]
+				selfOK, selfWhy := enroll.Pulsed(pulse, self, others)
+				if selfOK {
+					sp.Status, sp.Source, sp.VerifiedAt, sp.Reason = enroll.Verified, "camera+snmp+ping", time.Now(), fmt.Sprintf("carries the closet box's ping to port %d: %s", p.Num, selfWhy)
+				} else {
+					sp.Reason += fmt.Sprintf("; the closet box's ping to port %d: %s", p.Num, selfWhy)
+				}
 			}
 		}
 
