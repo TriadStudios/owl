@@ -21,6 +21,7 @@ SPEND_PATH = CACHE / "spend.json"
 SPEND_LOCK_TIMEOUT_S = 30
 ROI_PATH = ROOT / "data" / "port-roi.json"
 ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
+ROI_MIN_BOXES = 4
 META_API_URL = "https://api.meta.ai/v1/responses"
 LOCAL_MODEL = "facebook/sam3"
 LOCAL_LONG_SIDE = 1280
@@ -211,6 +212,13 @@ def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
 
 
 def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
+    row = port_row(results)
+    if len(row) != COPPER_PORTS:
+        raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
+    return row
+
+
+def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     sockets: list[Instance] = []
     for instance in sorted(
         (instance for prompt in SOCKET_PROMPTS for instance in results[prompt]),
@@ -272,8 +280,6 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         else:
             runs.append([candidate])
     row = max(runs, key=len, default=[])
-    if len(row) != COPPER_PORTS:
-        raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
     for port in row:
         port["row_band"] = [top, bottom]
     return row
@@ -307,9 +313,12 @@ def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[s
 
     if not ROI_PATH.exists():
         try:
-            full_row = ports(segment(image_bytes, image, env))
+            full_row = port_row(segment(image_bytes, image, env))
         except ValueError as error:
             raise ValueError(f"cannot place the port-row crop: {error}") from error
+        # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
+        if len(full_row) < ROI_MIN_BOXES:
+            raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
         box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
         box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
         rect = [
