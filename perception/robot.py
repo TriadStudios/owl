@@ -45,6 +45,8 @@ MOTION_PIXEL = 25
 MOTION_FRACTION = 0.004
 MOTION_SAME_FRAME = 0.5
 MOTION_FRESH_S = 1.0
+MOTION_HITS = 3
+MOTION_WINDOW_S = 1.0
 PRESENCE_FRESH_S = 1.0
 FACE_WIDTH = 640
 FACE_EVERY_S = 0.2
@@ -70,6 +72,7 @@ DEBUG_DIR = segment.ROOT / "data" / "debug" / "robot"
 DEBUG_FPS = 10
 DEBUG_SIZE = (640, 360)
 DEBUG_PREROLL_S = 3
+DEBUG_GRID_MAX = 300
 
 app = FastAPI()
 state: dict[str, object] = {
@@ -81,7 +84,10 @@ audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
 audio_lock = threading.Lock()
 head_lock = threading.Lock()
 voice_lock = threading.Lock()
-debug: dict[str, object] = {"on": False, "dir": None, "writer": None, "events": None, "clips": 0, "next_at": 0.0, "preroll": collections.deque(maxlen=DEBUG_PREROLL_S * DEBUG_FPS)}
+debug: dict[str, object] = {
+    "on": False, "dir": None, "writer": None, "events": None, "clips": 0, "next_at": 0.0,
+    "preroll": collections.deque(maxlen=DEBUG_PREROLL_S * DEBUG_FPS), "grid": collections.deque(), "grid_session": [],
+}
 debug_lock = threading.Lock()
 
 
@@ -97,14 +103,34 @@ def debug_start() -> None:
         for image in debug["preroll"]:
             writer.write(image)
         debug["preroll"].clear()
+        debug["grid_session"] = list(debug["grid"])
+        debug["grid"].clear()
         debug.update(dir=folder, writer=writer, events=(folder / "events.jsonl").open("a", encoding="utf-8"), clips=0)
     print(f"debug recording {folder}", flush=True)
+
+
+def debug_grid(gray: np.ndarray, fraction: float) -> None:
+    if not debug["on"]:
+        return
+    with debug_lock:
+        entry = (time.time(), gray.astype(np.uint8), fraction)
+        if debug["dir"] is not None:
+            if len(debug["grid_session"]) < DEBUG_GRID_MAX:
+                debug["grid_session"].append(entry)
+            return
+        debug["grid"].append(entry)
+        while debug["grid"] and debug["grid"][0][0] < entry[0] - DEBUG_PREROLL_S:
+            debug["grid"].popleft()
 
 
 def debug_stop() -> None:
     with debug_lock:
         if debug["dir"] is None:
             return
+        grid = debug["grid_session"]
+        if grid:
+            np.savez_compressed(debug["dir"] / "motion.npz", t=np.array([g[0] for g in grid]), frames=np.stack([g[1] for g in grid]), fraction=np.array([g[2] for g in grid]))
+        debug["grid_session"] = []
         debug["writer"].release()
         debug["events"].close()
         print(f"debug saved {debug['dir']}", flush=True)
@@ -190,6 +216,7 @@ def move_head(fn, seconds: float, busy: bool = True) -> None:
 def watch_camera(m) -> None:
     detector, tracker = FaceDetector(), Tracker()
     history: collections.deque[np.ndarray] = collections.deque(maxlen=2)
+    motion_hits: collections.deque[float] = collections.deque()
     next_face, next_track = 0.0, 0.0
     try:
         for frame in capture.frames(m, float("inf")):
@@ -200,12 +227,19 @@ def watch_camera(m) -> None:
             if now <= state["head_busy_until"]:
                 history.clear()
             elif not history or np.abs(gray - history[-1]).mean() >= MOTION_SAME_FRAME:
+                fraction = 0.0
                 if len(history) == 2:
                     moved = (np.abs(history[1] - history[0]) > MOTION_PIXEL) & (np.abs(gray - history[0]) > MOTION_PIXEL)
-                    if moved.mean() > MOTION_FRACTION:
-                        ys, xs = np.nonzero(moved)
-                        state["centroid"] = [float(xs.mean() + 0.5) / MOTION_SIZE[0], float(ys.mean() + 0.5) / MOTION_SIZE[1]]
-                        state["moving_at"] = now
+                    fraction = float(moved.mean())
+                    if fraction > MOTION_FRACTION:
+                        motion_hits.append(now)
+                        while motion_hits and motion_hits[0] < now - MOTION_WINDOW_S:
+                            motion_hits.popleft()
+                        if len(motion_hits) >= MOTION_HITS:
+                            ys, xs = np.nonzero(moved)
+                            state["centroid"] = [float(xs.mean() + 0.5) / MOTION_SIZE[0], float(ys.mean() + 0.5) / MOTION_SIZE[1]]
+                            state["moving_at"] = now
+                debug_grid(gray, fraction)
                 history.append(gray)
             if now >= next_face:
                 next_face = now + FACE_EVERY_S
