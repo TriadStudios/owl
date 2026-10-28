@@ -14,7 +14,10 @@ class FixtureFrame(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.sam = json.loads((TESTDATA / "sam-switch-face.json").read_text())
-        cls.row = segment.ports(cls.sam["results"])
+        results = dict(cls.sam["results"])
+        # The fixture was captured with the earlier "ethernet cable" prompt.
+        results[segment.CABLE_PROMPT] = results.pop("ethernet cable")
+        cls.row = segment.ports(results)
 
     def test_numbers_eight_ports_with_first_three_plugged(self) -> None:
         self.assertEqual([port["occupied"] for port in self.row], [True] * 3 + [False] * 5)

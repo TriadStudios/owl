@@ -7,7 +7,7 @@ GREEN = ((31, 30, 170), (90, 255, 255))
 AMBER = ((5, 80, 170), (30, 255, 255))
 LIT_FRACTION = 0.02
 LINK_FRAMES = 0.5
-BAND_UP, BAND_DOWN, BAND_SIDE = 0.45, 0.2, 0.1
+BAND_UP, BAND_DOWN, BAND_SIDE = 0.45, 0.5, 0.1
 
 
 def band(box: list[float], height: int, width: int) -> tuple[int, int, int, int]:
