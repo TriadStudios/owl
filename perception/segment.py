@@ -234,6 +234,8 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         for s, y in zip(sockets, centers_y)
         if abs(y - row_y) <= socket_height / 2
     ]
+    # Small boxes off the row (the SFP cages' LEDs) pull the all-socket median down, and a 1.5-socket plug end then splits into two ports.
+    socket_width = float(np.median([c["box"][2] - c["box"][0] for c in candidates]))
     for cable_index, cable in enumerate(results[CABLE_PROMPT]):
         mask = decode_rle(cable["mask_rle"])
         rows = np.flatnonzero(mask.any(axis=1))

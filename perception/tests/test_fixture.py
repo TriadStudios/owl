@@ -37,5 +37,12 @@ class FixtureFrame(unittest.TestCase):
         self.assertEqual([led["link_on"] for led in leds.leds([frame], boxes)], [True] * 3 + [False] * 5)
 
 
+class AdjacentPlugsFrame(unittest.TestCase):
+    def test_wide_plug_end_is_one_port_when_sfp_boxes_shrink_the_socket_median(self) -> None:
+        sam = json.loads((TESTDATA / "sam-switch-face-2-split.json").read_text())
+        row = segment.ports(sam["results"])
+        self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "XXX...X.")
+
+
 if __name__ == "__main__":
     unittest.main()
