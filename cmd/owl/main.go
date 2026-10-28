@@ -31,6 +31,7 @@ import (
 	"github.com/triadstudios/owl/internal/drift"
 	"github.com/triadstudios/owl/internal/enroll"
 	"github.com/triadstudios/owl/internal/finding"
+	"github.com/triadstudios/owl/internal/guardian"
 	"github.com/triadstudios/owl/internal/job"
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
@@ -62,7 +63,7 @@ const (
 	evidenceDir     = "data/evidence"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -80,7 +81,7 @@ func run(args []string) error {
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 2 && args[0] == "job" && (args[1] == "add" || args[1] == "list" || args[1] == "close"):
 		cmd, args = args[0]+" "+args[1], args[2:]
-	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "serve" || args[0] == "pair"):
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "watch" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
@@ -674,6 +675,8 @@ func run(args []string) error {
 		}
 		fmt.Printf("%d finding(s) appended to %s\n", len(found), findingsPath)
 		return nil
+	case "watch":
+		return watch(cfg, *perceptionURL, *leases, *rulesPath, *robotURL)
 	case "netbox seed":
 		nb, err := newNetbox()
 		if err != nil {
@@ -930,6 +933,78 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	return nil
 }
 
+func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL string) error {
+	if leasesPath == "" {
+		return errors.New("need -leases or OWL_DHCP_LEASES")
+	}
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	cam := perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	frame, err := cam.SegmentCamera(ctx, time.Second)
+	if err != nil {
+		return err
+	}
+	log.Info("camera", "frame_hash", frame.FrameHash, "ports", len(frame.Ports))
+	in, err := loadInputs(cfg, frame, leasesPath, rulesPath)
+	if err != nil {
+		return err
+	}
+	ports, err := reconcile.Join(in)
+	if err != nil {
+		return err
+	}
+	var mu sync.Mutex
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Minute):
+			}
+			prev, cur, err := pollTwice(cfg, in.Rules.LivenessWindow)
+			if err != nil {
+				log.Error("snmp poll", "err", err)
+				continue
+			}
+			next := in
+			next.Prev, next.Cur = prev, cur
+			fresh, err := reconcile.Join(next)
+			if err != nil {
+				log.Error("reconcile", "err", err)
+				continue
+			}
+			mu.Lock()
+			ports = fresh
+			mu.Unlock()
+		}
+	}()
+	bridge := &guardian.Bridge{BaseURL: robotURL, HTTP: &http.Client{Timeout: time.Minute}, Log: log}
+	g := &guardian.Guardian{
+		Robot:  bridge,
+		Camera: bridge,
+		Table: func() []reconcile.Port {
+			mu.Lock()
+			defer mu.Unlock()
+			return ports
+		},
+	}
+	log.Info("guardian watching", "robot", robotURL)
+	state := g.State()
+	for ctx.Err() == nil {
+		g.Step(time.Now())
+		if g.State() != state {
+			log.Info("guardian", "from", state, "to", g.State())
+			state = g.State()
+		}
+		select {
+		case <-ctx.Done():
+		case <-time.After(200 * time.Millisecond):
+		}
+	}
+	return nil
+}
+
 func saveEvidence(hash string, frame []byte) error {
 	ext := ".png"
 	if http.DetectContentType(frame) == "image/jpeg" {
@@ -986,18 +1061,24 @@ func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPa
 	if image == "" || leasesPath == "" {
 		return blast.Inputs{}, errors.New("need -image and -leases (or OWL_DHCP_LEASES)")
 	}
-	in, err := thresholds()
-	if err != nil {
-		return blast.Inputs{}, err
-	}
 	frame, err := os.ReadFile(image)
 	if err != nil {
 		return blast.Inputs{}, err
 	}
 	client := perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
-	if in.Camera, err = client.Segment(context.Background(), frame, http.DetectContentType(frame)); err != nil {
+	cam, err := client.Segment(context.Background(), frame, http.DetectContentType(frame))
+	if err != nil {
 		return blast.Inputs{}, err
 	}
+	return loadInputs(cfg, cam, leasesPath, rulesPath)
+}
+
+func loadInputs(cfg discovery.Config, cam *perception.Result, leasesPath, rulesPath string) (blast.Inputs, error) {
+	in, err := thresholds()
+	if err != nil {
+		return blast.Inputs{}, err
+	}
+	in.Camera = cam
 	lf, err := os.Open(leasesPath)
 	if err != nil {
 		return blast.Inputs{}, err

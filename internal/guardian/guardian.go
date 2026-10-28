@@ -38,6 +38,7 @@ type Frame struct {
 
 type Robot interface {
 	Turn(to Point)
+	Home()
 	Say(text string)
 	Listen() string
 }
@@ -52,7 +53,6 @@ type Guardian struct {
 	Camera Camera
 	Table  func() []reconcile.Port
 	Colors map[int]string
-	Home   Point
 
 	state       State
 	motionSince time.Time
@@ -89,7 +89,7 @@ func (g *Guardian) Step(now time.Time) {
 		g.state, g.motionSince = Idle, time.Time{}
 	default:
 		if now.Sub(g.lastMotion) >= sleepAfter {
-			g.Robot.Turn(g.Home)
+			g.Robot.Home()
 			g.state = Sleep
 			return
 		}
@@ -112,12 +112,19 @@ func (g *Guardian) Step(now time.Time) {
 	}
 }
 
-var portNumber = regexp.MustCompile(`(?i)\bport\s+(\d{1,3})\b`)
+var (
+	portNumber = regexp.MustCompile(`(?i)\bport\s+(\d{1,3}|[a-z]+)\b`)
+	numberWord = map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
+)
 
 func ParseUtterance(text string, ports []reconcile.Port) int {
 	if m := portNumber.FindStringSubmatch(text); m != nil {
-		n, _ := strconv.Atoi(m[1])
-		return n
+		if n, err := strconv.Atoi(m[1]); err == nil {
+			return n
+		}
+		if n, ok := numberWord[strings.ToLower(m[1])]; ok {
+			return n
+		}
 	}
 	words := strings.Fields(text)
 	best, bestDist, tied := 0, 0, false

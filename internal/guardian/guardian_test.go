@@ -11,12 +11,14 @@ import (
 )
 
 type fakeRobot struct {
+	homes   int
 	turns   []Point
 	said    []string
 	replies []string
 }
 
 func (r *fakeRobot) Turn(to Point)   { r.turns = append(r.turns, to) }
+func (r *fakeRobot) Home()           { r.homes++ }
 func (r *fakeRobot) Say(text string) { r.said = append(r.said, text) }
 func (r *fakeRobot) Listen() string {
 	if len(r.replies) == 0 {
@@ -46,7 +48,7 @@ func table() []reconcile.Port {
 }
 
 func awake(state State, robot *fakeRobot, cam *fakeCamera, now time.Time) *Guardian {
-	return &Guardian{Robot: robot, Camera: cam, Table: table, Colors: map[int]string{2: "blue"}, Home: Point{0.5, 0.5}, state: state, lastMotion: now}
+	return &Guardian{Robot: robot, Camera: cam, Table: table, Colors: map[int]string{2: "blue"}, state: state, lastMotion: now}
 }
 
 func TestIdleWakesOnOneSecondOfMotionAndTurnsToIt(t *testing.T) {
@@ -125,8 +127,8 @@ func TestAnswerSleepsAfterSixtyStillSecondsAndTurnsHome(t *testing.T) {
 		t.Fatalf("slept after 59 s: state %s", g.State())
 	}
 	g.Step(now.Add(60 * time.Second))
-	if g.State() != Sleep || len(robot.turns) != 1 || robot.turns[0] != g.Home {
-		t.Fatalf("state %s turns %v, want sleep and a turn home", g.State(), robot.turns)
+	if g.State() != Sleep || robot.homes != 1 {
+		t.Fatalf("state %s homes %d, want sleep and one turn home", g.State(), robot.homes)
 	}
 }
 
@@ -152,6 +154,8 @@ func TestParseUtterance(t *testing.T) {
 	}{
 		{"I'm pulling port 5", 5},
 		{"PORT 12 please", 12},
+		{"I'm pulling port two.", 2},
+		{"port forwarding", 0},
 		{"the nas-01 box", 3},
 		{"working on nas zero one", 0},
 		{"nas 01", 3},
