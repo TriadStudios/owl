@@ -28,7 +28,9 @@ import (
 
 	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/drift"
 	"github.com/triadstudios/owl/internal/enroll"
+	"github.com/triadstudios/owl/internal/finding"
 	"github.com/triadstudios/owl/internal/job"
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
@@ -54,11 +56,13 @@ const (
 	baselinePath    = "data/baseline.json"
 	devicesPath     = "data/devices.json"
 	jobsPath        = "data/jobs.json"
+	findingsPath    = "data/findings.json"
+	framesDir       = "data/frames"
 	tlsDir          = "data/tls"
 	evidenceDir     = "data/evidence"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -76,7 +80,7 @@ func run(args []string) error {
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 2 && args[0] == "job" && (args[1] == "add" || args[1] == "list" || args[1] == "close"):
 		cmd, args = args[0]+" "+args[1], args[2:]
-	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "serve" || args[0] == "pair"):
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
@@ -595,6 +599,81 @@ func run(args []string) error {
 			fmt.Println("  " + c)
 		}
 		return nil
+	case "diff":
+		if *image == "" {
+			return errors.New("diff needs -image FILE")
+		}
+		data, err := os.ReadFile(baselinePath)
+		if err != nil {
+			return fmt.Errorf("%w; run owl enroll first", err)
+		}
+		var baseline enroll.Baseline
+		if err := json.Unmarshal(data, &baseline); err != nil {
+			return fmt.Errorf("%s: %w", baselinePath, err)
+		}
+		cam := perception.Client{BaseURL: *perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+		ctx := context.Background()
+		segment := func(path string) (*perception.Result, []byte, error) {
+			frame, err := os.ReadFile(path)
+			if err != nil {
+				return nil, nil, err
+			}
+			res, err := cam.Segment(ctx, frame, http.DetectContentType(frame))
+			if err != nil {
+				return nil, nil, fmt.Errorf("%s: %w", path, err)
+			}
+			return res, frame, nil
+		}
+		before, beforeFrame, err := segment(filepath.Join(framesDir, baseline.FrameHash+".png"))
+		if err != nil {
+			return err
+		}
+		after, afterFrame, err := segment(*image)
+		if err != nil {
+			return err
+		}
+		found := drift.Compare(before, after, time.Now())
+		jobs, err := job.Load(jobsPath)
+		if err != nil {
+			return err
+		}
+		for i := range found {
+			if j := job.Covering(jobs, found[i].Port, found[i].TS); j != nil {
+				found[i].JobID = j.ID
+			}
+		}
+		if len(found) > 0 {
+			for _, ev := range []struct {
+				hash  string
+				frame []byte
+			}{{before.FrameHash, beforeFrame}, {after.FrameHash, afterFrame}} {
+				if err := saveEvidence(ev.hash, ev.frame); err != nil {
+					return err
+				}
+			}
+			if err := finding.Append(findingsPath, found); err != nil {
+				return err
+			}
+		}
+		fmt.Printf("baseline %s (enrolled %s) vs %s\n", before.FrameHash[:16], baseline.EnrolledAt.Local().Format(time.DateTime), after.FrameHash[:16])
+		if len(found) == 0 {
+			fmt.Println("no drift")
+			return nil
+		}
+		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(tw, "PORT\tDIFF\tJOB")
+		for _, f := range found {
+			covered := "none (deviation)"
+			if f.JobID != 0 {
+				covered = strconv.Itoa(f.JobID)
+			}
+			fmt.Fprintf(tw, "%d\t%s\t%s\n", f.Port, f.Diff, covered)
+		}
+		if err := tw.Flush(); err != nil {
+			return err
+		}
+		fmt.Printf("%d finding(s) appended to %s\n", len(found), findingsPath)
+		return nil
 	case "netbox seed":
 		nb, err := newNetbox()
 		if err != nil {
@@ -738,6 +817,7 @@ func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPa
 		AttributionMin: in.AttributionMin,
 		AggregationMin: in.AggregationMin,
 		EvidenceDir:    evidenceDir,
+		FindingsPath:   findingsPath,
 		Devices:        &ui.Registry{Path: devicesPath},
 		Log:            log,
 	}
@@ -848,6 +928,31 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	fmt.Print(qr.Terminal(code))
 	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token and is deleted on the device's first connection\n", name, relayURL, fingerprint, pngPath)
 	return nil
+}
+
+func saveEvidence(hash string, frame []byte) error {
+	ext := ".png"
+	if http.DetectContentType(frame) == "image/jpeg" {
+		ext = ".jpg"
+	}
+	if err := os.MkdirAll(evidenceDir, 0o755); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filepath.Join(evidenceDir, hash+ext), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+	if errors.Is(err, fs.ErrExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(frame)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		os.Remove(f.Name())
+	}
+	return err
 }
 
 func thresholds() (blast.Inputs, error) {

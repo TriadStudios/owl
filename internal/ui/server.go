@@ -22,6 +22,7 @@ import (
 
 	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/finding"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
 	"github.com/triadstudios/owl/internal/reconcile"
@@ -47,6 +48,7 @@ type Config struct {
 	AttributionMin float64
 	AggregationMin int
 	EvidenceDir    string
+	FindingsPath   string
 	Devices        *Registry
 	Log            *slog.Logger
 }
@@ -502,7 +504,16 @@ func (s *Server) blastCard(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) findings(w http.ResponseWriter, r *http.Request) {
-	s.writeJSON(w, http.StatusOK, map[string][]any{"findings": {}})
+	found, err := finding.Load(s.FindingsPath)
+	if err != nil {
+		s.Log.Error("findings", "err", err)
+		s.fail(w, http.StatusInternalServerError, "cannot read findings")
+		return
+	}
+	if found == nil {
+		found = []finding.Finding{}
+	}
+	s.writeJSON(w, http.StatusOK, map[string][]finding.Finding{"findings": found})
 }
 
 func (s *Server) evidence(w http.ResponseWriter, r *http.Request) {

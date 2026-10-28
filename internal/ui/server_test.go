@@ -40,6 +40,7 @@ func fixtureServer(t *testing.T) (*Server, string) {
 		Rules:          rules,
 		AttributionMin: 0.6,
 		AggregationMin: 3,
+		FindingsPath:   filepath.Join(t.TempDir(), "findings.json"),
 		Devices:        &Registry{Path: devices},
 		Log:            slog.New(slog.DiscardHandler),
 	})
