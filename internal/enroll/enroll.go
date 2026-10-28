@@ -222,6 +222,6 @@ func Induced(ports []Port, probe Probe, others []int) (bool, string) {
 		otherExcess, otherRise = math.Max(otherExcess, e), math.Max(otherRise, r)
 	}
 	ok := excess >= minExcessBytes && excess >= excessRatio*otherExcess && rise > 0 && rise >= otherRise
-	return ok, fmt.Sprintf("ping spike on port %d: +%.0f KiB, LED +%.2f; largest elsewhere +%.0f KiB, LED +%.2f",
+	return ok, fmt.Sprintf("ping spike on port %d: %+.0f KiB, LED %+.2f; largest elsewhere %+.0f KiB, LED %+.2f",
 		probe.Target, excess/1024, rise, otherExcess/1024, otherRise)
 }

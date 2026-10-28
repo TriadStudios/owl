@@ -2,6 +2,7 @@ import hashlib
 import itertools
 import json
 import threading
+import time
 from datetime import datetime, timezone
 
 import cv2
@@ -20,6 +21,8 @@ MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
 POLYGON_EPSILON_PX = 1.5
+HOLD_INTERVAL_S = 1.0
+HOLD_SETTLE_S = 0.4
 FRAMES = segment.ROOT / "data" / "frames"
 DEBUG = segment.ROOT / "data" / "debug"
 ALIGN_SCALE = 0.5
@@ -159,18 +162,30 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
     state["changes"] = changes
     try:
         with camera_lock, capture.connect(segment.load_env()) as mini:
-            capture.home(mini)
+            locked = capture.home(mini)
             base = None
             for frame in capture.frames(mini, MAX_RECORD_S):
+                now = time.monotonic()
                 if base is None:
                     regions = [[int(round(v)) for v in r] for r in align(frame, regions)]
                     debug_frame("touch-start", frame, regions, [f"r{i + 1}" for i in range(len(regions))], [True] * len(regions))
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16)
-                if base is None:
-                    base = gray
+                    base, base_small = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.int16), small_gray(frame)
+                    window = cv2.createHanningWindow(base_small.shape[::-1], cv2.CV_32F)
+                    next_hold, settled = now + HOLD_INTERVAL_S, now
                     ready.set()
-                for i, (x0, y0, x1, y1) in enumerate(regions):
-                    changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
+                    continue
+                if locked is not None and now >= next_hold:
+                    target, moved = capture.hold(mini, *locked)
+                    locked, next_hold = (locked[0], target), now + HOLD_INTERVAL_S
+                    if moved:
+                        settled = now + HOLD_SETTLE_S
+                # Frames while the head is still settling from a hold correction are blurred, so they would score as motion everywhere.
+                if now >= settled:
+                    (dx, dy), _ = cv2.phaseCorrelate(base_small, small_gray(frame), window)
+                    back = np.float32([[1, 0, -dx / ALIGN_SCALE], [0, 1, -dy / ALIGN_SCALE]])
+                    gray = cv2.warpAffine(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), back, base.shape[::-1]).astype(np.int16)
+                    for i, (x0, y0, x1, y1) in enumerate(regions):
+                        changes[i] = max(changes[i], float(np.abs(gray[y0:y1, x0:x1] - base[y0:y1, x0:x1]).mean()))
                 if stop.is_set():
                     peak = max(changes)
                     debug_frame("touch-end", frame, regions, [f"r{i + 1} {c:.1f}" for i, c in enumerate(changes)], [c == peak for c in changes])

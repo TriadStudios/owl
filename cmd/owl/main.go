@@ -31,14 +31,15 @@ import (
 )
 
 const (
-	passiveWindows = 3
-	inducedWindow  = 5 * time.Second
-	maxPingTargets = 4
-	pingersPerIP   = 4
-	enrollBurst    = 10 * time.Second
-	touchMinChange = 12.0
-	touchDominance = 1.5
-	baselinePath   = "data/baseline.json"
+	passiveWindows  = 3
+	inducedWindow   = 5 * time.Second
+	maxPingTargets  = 4
+	pingersPerIP    = 4
+	enrollBurst     = 10 * time.Second
+	touchMinChange  = 12.0
+	touchDominance  = 1.5
+	touchStripDepth = 1.0
+	baselinePath    = "data/baseline.json"
 )
 
 const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE]"
@@ -325,16 +326,21 @@ func run(args []string) error {
 
 		var regions [][4]int
 		regionOf := map[int]int{}
-		for _, c := range frame.Ports {
+		// Cable outlines cross below the row, so each port gets only the strip under its own plug, split at the gaps between neighbours.
+		for i, c := range frame.Ports {
 			if !c.Occupied {
 				continue
 			}
-			x0, y0, x1, y1 := c.Box[0], c.Box[1], c.Box[2], c.Box[3]
-			for _, pt := range c.CablePolygon {
-				x0, y0, x1, y1 = min(x0, pt[0]), min(y0, pt[1]), max(x1, pt[0]), max(y1, pt[1])
+			x0, x1 := c.Box[0], c.Box[2]
+			if i > 0 {
+				x0 = max(x0, (frame.Ports[i-1].Box[2]+c.Box[0])/2)
 			}
+			if i < len(frame.Ports)-1 {
+				x1 = min(x1, (c.Box[2]+frame.Ports[i+1].Box[0])/2)
+			}
+			y0 := frame.Row[1]
 			regionOf[c.Num] = len(regions)
-			regions = append(regions, [4]int{int(x0), int(y0), int(x1) + 1, int(y1) + 1})
+			regions = append(regions, [4]int{int(x0), int(y0), int(x1), int(y0+touchStripDepth*(c.Box[2]-c.Box[0])) + 1})
 		}
 		stdin := bufio.NewReader(os.Stdin)
 		human := true
