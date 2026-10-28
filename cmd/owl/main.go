@@ -34,9 +34,9 @@ import (
 
 const (
 	passiveWindows  = 3
-	pulseOn         = 2 * time.Second
-	pulseOff        = 2 * time.Second
-	pulseCycles     = 10
+	pulseOn         = 4 * time.Second
+	pulseOff        = 4 * time.Second
+	pulseCycles     = 5
 	pulseSample     = time.Second
 	maxPingTargets  = 4
 	pulseRate       = 256 << 10
