@@ -24,10 +24,14 @@ const (
 )
 
 const (
-	wakeAfter  = time.Second
-	sleepAfter = 60 * time.Second
-	greeting   = "Hi, I'm watching this switch. What are you here for?"
-	missLine   = "I didn't catch a port. Say port and a number, or the device's name."
+	wakeAfter       = time.Second
+	sleepAfter      = 60 * time.Second
+	quietBeforeIdle = 10 * time.Second
+	maxMisses       = 1
+	greeting        = "Hi, I'm watching this switch. What are you here for?"
+	missLine        = "I didn't catch a port. Say port and a number, or the device's name."
+	followUp        = "Anything else?"
+	closing         = "Okay. I'll keep watching."
 )
 
 type Point struct{ X, Y float64 }
@@ -58,6 +62,7 @@ type Guardian struct {
 	motionSince time.Time
 	lastMotion  time.Time
 	heard       string
+	misses      int
 }
 
 func (g *Guardian) State() State {
@@ -86,28 +91,34 @@ func (g *Guardian) Step(now time.Time) {
 			g.state = Wake
 		}
 	case Sleep:
-		g.state, g.motionSince = Idle, time.Time{}
+		if now.Sub(g.lastMotion) >= quietBeforeIdle {
+			g.state, g.motionSince = Idle, time.Time{}
+		}
 	default:
 		if now.Sub(g.lastMotion) >= sleepAfter {
 			g.Robot.Home()
 			g.state = Sleep
 			return
 		}
-		switch g.state {
-		case Wake:
+		ports := g.Table()
+		num := ParseUtterance(g.heard, ports)
+		switch {
+		case g.state == Wake:
 			g.Robot.Say(greeting)
-			g.heard = g.Robot.Listen()
+			g.heard, g.misses = g.Robot.Listen(), 0
 			g.state = Ask
-		case Ask:
-			ports := g.Table()
-			num := ParseUtterance(g.heard, ports)
-			if num == 0 {
-				g.Robot.Say(missLine)
-				g.heard = g.Robot.Listen()
-				return
-			}
-			g.Robot.Say(Line(num, ports, g.Colors[num]))
+		case num != 0:
+			g.Robot.Say(Line(num, ports, g.Colors[num]) + " " + followUp)
+			g.heard = g.Robot.Listen()
 			g.state = Answer
+		case g.state == Ask && g.misses < maxMisses:
+			g.Robot.Say(missLine)
+			g.heard = g.Robot.Listen()
+			g.misses++
+		default:
+			g.Robot.Say(closing)
+			g.Robot.Home()
+			g.state = Sleep
 		}
 	}
 }

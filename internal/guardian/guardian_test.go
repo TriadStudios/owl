@@ -116,34 +116,56 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 	if g.State() != Ask || g.heard != "port 3" || robot.said[0] != missLine {
 		t.Fatalf("unparsed utterance: state %s said %q heard %q, want a re-ask", g.State(), robot.said, g.heard)
 	}
+	g.heard = "still nothing"
+	g.Step(now.Add(2 * time.Second))
+	if g.State() != Sleep || robot.said[1] != closing || robot.homes != 1 {
+		t.Fatalf("second miss: state %s said %q homes %d, want a closing line and home", g.State(), robot.said, robot.homes)
+	}
 }
 
-func TestAnswerSleepsAfterSixtyStillSecondsAndTurnsHome(t *testing.T) {
+func TestAnswerListensForMoreThenCloses(t *testing.T) {
 	now := time.Now()
-	robot, cam := &fakeRobot{}, &fakeCamera{}
-	g := awake(Answer, robot, cam, now)
-	g.Step(now.Add(59 * time.Second))
-	if g.State() != Answer {
-		t.Fatalf("slept after 59 s: state %s", g.State())
+	robot := &fakeRobot{}
+	g := awake(Answer, robot, &fakeCamera{}, now)
+	g.heard = "and port 3"
+	g.Step(now.Add(time.Second))
+	if g.State() != Answer || len(robot.said) != 1 || !strings.Contains(robot.said[0], "Port 3") || !strings.HasSuffix(robot.said[0], followUp) {
+		t.Fatalf("follow-up port: state %s said %q, want port 3's card and a follow-up", g.State(), robot.said)
 	}
+	g.Step(now.Add(2 * time.Second))
+	if g.State() != Sleep || robot.said[1] != closing || robot.homes != 1 {
+		t.Fatalf("nothing more: state %s said %q homes %d, want a closing line and home", g.State(), robot.said, robot.homes)
+	}
+
+	robot = &fakeRobot{}
+	g = awake(Answer, robot, &fakeCamera{}, now)
+	g.heard = "port 3"
 	g.Step(now.Add(60 * time.Second))
-	if g.State() != Sleep || robot.homes != 1 {
-		t.Fatalf("state %s homes %d, want sleep and one turn home", g.State(), robot.homes)
+	if g.State() != Sleep || robot.homes != 1 || len(robot.said) != 0 {
+		t.Fatalf("60 s still: state %s homes %d said %q, want sleep and home without speaking", g.State(), robot.homes, robot.said)
 	}
 }
 
-func TestSleepReturnsToIdleAndNeedsFreshMotion(t *testing.T) {
+func TestSleepWaitsForAQuietRoomBeforeIdle(t *testing.T) {
 	now := time.Now()
 	robot, cam := &fakeRobot{}, &fakeCamera{moving: true}
 	g := awake(Sleep, robot, cam, now)
-	g.motionSince = now.Add(-time.Hour)
-	g.Step(now)
-	if g.State() != Idle {
-		t.Fatalf("state %s, want idle", g.State())
+	g.Step(now.Add(5 * time.Second))
+	if g.State() != Sleep {
+		t.Fatalf("idle while someone is still there: state %s", g.State())
 	}
-	g.Step(now.Add(500 * time.Millisecond))
+	cam.moving = false
+	g.Step(now.Add(14 * time.Second))
+	if g.State() != Sleep {
+		t.Fatalf("idle after 9 quiet seconds: state %s", g.State())
+	}
+	g.Step(now.Add(15 * time.Second))
 	if g.State() != Idle {
-		t.Fatalf("woke on stale motion: state %s", g.State())
+		t.Fatalf("state %s after 10 quiet seconds, want idle", g.State())
+	}
+	g.Step(now.Add(16 * time.Second))
+	if g.State() != Idle {
+		t.Fatalf("woke without fresh motion: state %s", g.State())
 	}
 }
 

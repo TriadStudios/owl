@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 import wave
+from datetime import datetime
 from pathlib import Path
 
 import cv2
@@ -50,13 +51,107 @@ TURN_S = 1.0
 SETTLE_S = 0.3
 ANTENNA_RAD = 0.35
 ANTENNA_EVERY_S = 0.45
+FACE_SEARCH_Y = 0.15
+FACE_SEARCH_STEPS = 2
+FACE_SEARCH_WAIT_S = 0.5
+DEBUG_DIR = segment.ROOT / "data" / "debug" / "robot"
+DEBUG_FPS = 10
+DEBUG_SIZE = (640, 360)
+DEBUG_PREROLL_S = 3
 
 app = FastAPI()
-state: dict[str, object] = {"mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "centroid": [0.5, 0.5], "frame_at": 0.0, "head_busy_until": 0.0, "tracking": False}
+state: dict[str, object] = {
+    "mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "face_box": None, "centroid": [0.5, 0.5],
+    "frame_at": 0.0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
+}
 audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
 audio_lock = threading.Lock()
 head_lock = threading.Lock()
 voice_lock = threading.Lock()
+debug: dict[str, object] = {"on": False, "dir": None, "writer": None, "events": None, "clips": 0, "next_at": 0.0, "preroll": collections.deque(maxlen=DEBUG_PREROLL_S * DEBUG_FPS)}
+debug_lock = threading.Lock()
+
+
+def debug_start() -> None:
+    if not debug["on"]:
+        return
+    with debug_lock:
+        if debug["dir"] is not None:
+            return
+        folder = DEBUG_DIR / datetime.now().strftime("%Y%m%dT%H%M%S")
+        folder.mkdir(parents=True, exist_ok=True)
+        writer = cv2.VideoWriter(str(folder / "camera.mp4"), cv2.VideoWriter_fourcc(*"mp4v"), DEBUG_FPS, DEBUG_SIZE)
+        for image in debug["preroll"]:
+            writer.write(image)
+        debug["preroll"].clear()
+        debug.update(dir=folder, writer=writer, events=(folder / "events.jsonl").open("a", encoding="utf-8"), clips=0)
+    print(f"debug recording {folder}", flush=True)
+
+
+def debug_stop() -> None:
+    with debug_lock:
+        if debug["dir"] is None:
+            return
+        debug["writer"].release()
+        debug["events"].close()
+        print(f"debug saved {debug['dir']}", flush=True)
+        debug.update(dir=None, writer=None, events=None)
+
+
+def debug_event(name: str, **fields) -> None:
+    with debug_lock:
+        if debug["events"] is not None:
+            debug["events"].write(json.dumps({"t": datetime.now().isoformat(timespec="milliseconds"), "event": name, **fields}) + "\n")
+            debug["events"].flush()
+
+
+def debug_clip(samples: np.ndarray) -> str | None:
+    with debug_lock:
+        if debug["dir"] is None:
+            return None
+        debug["clips"] += 1
+        path = debug["dir"] / f"heard-{debug['clips']}.wav"
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(AUDIO_RATE)
+        w.writeframes((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
+    return path.name
+
+
+def debug_frame(frame: np.ndarray, now: float) -> None:
+    if not debug["on"] or now < debug["next_at"]:
+        return
+    debug["next_at"] = now + 1 / DEBUG_FPS
+    image = cv2.resize(frame, DEBUG_SIZE, interpolation=cv2.INTER_AREA)
+    w, h = DEBUG_SIZE
+    face = now - state["face_at"] < PRESENCE_FRESH_S
+    moving = now - state["moving_at"] < PRESENCE_FRESH_S
+    if state["tracking"]:
+        dx, dy = TRACK_DEADBAND
+        cv2.rectangle(image, (int((0.5 - dx) * w), int((0.5 - dy) * h)), (int((0.5 + dx) * w), int((0.5 + dy) * h)), (255, 255, 0), 1)
+    if face and state["face_box"]:
+        bx, by, bw, bh = state["face_box"]
+        cv2.rectangle(image, (int(bx * w), int(by * h)), (int((bx + bw) * w), int((by + bh) * h)), (0, 255, 0), 2)
+        cv2.circle(image, (int(state["face"][0] * w), int(state["face"][1] * h)), 4, (0, 255, 0), -1)
+    if moving:
+        cx, cy = int(state["centroid"][0] * w), int(state["centroid"][1] * h)
+        cv2.drawMarker(image, (cx, cy), (0, 165, 255), cv2.MARKER_CROSS, 18, 2)
+    if state["look"] and now - state["look"][2] < 1.0:
+        cv2.circle(image, (int(state["look"][0] * w), int(state["look"][1] * h)), 10, (0, 0, 255), 2)
+    lines = [
+        datetime.now().strftime("%H:%M:%S.%f")[:-3],
+        f"{state['activity']}",
+        f"face {'yes' if face else 'no'}  motion {'yes' if moving else 'no'}  tracking {'on' if state['tracking'] else 'off'}  head {'moving' if now < state['head_busy_until'] else 'still'}",
+    ]
+    for i, line in enumerate(lines):
+        cv2.putText(image, line[:90], (8, 18 + 18 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, line[:90], (8, 18 + 18 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
+    with debug_lock:
+        if debug["writer"] is not None:
+            debug["writer"].write(image)
+        else:
+            debug["preroll"].append(image)
 
 
 def mini():
@@ -93,14 +188,17 @@ def watch_camera(m) -> None:
                 next_face = now + FACE_EVERY_S
                 scale = FACE_WIDTH / width
                 small = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-                face = tracker.select(detector.detect(small), small.shape[1], small.shape[0])
+                sw, sh = small.shape[1], small.shape[0]
+                face = tracker.select(detector.detect(small), sw, sh)
                 if face is not None:
-                    state["face"], state["face_at"] = [face.nose[0] / small.shape[1], face.nose[1] / small.shape[0]], now
+                    bx, by, bw, bh = face.bbox
+                    state["face"], state["face_box"], state["face_at"] = [face.nose[0] / sw, face.nose[1] / sh], [bx / sw, by / sh, bw / sw, bh / sh], now
             if state["tracking"] and now >= next_track and now - state["face_at"] < FACE_EVERY_S * 2 and now > state["head_busy_until"]:
                 x, y = state["face"]
                 if abs(x - 0.5) > TRACK_DEADBAND[0] or abs(y - 0.5) > TRACK_DEADBAND[1]:
                     next_track = now + TRACK_EVERY_S
                     look(m, x, y, TRACK_MOVE_S)
+            debug_frame(frame, now)
             time.sleep(0.03)
     except Exception as error:
         state["error"] = f"camera watcher stopped: {error}"
@@ -109,6 +207,8 @@ def watch_camera(m) -> None:
 def look(m, x: float, y: float, seconds: float) -> None:
     width, height = state.get("frame_size", (1280, 720))
     u, v = int(min(max(x, 0.02), 0.98) * width), int(min(max(y, 0.02), 0.98) * height)
+    state["look"] = (x, y, time.monotonic())
+    debug_event("look", x=round(x, 3), y=round(y, 3), seconds=seconds)
     move_head(lambda: m.look_at_image(u, v, duration=seconds), seconds)
 
 
@@ -152,6 +252,7 @@ def frame_rms(samples: np.ndarray) -> np.ndarray:
 def listen() -> dict[str, object]:
     with voice_lock:
         mini()
+        state["activity"] = "listening"
         start = time.monotonic()
         floor = float(np.percentile(frame_rms(audio_since(start - 3.0)), 20)) if audio else 0.0
         threshold = max(SPEECH_RMS, SPEECH_OVER_FLOOR * floor)
@@ -175,7 +276,10 @@ def listen() -> dict[str, object]:
         if began is not None:
             clip = samples[max(0, int((began * VAD_FRAME_S - 0.3) * AUDIO_RATE)):]
             text = speech_model()({"raw": clip, "sampling_rate": AUDIO_RATE}, generate_kwargs={"max_new_tokens": 48})["text"].strip()
-        print(f"heard {text!r} after {time.monotonic() - start:.1f} s (threshold {threshold:.3f}, floor {floor:.3f}, speech {'yes' if began is not None else 'no'})", flush=True)
+        took = time.monotonic() - start
+        print(f"heard {text!r} after {took:.1f} s (threshold {threshold:.3f}, floor {floor:.3f}, speech {'yes' if began is not None else 'no'})", flush=True)
+        state["activity"] = f"heard: {text}"
+        debug_event("listen", text=text, took_s=round(took, 2), threshold=round(threshold, 4), floor=round(floor, 4), speech_at_s=None if began is None else round(began * VAD_FRAME_S, 2), clip=debug_clip(samples))
     return {"text": text}
 
 
@@ -216,6 +320,8 @@ def say(text: str) -> dict[str, object]:
         env = segment.load_env()
         key = env.get("ELEVENLABS_API_KEY", "").strip()
         pushed, first = [0], []
+        state["activity"] = f"saying: {text}"
+        requested = time.monotonic()
 
         def play(samples: np.ndarray) -> None:
             if not first:
@@ -236,23 +342,50 @@ def say(text: str) -> dict[str, object]:
                 side = -side
             time.sleep(ANTENNA_EVERY_S)
         m.goto_target(antennas=[0.0, 0.0], duration=0.3)
-    return {"ok": True, "seconds": round(seconds, 1), "voice": "elevenlabs" if key else "windows"}
+        state["activity"] = "idle"
+        voice = "elevenlabs" if key else "windows"
+        debug_event("say", text=text, voice=voice, seconds=round(seconds, 2), first_audio_ms=round(((first[0] if first else time.monotonic()) - requested) * 1000))
+    return {"ok": True, "seconds": round(seconds, 1), "voice": voice}
+
+
+def face_seen(within: float) -> bool:
+    return time.monotonic() - state["face_at"] < within
 
 
 def turn(x: float, y: float) -> dict[str, object]:
     m = mini()
-    if time.monotonic() - state["face_at"] < PRESENCE_FRESH_S:
+    debug_start()
+    state["activity"] = "turning"
+    how = "face"
+    if face_seen(PRESENCE_FRESH_S):
         x, y = state["face"]
+    else:
+        y, how = FACE_SEARCH_Y, "motion x, looking up"
+    debug_event("turn", target=[round(x, 3), round(y, 3)], how=how)
     look(m, x, y, TURN_S)
-    time.sleep(TURN_S)
-    state["tracking"] = True
-    return {"ok": True, "target": "face" if [x, y] == state["face"] else "motion"}
+    time.sleep(TURN_S + SETTLE_S)
+    for step in range(FACE_SEARCH_STEPS):
+        time.sleep(FACE_SEARCH_WAIT_S)
+        if face_seen(FACE_SEARCH_WAIT_S + SETTLE_S):
+            break
+        debug_event("search", step=step + 1)
+        look(m, 0.5, FACE_SEARCH_Y, TURN_S)
+        time.sleep(TURN_S + SETTLE_S)
+    found = face_seen(1.5)
+    if found:
+        look(m, *state["face"], TURN_S / 2)
+    state["tracking"], state["activity"] = True, "idle"
+    debug_event("face" if found else "no_face")
+    return {"ok": True, "face": found}
 
 
 def home() -> dict[str, object]:
-    state["tracking"] = False
+    state["tracking"], state["activity"] = False, "going home"
     m = mini()
+    debug_event("home")
     move_head(lambda: capture.home(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
+    state["activity"] = "idle"
+    debug_stop()
     return {"ok": True}
 
 
@@ -267,7 +400,7 @@ async def run(fn, *args) -> dict[str, object]:
 def health() -> dict[str, object]:
     if state["error"] or state["mini"] is None:
         raise HTTPException(503, str(state["error"] or "bridge not connected"))
-    return {"ok": True, "frame_age_s": round(time.monotonic() - state["frame_at"], 1), "voice": "elevenlabs" if segment.load_env().get("ELEVENLABS_API_KEY", "").strip() else "windows"}
+    return {"ok": True, "frame_age_s": round(time.monotonic() - state["frame_at"], 1), "debug": debug["on"], "voice": "elevenlabs" if segment.load_env().get("ELEVENLABS_API_KEY", "").strip() else "windows"}
 
 
 @app.get("/motion")
@@ -308,6 +441,7 @@ async def listen_once() -> dict[str, object]:
 
 
 def main() -> None:
+    debug["on"] = segment.load_env().get("OWL_ROBOT_DEBUG", "").strip() == "1"
     m = capture.connect(segment.load_env())
     m.__enter__()
     state["mini"] = m
