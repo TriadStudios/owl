@@ -200,6 +200,19 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 	}
 }
 
+func TestBackgroundTalkEndsAfterThreeUnclearTurns(t *testing.T) {
+	now := time.Now()
+	robot := &fakeRobot{replies: []string{"in the dark", "oh oh oh oh"}}
+	g := awake(Ask, robot, &fakeCamera{moving: true}, now)
+	g.heard = "from the last and the strength"
+	for i := 1; i <= 3; i++ {
+		g.Step(now.Add(time.Duration(i) * time.Second))
+	}
+	if g.State() != Sleep || robot.homes != 1 || robot.said[2] != closing {
+		t.Fatalf("state %s homes %d said %q, want a closing line and home after three unclear turns", g.State(), robot.homes, robot.said)
+	}
+}
+
 func TestSleepWaitsForAQuietRoomBeforeIdle(t *testing.T) {
 	now := time.Now()
 	robot, cam := &fakeRobot{}, &fakeCamera{moving: true}
