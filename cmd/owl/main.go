@@ -63,7 +63,7 @@ const (
 	evidenceDir     = "data/evidence"
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl bench -expect XXX...X. [-captures 20] [-frames 5] [-every 30s] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -81,7 +81,7 @@ func run(args []string) error {
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 2 && args[0] == "job" && (args[1] == "add" || args[1] == "list" || args[1] == "close"):
 		cmd, args = args[0]+" "+args[1], args[2:]
-	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "watch" || args[0] == "serve" || args[0] == "pair"):
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "bench" || args[0] == "watch" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
@@ -105,6 +105,10 @@ func run(args []string) error {
 	addr := fset.String("addr", "0.0.0.0:8080", "serve listen address")
 	robotURL := fset.String("robot", "http://127.0.0.1:8702", "robot bridge URL")
 	pairName := fset.String("name", "phone", "paired device name")
+	captures := fset.Int("captures", 20, "bench captures")
+	burstFrames := fset.Int("frames", 5, "bench frames per capture, majority vote")
+	every := fset.Duration("every", 30*time.Second, "bench time between captures")
+	expect := fset.String("expect", "", "bench expected occupancy left to right, X plugged . empty")
 	tech := fset.String("tech", "", "technician doing the job")
 	window := fset.String("window", "", "job window HH:MM-HH:MM, today local; an end before the start is tomorrow")
 	note := fset.String("note", "", "job note")
@@ -675,6 +679,8 @@ func run(args []string) error {
 		}
 		fmt.Printf("%d finding(s) appended to %s\n", len(found), findingsPath)
 		return nil
+	case "bench":
+		return bench(*perceptionURL, *captures, *burstFrames, *every, *expect)
 	case "watch":
 		return watch(cfg, *perceptionURL, *leases, *rulesPath, *robotURL)
 	case "netbox seed":
@@ -930,6 +936,124 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	}
 	fmt.Print(qr.Terminal(code))
 	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token and is deleted on the device's first connection\n", name, relayURL, fingerprint, pngPath)
+	return nil
+}
+
+type benchCapture struct {
+	Capture int      `json:"capture"`
+	Frames  []string `json:"frames"`
+	Votes   []string `json:"votes"`
+	Vote    string   `json:"vote"`
+	OK      bool     `json:"ok"`
+}
+
+func bench(perceptionURL string, captures, frames int, every time.Duration, expect string) error {
+	if !regexp.MustCompile(`^[X.]+$`).MatchString(expect) {
+		return errors.New("bench needs -expect, e.g. XXX...X. for ports 1-3 and 7 plugged")
+	}
+	if captures < 1 || frames < 1 || frames > 10 {
+		return errors.New("bench wants -captures >= 1 and -frames in 1..10")
+	}
+	cam := &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	report := make([]benchCapture, captures)
+	work := make(chan int, captures)
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for i := range work {
+			for _, hash := range report[i].Frames {
+				vote := "rejected: "
+				frame, err := os.ReadFile(filepath.Join(framesDir, hash+".png"))
+				var res *perception.Result
+				if err == nil {
+					res, err = cam.Segment(ctx, frame, "image/png")
+				}
+				if err != nil {
+					vote += err.Error()
+				} else {
+					var b strings.Builder
+					for _, p := range res.Ports {
+						if p.Occupied {
+							b.WriteByte('X')
+						} else {
+							b.WriteByte('.')
+						}
+					}
+					vote = b.String()
+				}
+				report[i].Votes = append(report[i].Votes, vote)
+			}
+		}
+	})
+	start := time.Now()
+	for i := range captures {
+		select {
+		case <-ctx.Done():
+		case <-time.After(time.Until(start.Add(time.Duration(i) * every))):
+		}
+		if ctx.Err() != nil {
+			break
+		}
+		hashes, err := cam.Capture(ctx, frames, 200*time.Millisecond)
+		if err != nil {
+			close(work)
+			wg.Wait()
+			return fmt.Errorf("capture %d: %w", i+1, err)
+		}
+		report[i] = benchCapture{Capture: i + 1, Frames: hashes}
+		work <- i
+		fmt.Printf("capture %d/%d at %s, %d frames\n", i+1, captures, time.Since(start).Round(time.Second), len(hashes))
+	}
+	close(work)
+	wg.Wait()
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	good, single, total := 0, 0, 0
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, "CAPTURE\tRESULT\tVOTE\tFRAMES")
+	for i := range report {
+		r := &report[i]
+		counts := map[string]int{}
+		for _, v := range r.Votes {
+			counts[v]++
+			total++
+			if v == expect {
+				single++
+			}
+		}
+		r.Vote = "no majority"
+		for v, n := range counts {
+			if 2*n > len(r.Votes) {
+				r.Vote = v
+			}
+		}
+		r.OK = r.Vote == expect
+		result := "FAIL"
+		if r.OK {
+			good++
+			result = "PASS"
+		}
+		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\n", r.Capture, result, r.Vote, strings.Join(r.Votes, " | "))
+	}
+	if err := tw.Flush(); err != nil {
+		return err
+	}
+	fmt.Printf("%d/%d captures voted %s; single frames %d/%d\n", good, captures, expect, single, total)
+	data, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll("data/bench", 0o755); err != nil {
+		return err
+	}
+	out := filepath.Join("data/bench", start.Format("20060102T150405")+".json")
+	if err := os.WriteFile(out, append(data, '\n'), 0o644); err != nil {
+		return err
+	}
+	fmt.Println("report", out)
 	return nil
 }
 

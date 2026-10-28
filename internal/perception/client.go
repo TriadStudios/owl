@@ -60,6 +60,29 @@ func (c *Client) SegmentCamera(ctx context.Context, burst time.Duration) (*Resul
 	return Decode(io.LimitReader(body, maxResponseBytes))
 }
 
+func (c *Client) Capture(ctx context.Context, frames int, spacing time.Duration) ([]string, error) {
+	body, err := c.post(ctx, fmt.Sprintf("/capture?frames=%d&spacing=%g", frames, spacing.Seconds()), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	var res struct {
+		Frames []string `json:"frames"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, maxResponseBytes)).Decode(&res); err != nil {
+		return nil, fmt.Errorf("perception: decode capture: %w", err)
+	}
+	if len(res.Frames) != frames {
+		return nil, fmt.Errorf("perception: %d frames captured, asked for %d", len(res.Frames), frames)
+	}
+	for _, h := range res.Frames {
+		if !frameHash.MatchString(h) {
+			return nil, fmt.Errorf("perception: bad frame hash %q", h)
+		}
+	}
+	return res.Frames, nil
+}
+
 func (c *Client) LEDs(ctx context.Context, boxes [][4]float64, window time.Duration) ([]LED, error) {
 	req, err := json.Marshal(map[string]any{"boxes": boxes, "seconds": window.Seconds()})
 	if err != nil {

@@ -20,6 +20,7 @@ MAX_BURST_S = 30
 MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
+MAX_CAPTURE_FRAMES = 10
 POLYGON_EPSILON_PX = 1.5
 HOLD_INTERVAL_S = 1.0
 HOLD_SETTLE_S = 0.4
@@ -223,6 +224,31 @@ def stop_recording() -> dict[str, object]:
     return {"changes": [round(c, 2) for c in recording["changes"]]}
 
 
+def capture_frames(count: int, spacing: float) -> dict[str, object]:
+    hashes: list[str] = []
+    with camera_lock, capture.connect(segment.load_env()) as mini:
+        capture.home(mini)
+        next_at = 0.0
+        for frame in capture.frames(mini, count * spacing + 1):
+            now = time.monotonic()
+            if now < next_at:
+                continue
+            ok, encoded = cv2.imencode(".png", frame)
+            if not ok:
+                raise ValueError("failed to encode the camera frame")
+            data = encoded.tobytes()
+            digest = hashlib.sha256(data).hexdigest()
+            FRAMES.mkdir(parents=True, exist_ok=True)
+            (FRAMES / f"{digest}.png").write_bytes(data)
+            hashes.append(digest)
+            next_at = now + spacing
+            if len(hashes) == count:
+                break
+    if len(hashes) < count:
+        raise RuntimeError(f"camera gave {len(hashes)} of {count} frames")
+    return {"frames": hashes}
+
+
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
         capture.home(mini)
@@ -248,6 +274,13 @@ async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]
     if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(413 if image_bytes else 400, f"send one image of at most {MAX_IMAGE_BYTES} bytes as the request body")
     return await run(describe_upload, image_bytes)
+
+
+@app.post("/capture")
+async def capture_burst(frames: int = 5, spacing: float = 0.2) -> dict[str, object]:
+    if not 1 <= frames <= MAX_CAPTURE_FRAMES or not 0 <= spacing <= 2:
+        raise HTTPException(400, f"frames in 1..{MAX_CAPTURE_FRAMES}, spacing in 0..2 s")
+    return await run(capture_frames, frames, spacing)
 
 
 @app.post("/motion/start")

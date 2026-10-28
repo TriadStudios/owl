@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import functools
 import hashlib
 import json
@@ -17,6 +18,7 @@ from meta_sam_parser import CompletedOutcome, decode_mask_to_raster, image_segme
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "sam-cache"
 SPEND_PATH = CACHE / "spend.json"
+SPEND_LOCK_TIMEOUT_S = 30
 ROI_PATH = ROOT / "data" / "port-roi.json"
 ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
 META_API_URL = "https://api.meta.ai/v1/responses"
@@ -57,6 +59,38 @@ def iou(a: list[float], b: list[float]) -> float:
     return inter / union if union > 0 else 0.0
 
 
+def read_spend() -> dict[str, int]:
+    return json.loads(SPEND_PATH.read_text()) if SPEND_PATH.exists() else {}
+
+
+@contextlib.contextmanager
+def spend_lock():
+    lock = SPEND_PATH.with_suffix(".lock")
+    give_up = time.monotonic() + SPEND_LOCK_TIMEOUT_S
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            break
+        except (FileExistsError, PermissionError):
+            if time.monotonic() > give_up:
+                raise RuntimeError(f"{lock} held for {SPEND_LOCK_TIMEOUT_S} s; delete it if no OWL process is billing")
+            time.sleep(0.01)
+    try:
+        yield
+    finally:
+        os.close(fd)
+        os.unlink(lock)
+
+
+def add_spend(today: str) -> None:
+    with spend_lock():
+        spend = read_spend()
+        spend[today] = spend.get(today, 0) + 1
+        tmp = SPEND_PATH.with_suffix(".tmp")
+        tmp.write_text(json.dumps(spend))
+        os.replace(tmp, SPEND_PATH)
+
+
 def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
@@ -73,10 +107,11 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         if cache_path.exists():
             raw[prompt] = json.loads(cache_path.read_text())["output_text"]
             continue
-        spend: dict[str, int] = json.loads(SPEND_PATH.read_text()) if SPEND_PATH.exists() else {}
         today = datetime.now(timezone.utc).date().isoformat()
-        if spend.get(today, 0) >= cap:
-            raise RuntimeError(f"SAM daily cap reached: {spend[today]}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
+        with spend_lock():
+            spent = read_spend().get(today, 0)
+        if spent >= cap:
+            raise RuntimeError(f"SAM daily cap reached: {spent}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
 
         body = {
             "model": "sam-3.1",
@@ -99,8 +134,7 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         except urllib.error.HTTPError as error:
             raise RuntimeError(f"Meta SAM API returned {error.code} for '{prompt}': {error.read().decode(errors='replace')[:500]}")
 
-        spend[today] = spend.get(today, 0) + 1
-        SPEND_PATH.write_text(json.dumps(spend))
+        add_spend(today)
         billed += 1
         if reply.get("status") != "completed":
             raise RuntimeError(f"Meta SAM API response for '{prompt}' not completed: {json.dumps(reply)[:500]}")
