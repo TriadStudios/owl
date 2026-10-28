@@ -20,7 +20,8 @@ CACHE = ROOT / "data" / "sam-cache"
 SPEND_PATH = CACHE / "spend.json"
 SPEND_LOCK_TIMEOUT_S = 30
 ROI_PATH = ROOT / "data" / "port-roi.json"
-ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
+ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 2, 3, 4
+ROI_PITCH = 1.2
 ROI_MIN_BOXES = 4
 META_API_URL = "https://api.meta.ai/v1/responses"
 LOCAL_MODEL = "facebook/sam3"
@@ -321,10 +322,11 @@ def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[s
             raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
         box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
         box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
+        pad_x = ROI_PAD_X + ROI_PITCH * max(0, COPPER_PORTS - len(full_row))
         rect = [
-            max(int(min(p["box"][0] for p in full_row) - ROI_PAD_X * box_width), 0),
+            max(int(min(p["box"][0] for p in full_row) - pad_x * box_width), 0),
             max(int(min(p["box"][1] for p in full_row) - ROI_PAD_UP * box_height), 0),
-            min(int(max(p["box"][2] for p in full_row) + ROI_PAD_X * box_width), width),
+            min(int(max(p["box"][2] for p in full_row) + pad_x * box_width), width),
             min(int(max(p["box"][3] for p in full_row) + ROI_PAD_DOWN * box_height), height),
         ]
         ROI_PATH.parent.mkdir(parents=True, exist_ok=True)

@@ -43,26 +43,27 @@ import (
 )
 
 const (
-	passiveWindows  = 3
-	pulseOn         = 4 * time.Second
-	pulseOff        = 4 * time.Second
-	pulseCycles     = 5
-	pulseSample     = time.Second
-	maxPingTargets  = 4
-	pulseRate       = 256 << 10
-	pingPayload     = 64000
-	enrollBurst     = 10 * time.Second
-	touchMinChange  = 12.0
-	touchDominance  = 1.5
-	touchStripDepth = 1.0
-	baselinePath    = "data/baseline.json"
-	devicesPath     = "data/devices.json"
-	jobsPath        = "data/jobs.json"
-	findingsPath    = "data/findings.json"
-	framesDir       = "data/frames"
-	tlsDir          = "data/tls"
-	evidenceDir     = "data/evidence"
-	trackFPS        = 10
+	passiveWindows    = 3
+	pulseOn           = 4 * time.Second
+	pulseOff          = 4 * time.Second
+	pulseCycles       = 5
+	pulseSample       = time.Second
+	maxPingTargets    = 4
+	pulseRate         = 256 << 10
+	pingPayload       = 64000
+	enrollBurst       = 10 * time.Second
+	touchMinChange    = 12.0
+	touchDominance    = 1.5
+	touchStripDepth   = 1.0
+	baselinePath      = "data/baseline.json"
+	devicesPath       = "data/devices.json"
+	jobsPath          = "data/jobs.json"
+	findingsPath      = "data/findings.json"
+	framesDir         = "data/frames"
+	tlsDir            = "data/tls"
+	evidenceDir       = "data/evidence"
+	trackFPS          = 10
+	benchCaptureTries = 3
 )
 
 const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl bench -expect XXX...X. [-captures 20] [-frames 5] [-every 30s] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
@@ -997,7 +998,14 @@ func bench(perceptionURL string, captures, frames int, every time.Duration, expe
 		if ctx.Err() != nil {
 			break
 		}
-		hashes, err := cam.Capture(ctx, frames, 200*time.Millisecond)
+		var hashes []string
+		var err error
+		for try := range benchCaptureTries {
+			if hashes, err = cam.Capture(ctx, frames, 200*time.Millisecond); err == nil || ctx.Err() != nil {
+				break
+			}
+			fmt.Printf("capture %d try %d failed: %v\n", i+1, try+1, err)
+		}
 		if err != nil {
 			close(work)
 			wg.Wait()

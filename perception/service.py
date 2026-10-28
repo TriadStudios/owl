@@ -24,6 +24,7 @@ MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 3
 MAX_CAPTURE_FRAMES = 10
+CAPTURE_GRACE_S = 5
 MAX_TRACK_FPS = 15
 TRACK_BACKLOG = 64
 POLYGON_EPSILON_PX = 1.5
@@ -234,7 +235,7 @@ def capture_frames(count: int, spacing: float) -> dict[str, object]:
     with camera_lock, capture.connect(segment.load_env()) as mini:
         capture.home(mini)
         next_at = 0.0
-        for frame in capture.frames(mini, count * spacing + 1):
+        for frame in capture.frames(mini, count * spacing + CAPTURE_GRACE_S):
             now = time.monotonic()
             if now < next_at:
                 continue
