@@ -94,7 +94,7 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                 found.update(seq=seq, hand=hand, gray=gray)
 
     try:
-        with camera_lock, capture.connect(segment.load_env()) as mini:
+        with camera_lock, capture.session(segment.load_env()) as mini:
             capture.home(mini)
             threading.Thread(target=detector, daemon=True).start()
             box, template, used, next_at = None, None, -1, 0.0

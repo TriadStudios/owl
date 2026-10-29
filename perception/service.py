@@ -22,7 +22,8 @@ MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
 MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
-CAMERA_ATTEMPTS = 3
+CAMERA_ATTEMPTS = 5
+CAMERA_RETRY_S = 2.0
 MAX_CAPTURE_FRAMES = 10
 CAPTURE_GRACE_S = 5
 MAX_TRACK_FPS = 15
@@ -143,9 +144,12 @@ def describe_upload(image_bytes: bytes) -> dict[str, object]:
 
 
 def describe_camera(burst: float) -> dict[str, object]:
-    with camera_lock, capture.connect(segment.load_env()) as mini:
+    with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
         for attempt in range(1, CAMERA_ATTEMPTS + 1):
+            if attempt > 1:
+                # The WebRTC stream degrades into codec blocks for several seconds at a time, so retry on a later frame.
+                time.sleep(CAMERA_RETRY_S)
             frame = next(capture.frames(mini, 0))
             ok, encoded = cv2.imencode(".png", frame)
             if not ok:
@@ -168,7 +172,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
     changes = [0.0] * len(regions)
     state["changes"] = changes
     try:
-        with camera_lock, capture.connect(segment.load_env()) as mini:
+        with camera_lock, capture.session(segment.load_env()) as mini:
             locked = capture.home(mini)
             base = None
             for frame in capture.frames(mini, MAX_RECORD_S):
@@ -232,7 +236,7 @@ def stop_recording() -> dict[str, object]:
 
 def capture_frames(count: int, spacing: float) -> dict[str, object]:
     hashes: list[str] = []
-    with camera_lock, capture.connect(segment.load_env()) as mini:
+    with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
         next_at = 0.0
         for frame in capture.frames(mini, count * spacing + CAPTURE_GRACE_S):
@@ -256,7 +260,7 @@ def capture_frames(count: int, spacing: float) -> dict[str, object]:
 
 
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
-    with camera_lock, capture.connect(segment.load_env()) as mini:
+    with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
         return {"leds": watch("leds", capture.frames(mini, seconds), boxes)}
 
