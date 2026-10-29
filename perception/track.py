@@ -98,7 +98,7 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
             capture.home(mini)
             threading.Thread(target=detector, daemon=True).start()
             box, template, used, next_at = None, None, -1, 0.0
-            for frame in capture.frames(mini, float("inf")):
+            for frame in capture.bridged(float("inf")):
                 if stop.is_set():
                     return
                 now = time.monotonic()

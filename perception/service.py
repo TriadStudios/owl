@@ -150,7 +150,7 @@ def describe_camera(burst: float) -> dict[str, object]:
             if attempt > 1:
                 # The WebRTC stream degrades into codec blocks for several seconds at a time, so retry on a later frame.
                 time.sleep(CAMERA_RETRY_S)
-            frame = next(capture.frames(mini, 0))
+            frame = next(capture.bridged(0))
             ok, encoded = cv2.imencode(".png", frame)
             if not ok:
                 raise ValueError("failed to encode the camera frame")
@@ -164,7 +164,7 @@ def describe_camera(burst: float) -> dict[str, object]:
         reference["gray"] = small_gray(frame)
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
-        result["leds"] = watch("segment-leds", capture.frames(mini, burst), led_boxes(result))
+        result["leds"] = watch("segment-leds", capture.bridged(burst), led_boxes(result))
     return result
 
 
@@ -175,7 +175,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
         with camera_lock, capture.session(segment.load_env()) as mini:
             locked = capture.home(mini)
             base = None
-            for frame in capture.frames(mini, MAX_RECORD_S):
+            for frame in capture.bridged(MAX_RECORD_S):
                 now = time.monotonic()
                 if base is None:
                     regions = [[int(round(v)) for v in r] for r in align(frame, regions)]
@@ -239,7 +239,7 @@ def capture_frames(count: int, spacing: float) -> dict[str, object]:
     with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
         next_at = 0.0
-        for frame in capture.frames(mini, count * spacing + CAPTURE_GRACE_S):
+        for frame in capture.bridged(count * spacing + CAPTURE_GRACE_S):
             now = time.monotonic()
             if now < next_at:
                 continue
@@ -262,7 +262,7 @@ def capture_frames(count: int, spacing: float) -> dict[str, object]:
 def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
     with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
-        return {"leds": watch("leds", capture.frames(mini, seconds), boxes)}
+        return {"leds": watch("leds", capture.bridged(seconds), boxes)}
 
 
 async def run(fn, *args) -> dict[str, object]:

@@ -18,7 +18,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from reachy_mini.vision.face_detector import FaceDetector
 from reachy_mini.utils import create_head_pose
 from reachy_mini.vision.face_tracking import Tracker
@@ -85,10 +85,12 @@ DEBUG_SIZE = (640, 360)
 DEBUG_PREROLL_S = 3
 DEBUG_GRID_MAX = 300
 
+FRAME_WAIT_S = 2.0
+
 app = FastAPI()
 state: dict[str, object] = {
     "mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "face_box": None, "centroid": [0.5, 0.5],
-    "frame_at": 0.0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
+    "frame_at": 0.0, "frame": None, "frame_seq": 0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
     "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0, "alert_until": 0.0,
 }
 audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
@@ -235,6 +237,7 @@ def watch_camera(m) -> None:
             now = time.monotonic()
             height, width = frame.shape[:2]
             state["frame_size"], state["frame_at"] = (width, height), now
+            state["frame"], state["frame_seq"] = frame, int(state["frame_seq"]) + 1
             gray = cv2.cvtColor(cv2.resize(frame, MOTION_SIZE, interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY).astype(np.int16)
             if now <= state["head_busy_until"]:
                 history.clear()
@@ -584,6 +587,20 @@ def health() -> dict[str, object]:
     if state["error"] or state["mini"] is None:
         raise HTTPException(503, str(state["error"] or "bridge not connected"))
     return {"ok": True, "frame_age_s": round(time.monotonic() - state["frame_at"], 1), "debug": debug["on"], "voice": "elevenlabs" if segment.load_env().get("ELEVENLABS_API_KEY", "").strip() else "windows"}
+
+
+@app.get("/frame")
+def latest_frame(after: int = 0) -> Response:
+    give_up = time.monotonic() + FRAME_WAIT_S
+    while int(state["frame_seq"]) <= after or state["frame"] is None:
+        if state["error"]:
+            raise HTTPException(503, str(state["error"]))
+        if time.monotonic() > give_up:
+            raise HTTPException(504, f"no new camera frame within {FRAME_WAIT_S} s")
+        time.sleep(0.005)
+    frame, seq = state["frame"], state["frame_seq"]
+    height, width = frame.shape[:2]
+    return Response(frame.tobytes(), media_type="application/octet-stream", headers={"X-Seq": str(seq), "X-Size": f"{height},{width}"})
 
 
 @app.get("/motion")
