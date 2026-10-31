@@ -198,6 +198,7 @@ type TrackFrame struct {
 	Err    string
 	T      time.Time
 	Hand   *[4]float64
+	Tip    float64
 	Source string
 	Score  float64
 	Frozen bool
@@ -226,6 +227,7 @@ func (c *Client) Track(ctx context.Context, row [2]float64, fps float64) (<-chan
 			var line struct {
 				T      float64     `json:"t"`
 				Hand   *[4]float64 `json:"hand"`
+				Tip    float64     `json:"tip"`
 				Source string      `json:"source"`
 				Score  float64     `json:"score"`
 				Frozen bool        `json:"frozen"`
@@ -245,7 +247,7 @@ func (c *Client) Track(ctx context.Context, row [2]float64, fps float64) (<-chan
 			if line.Hand != nil && (line.Hand[2] <= line.Hand[0] || line.Hand[3] <= line.Hand[1]) {
 				line.Hand = nil
 			}
-			f := TrackFrame{T: time.UnixMilli(int64(line.T * 1000)), Hand: line.Hand, Source: line.Source, Score: line.Score, Frozen: line.Frozen}
+			f := TrackFrame{T: time.UnixMilli(int64(line.T * 1000)), Hand: line.Hand, Tip: line.Tip, Source: line.Source, Score: line.Score, Frozen: line.Frozen}
 			select {
 			case frames <- f:
 			case <-ctx.Done():

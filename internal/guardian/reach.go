@@ -100,7 +100,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 		}
 		var obs *HandObs
 		if f.Hand != nil {
-			obs = &HandObs{T: f.T, Box: *f.Hand}
+			obs = &HandObs{T: f.T, Box: *f.Hand, Tip: f.Tip}
 		}
 		for _, e := range a.Update(obs, f.T) {
 			switch e.Kind {
@@ -110,7 +110,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 			case TargetLocked:
 				lockedAt = f.T
 				r.see(e.Port)
-				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "box", obs.Box)
+				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "box", obs.Box, "tip", obs.Tip)
 			case Expected:
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID)
 			case Withdrawn:

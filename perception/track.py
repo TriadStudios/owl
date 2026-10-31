@@ -19,6 +19,8 @@ FOLLOW_MIN_SCORE = 0.5
 FOLLOW_SEARCH = 1.0
 MIN_TEMPLATE = 8
 REGION_DOWN = 1.0
+REGION_SIDE = 0.25
+TIP_SHARE = 10
 CLIP_SECONDS = 15
 CLIP_WIDTH = 640
 EVIDENCE = segment.ROOT / "data" / "evidence"
@@ -32,7 +34,7 @@ def frozen() -> bool:
     return bool(state["frozen"])
 
 
-def detect_hand(rgb: np.ndarray) -> tuple[list[float], float] | None:
+def detect_hand(rgb: np.ndarray, row: tuple[float, float]) -> tuple[list[float], float, float] | None:
     import torch
 
     processor, model = segment.local_model()
@@ -40,14 +42,23 @@ def detect_hand(rgb: np.ndarray) -> tuple[list[float], float] | None:
     with torch.inference_mode():
         outputs = model(**inputs)
     result = processor.post_process_instance_segmentation(outputs, target_sizes=[rgb.shape[:2]])[0]
-    scored = list(zip(result["boxes"].float().cpu().tolist(), result["scores"].float().cpu().tolist()))
-    best = max(scored, key=lambda bs: bs[1], default=None)
-    return best if best and best[1] >= HAND_MIN_SCORE else None
+    boxes, scores = result["boxes"].float().cpu().tolist(), result["scores"].float().cpu().tolist()
+    hands = [i for i, score in enumerate(scores) if score >= HAND_MIN_SCORE]
+    if not hands:
+        return None
+    # The crop holds the tech's other hand too, often on a phone above the switch; the one that matters is nearest the ports.
+    k = min(hands, key=lambda i: max(0.0, row[0] - boxes[i][3], boxes[i][1] - row[1]))
+    ys, xs = np.nonzero(result["masks"][k].cpu().numpy())
+    # A hand reaching down over the switch has its fingers at the bottom of its mask, often far from the box center.
+    tip = float(np.median(xs[ys >= np.percentile(ys, 100 - TIP_SHARE)])) if len(xs) else (boxes[k][0] + boxes[k][2]) / 2
+    return boxes[k], scores[k], tip
 
 
 def region(height: int, width: int) -> list[int]:
     x0, y0, x1, y1 = json.loads(segment.ROI_PATH.read_text())["rect"]
-    return [x0, y0, x1, min(height, int(y1 + REGION_DOWN * (y1 - y0)))]
+    side = int(REGION_SIDE * (x1 - x0))
+    # Techs reach down over the top of the switch, so a crop starting at the port row only ever sees fingertips.
+    return [max(0, x0 - side), 0, min(width, x1 + side), min(height, int(y1 + REGION_DOWN * (y1 - y0)))]
 
 
 def follow(gray: np.ndarray, template: np.ndarray, box: list[float]) -> tuple[list[float], float] | None:
@@ -78,18 +89,18 @@ def emit(lines: queue.Queue, line: str | None) -> None:
 
 
 def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event, camera_lock: threading.Lock) -> None:
-    latest: dict[str, object] = {"rgb": None, "gray": None, "seq": 0}
+    latest: dict[str, object] = {"rgb": None, "gray": None, "seq": 0, "band": (0.0, 0.0)}
     found: dict[str, object] = {"seq": -1}
     lock = threading.Lock()
 
     def detector() -> None:
         while not stop.is_set():
             with lock:
-                rgb, gray, seq = latest["rgb"], latest["gray"], latest["seq"]
+                rgb, gray, seq, band = latest["rgb"], latest["gray"], latest["seq"], latest["band"]
             if rgb is None:
                 time.sleep(0.02)
                 continue
-            hand = detect_hand(rgb)
+            hand = detect_hand(rgb, band)
             with lock:
                 found.update(seq=seq, hand=hand, gray=gray)
 
@@ -97,7 +108,7 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
         # The bridge homes the head before tracking starts; a second goto from this connection races it and the SDK times the task out.
         with camera_lock:
             threading.Thread(target=detector, daemon=True).start()
-            box, template, used, next_at = None, None, -1, 0.0
+            box, template, tip_dx, used, next_at = None, None, 0.0, -1, 0.0
             for frame in capture.bridged(float("inf")):
                 if stop.is_set():
                     return
@@ -110,15 +121,16 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                 gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
                 with lock:
                     latest["seq"] = int(latest["seq"]) + 1
-                    latest.update(rgb=cv2.cvtColor(crop, cv2.COLOR_BGR2RGB), gray=gray)
+                    latest.update(rgb=cv2.cvtColor(crop, cv2.COLOR_BGR2RGB), gray=gray, band=(row[0] - ry0, row[1] - ry0))
                     seen = dict(found)
                 source, score = "", 0.0
                 if seen["seq"] != used:
                     used = seen["seq"]
                     if seen["hand"] is not None:
-                        box, score = seen["hand"]
+                        box, score, tip = seen["hand"]
                         h, w = seen["gray"].shape
                         box = [min(max(box[0], 0), w), min(max(box[1], 0), h), min(max(box[2], 0), w), min(max(box[3], 0), h)]
+                        tip_dx = tip - box[0]
                         x0, y0, x1, y1 = (int(round(v)) for v in box)
                         template = seen["gray"][y0:y1, x0:x1] if x1 - x0 >= MIN_TEMPLATE and y1 - y0 >= MIN_TEMPLATE else None
                         source = "sam3"
@@ -138,7 +150,8 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                     clip.append((time.time(), cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)))
                     while clip and clip[0][0] < time.time() - CLIP_SECONDS:
                         clip.popleft()
-                emit(lines, json.dumps({"t": round(time.time(), 3), "hand": hand, "source": source, "score": round(score, 3), "frozen": state["frozen"]}) + "\n")
+                tip_x = round(box[0] + tip_dx + rx0, 1) if box is not None else None
+                emit(lines, json.dumps({"t": round(time.time(), 3), "hand": hand, "tip": tip_x, "source": source, "score": round(score, 3), "frozen": state["frozen"]}) + "\n")
     except Exception as error:
         emit(lines, json.dumps({"error": str(error)}) + "\n")
     finally:

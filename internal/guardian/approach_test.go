@@ -203,3 +203,17 @@ func TestWithdrawnAfterASecondWithoutAHandAndANewReachCanWarnAgain(t *testing.T)
 		t.Fatalf("second reach: events %v, want one new stop", kinds(events))
 	}
 }
+
+func TestADownwardReachIsPlacedByTheFingertipsNotTheBoxCenter(t *testing.T) {
+	a := rack()
+	t0 := time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
+	var events []ApproachEvent
+	for i := range 4 {
+		t := t0.Add(time.Duration(i) * 100 * time.Millisecond)
+		obs := HandObs{T: t, Box: [4]float64{a.Ports[1].X0, 0, a.Ports[5].X1, 240}, Tip: center(a, 2)}
+		events = append(events, a.Update(&obs, t)...)
+	}
+	if len(events) < 3 || events[1].Kind != TargetLocked || events[1].Port != 2 || events[2].Kind != Stop {
+		t.Fatalf("events %+v, want port 2 locked under the fingertips and a stop", events)
+	}
+}

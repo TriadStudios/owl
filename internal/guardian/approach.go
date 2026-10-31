@@ -35,6 +35,7 @@ type PortBox struct {
 type HandObs struct {
 	T   time.Time
 	Box [4]float64
+	Tip float64
 }
 
 type ApproachEvent struct {
@@ -126,8 +127,12 @@ func (a *Approach) Update(o *HandObs, now time.Time) []ApproachEvent {
 	return append(events, e)
 }
 
-func (a *Approach) lead(b [4]float64) (float64, float64) {
+func (a *Approach) lead(o HandObs) (float64, float64) {
+	b := o.Box
 	x := (b[0] + b[2]) / 2
+	if o.Tip > b[0] && o.Tip < b[2] {
+		x = o.Tip
+	}
 	switch {
 	case b[1] > a.RowY1:
 		return x, b[1]
@@ -144,7 +149,7 @@ func (a *Approach) gap(y float64) float64 {
 
 func (a *Approach) Project(track []HandObs) (float64, float64) {
 	last := track[len(track)-1]
-	x, y := a.lead(last.Box)
+	x, y := a.lead(last)
 	dist := a.gap(y)
 	if len(track) < 2 || dist == 0 {
 		return x, dist
@@ -153,7 +158,7 @@ func (a *Approach) Project(track []HandObs) (float64, float64) {
 	n := float64(len(track))
 	for _, o := range track {
 		t := o.T.Sub(track[0].T).Seconds()
-		ox, oy := a.lead(o.Box)
+		ox, oy := a.lead(o)
 		st, sx, sy, stt, stx, sty = st+t, sx+ox, sy+oy, stt+t*t, stx+t*ox, sty+t*oy
 	}
 	den := n*stt - st*st
