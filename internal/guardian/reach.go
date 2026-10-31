@@ -14,7 +14,7 @@ import (
 )
 
 type Reach struct {
-	Track func(ctx context.Context) (<-chan perception.TrackFrame, error)
+	Track func(ctx context.Context, row [2]float64) (<-chan perception.TrackFrame, error)
 	Alert func(text string) error
 	Clip  func() (string, error)
 	Log   *slog.Logger
@@ -79,7 +79,7 @@ func WarningLines(a *Approach, ports []reconcile.Port) []string {
 }
 
 func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
-	frames, err := r.Track(ctx)
+	frames, err := r.Track(ctx, [2]float64{a.RowY0, a.RowY1})
 	if err != nil {
 		r.Log.Error("track", "err", err)
 		return
@@ -110,7 +110,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 			case TargetLocked:
 				lockedAt = f.T
 				r.see(e.Port)
-				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance))
+				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "box", obs.Box)
 			case Expected:
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID)
 			case Withdrawn:
