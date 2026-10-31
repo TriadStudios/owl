@@ -20,8 +20,7 @@ FOLLOW_SEARCH = 1.0
 MIN_TEMPLATE = 8
 REGION_DOWN = 1.0
 REGION_SIDE = 0.25
-TIP_SHARE = 10
-TIP_ABOVE_ROW = 15
+TIP_BAND = 15
 CLIP_SECONDS = 15
 CLIP_WIDTH = 640
 EVIDENCE = segment.ROOT / "data" / "evidence"
@@ -52,11 +51,9 @@ def detect_hand(rgb: np.ndarray, row: tuple[float, float]) -> tuple[list[float],
     ys, xs = np.nonzero(result["masks"][k].cpu().numpy())
     if not len(xs):
         return boxes[k], scores[k], (boxes[k][0] + boxes[k][2]) / 2
-    # Pulling a plug pinches it with a finger on each side, so the plug sits between the outermost fingers at the row, not under either one or the box center.
-    near = ys >= row[0] - TIP_ABOVE_ROW
-    if near.any():
-        return boxes[k], scores[k], float(xs[near].min() + xs[near].max()) / 2
-    return boxes[k], scores[k], float(np.median(xs[ys >= np.percentile(ys, 100 - TIP_SHARE)]))
+    # A pinch holds the plug between the two lowest fingertips; curled knuckles beside them also reach the port row, so take only the bottom of the hand.
+    low = ys >= ys.max() - TIP_BAND
+    return boxes[k], scores[k], float(xs[low].min() + xs[low].max()) / 2
 
 
 def region(height: int, width: int) -> list[int]:
