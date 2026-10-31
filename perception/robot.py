@@ -91,7 +91,7 @@ app = FastAPI()
 state: dict[str, object] = {
     "mini": None, "error": None, "moving_at": 0.0, "face_at": 0.0, "face": None, "face_box": None, "centroid": [0.5, 0.5],
     "frame_at": 0.0, "frame": None, "frame_seq": 0, "head_busy_until": 0.0, "tracking": False, "look": None, "activity": "idle",
-    "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0, "alert_until": 0.0,
+    "voice_at": 0.0, "voice_angle": float(np.pi / 2), "said_until": 0.0, "alert_until": 0.0, "homed": False,
 }
 audio: collections.deque[tuple[float, np.ndarray]] = collections.deque()
 audio_lock = threading.Lock()
@@ -227,6 +227,18 @@ def move_head(fn, seconds: float, busy: bool = True) -> None:
             debug_event("move_failed", seconds=seconds, err=str(error))
 
 
+def home_head(m) -> None:
+    state["homed"] = capture.home(m) is not None
+
+
+def wave_antennas(m, angles: list[float], seconds: float) -> None:
+    # Moving the antennas tips the head down off the switch, even with the head pose sent alongside, and the hand tracker needs the port row in view.
+    if state["homed"]:
+        time.sleep(seconds)
+        return
+    m.goto_target(antennas=angles, duration=seconds)
+
+
 def watch_camera(m) -> None:
     detector, tracker = FaceDetector(), Tracker()
     history: collections.deque[np.ndarray] = collections.deque(maxlen=2)
@@ -279,7 +291,7 @@ def watch_camera(m) -> None:
 def look(m, x: float, y: float, seconds: float) -> None:
     width, height = state.get("frame_size", (1280, 720))
     u, v = int(min(max(x, 0.02), 0.98) * width), int(min(max(y, 0.02), 0.98) * height)
-    state["look"] = (x, y, time.monotonic())
+    state["look"], state["homed"] = (x, y, time.monotonic()), False
     debug_event("look", x=round(x, 3), y=round(y, 3), seconds=seconds)
     move_head(lambda: m.look_at_image(u, v, duration=seconds), seconds)
 
@@ -450,11 +462,11 @@ def say(text: str) -> dict[str, object]:
         while time.monotonic() < end:
             if time.monotonic() > state["head_busy_until"]:
                 angles = [side * ANTENNA_RAD, -side * ANTENNA_RAD]
-                move_head(lambda: m.goto_target(antennas=angles, duration=ANTENNA_EVERY_S * 0.9), ANTENNA_EVERY_S, busy=False)
+                move_head(lambda: wave_antennas(m, angles, ANTENNA_EVERY_S * 0.9), ANTENNA_EVERY_S, busy=False)
                 side = -side
             else:
                 time.sleep(ANTENNA_EVERY_S)
-        move_head(lambda: m.goto_target(antennas=[0.0, 0.0], duration=0.3), 0.3, busy=False)
+        move_head(lambda: wave_antennas(m, [0.0, 0.0], 0.3), 0.3, busy=False)
         state["activity"], state["said_until"] = "idle", time.monotonic() + VOICE_QUIET_AFTER_SAY_S
         voice = "elevenlabs" if key else "windows"
         debug_event("say", text=text, voice=voice, seconds=round(seconds, 2), first_audio_ms=round(((first[0] if first else time.monotonic()) - requested) * 1000))
@@ -495,9 +507,9 @@ def alert(text: str) -> dict[str, object]:
         clear()
     m.media.push_audio_sample(pcm)
     played_ms = round((time.monotonic() - start) * 1000)
-    move_head(lambda: m.goto_target(antennas=[ALERT_ANTENNA_RAD, -ALERT_ANTENNA_RAD], duration=0.15), 0.15, busy=False)
+    move_head(lambda: wave_antennas(m, [ALERT_ANTENNA_RAD, -ALERT_ANTENNA_RAD], 0.15), 0.15, busy=False)
     time.sleep(max(0.0, seconds - 0.15))
-    move_head(lambda: m.goto_target(antennas=[0.0, 0.0], duration=0.3), 0.3, busy=False)
+    move_head(lambda: wave_antennas(m, [0.0, 0.0], 0.3), 0.3, busy=False)
     print(f"alert {text!r} cached={cached} audio queued in {played_ms} ms", flush=True)
     debug_event("alert", text=text, cached=cached, queued_ms=played_ms, seconds=round(seconds, 2))
     return {"ok": True, "cached": cached, "queued_ms": played_ms}
@@ -545,6 +557,7 @@ def turn(x: float, y: float) -> dict[str, object]:
         yaw = float(np.clip(np.degrees(np.pi / 2 - state["voice_angle"]), -VOICE_MAX_YAW_DEG, VOICE_MAX_YAW_DEG))
         debug_event("turn", how=how, doa_rad=round(state["voice_angle"], 3), yaw_deg=round(yaw, 1), pitch_deg=VOICE_PITCH_DEG)
         pose = create_head_pose(yaw=yaw, pitch=VOICE_PITCH_DEG)
+        state["homed"] = False
         move_head(lambda: m.goto_target(head=pose, duration=TURN_S), TURN_S)
     else:
         debug_event("turn", target=[round(x, 3), round(y, 3)], how=how)
@@ -569,7 +582,7 @@ def home() -> dict[str, object]:
     state["tracking"], state["activity"] = False, "going home"
     m = mini()
     debug_event("home")
-    move_head(lambda: capture.home(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
+    move_head(lambda: home_head(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
     state["activity"] = "idle"
     debug_stop()
     return {"ok": True}
@@ -666,7 +679,7 @@ def main() -> None:
     m = capture.connect(segment.load_env())
     m.__enter__()
     state["mini"] = m
-    move_head(lambda: capture.home(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
+    move_head(lambda: home_head(m), capture.HOME_MOVE_S * capture.HOME_PASSES)
     speech_model()
     threading.Thread(target=watch_audio, args=(m,), daemon=True).start()
     threading.Thread(target=watch_camera, args=(m,), daemon=True).start()
