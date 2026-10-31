@@ -110,7 +110,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 			case TargetLocked:
 				lockedAt = f.T
 				r.see(e.Port)
-				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance))
+				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "box", obs.Box)
 			case Expected:
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID)
 			case Withdrawn:
