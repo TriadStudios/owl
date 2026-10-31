@@ -1190,11 +1190,11 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
 		go func() {
 			bridge.Home()
+			go reach.Run(rctx, a, cur)
 			if err := bridge.Prepare(guardian.WarningLines(a, cur)); err != nil {
 				log.Warn("prepare warnings", "err", err)
 			}
 		}()
-		go reach.Run(rctx, a, cur)
 	}
 	state := g.State()
 	for ctx.Err() == nil {

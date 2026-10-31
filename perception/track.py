@@ -94,8 +94,8 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                 found.update(seq=seq, hand=hand, gray=gray)
 
     try:
-        with camera_lock, capture.session(segment.load_env()) as mini:
-            capture.home(mini)
+        # The bridge homes the head before tracking starts; a second goto from this connection races it and the SDK times the task out.
+        with camera_lock:
             threading.Thread(target=detector, daemon=True).start()
             box, template, used, next_at = None, None, -1, 0.0
             for frame in capture.bridged(float("inf")):
