@@ -144,7 +144,7 @@ func (g *Guardian) Step(now time.Time) {
 			g.lastSpeech = now
 			line, port, bye := g.respond(g.heard)
 			g.unclear++
-			if port != 0 || bye {
+			if port != 0 || bye || line != missLine {
 				g.unclear = 0
 			}
 			if g.unclear >= maxUnclear {

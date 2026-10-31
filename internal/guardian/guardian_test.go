@@ -242,6 +242,20 @@ func TestBackgroundTalkEndsAfterThreeUnclearTurns(t *testing.T) {
 	}
 }
 
+func TestAConversationWithoutAPortNumberStaysOpen(t *testing.T) {
+	now := time.Now()
+	robot := &fakeRobot{replies: []string{"this one", "this one right here, you don't see it?"}}
+	g := awake(Answer, robot, &fakeCamera{moving: true}, now)
+	g.Narrator = &fakeNarrator{reply: narrate.Reply{Line: "No worries, which one did you mean?"}}
+	g.heard = "oh sorry, that wasn't the one"
+	for i := 1; i <= 3; i++ {
+		g.Step(now.Add(time.Duration(i) * time.Second))
+	}
+	if g.State() != Answer || slices.Contains(robot.said, closing) {
+		t.Fatalf("state %s said %q, want the visit still open while the narrator is answering", g.State(), robot.said)
+	}
+}
+
 func TestSleepWaitsForAQuietRoomBeforeIdle(t *testing.T) {
 	now := time.Now()
 	robot, cam := &fakeRobot{}, &fakeCamera{moving: true}
