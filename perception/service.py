@@ -47,9 +47,9 @@ def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
     return [round(x / 2 + rect[0], 1), round(y / 2 + rect[1], 1)]
 
 
-def describe(image_bytes: bytes) -> dict[str, object]:
+def describe(image_bytes: bytes, fixed_crop: bool = True) -> dict[str, object]:
     with analyze_lock:
-        _, results, rect, _ = segment.analyze(image_bytes, segment.load_env())
+        _, results, rect, _ = segment.analyze(image_bytes, segment.load_env(), fixed_crop)
     row = segment.ports(results)
     cables = results[segment.CABLE_PROMPT]
     ports = []
@@ -151,7 +151,7 @@ def health() -> dict[str, object]:
 
 
 def describe_upload(image_bytes: bytes) -> dict[str, object]:
-    result = describe(image_bytes)
+    result = describe(image_bytes, fixed_crop=False)
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     result["leds"] = leds.leds([image], led_boxes(result))
     return result
