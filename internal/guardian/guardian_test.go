@@ -56,7 +56,7 @@ func table() []reconcile.Port {
 }
 
 func awake(state State, robot *fakeRobot, cam *fakeCamera, now time.Time) *Guardian {
-	return &Guardian{Robot: robot, Camera: cam, Table: table, Colors: map[int]string{2: "blue"}, state: state, lastMotion: now, lastSpeech: now}
+	return &Guardian{Robot: robot, Camera: cam, Table: table, Colors: map[int]string{2: "blue"}, state: state, lastMotion: now}
 }
 
 func TestIdleWakesOnOneSecondOfMotionAndTurnsToIt(t *testing.T) {
@@ -92,9 +92,14 @@ func TestWakeGreetsAsksAndListens(t *testing.T) {
 	greeting := make(chan string, 1)
 	greeting <- greetings[0]
 	g.greeting = greeting
+	watched := false
+	g.Watch = func([]reconcile.Port) { watched = true }
 	g.Step(now.Add(time.Second))
 	if g.State() != Ask || len(robot.said) != 1 || !slices.Contains(greetings, robot.said[0]) || g.heard != "I'm pulling port 3" {
 		t.Fatalf("state %s said %q heard %q", g.State(), robot.said, g.heard)
+	}
+	if !watched {
+		t.Errorf("hand tracking did not start on wake")
 	}
 }
 
@@ -113,15 +118,10 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 		now := time.Now()
 		robot, cam := &fakeRobot{}, &fakeCamera{}
 		g := awake(Ask, robot, cam, now)
-		watched := false
-		g.Watch = func([]reconcile.Port) { watched = true }
 		g.heard = c.heard
 		g.Step(now.Add(time.Second))
 		if g.State() != Answer || len(robot.said) != 1 {
 			t.Fatalf("%q: state %s said %q, want answer and one line", c.heard, g.State(), robot.said)
-		}
-		if !watched {
-			t.Errorf("%q: hand tracking did not start after the answer", c.heard)
 		}
 		for _, w := range c.want {
 			if !strings.Contains(robot.said[0], w) {
@@ -145,42 +145,58 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 	}
 }
 
-func TestAnswerListensForMoreThenCloses(t *testing.T) {
+func TestAQuietVisitStaysOpenUntilTheRoomIsStill(t *testing.T) {
 	now := time.Now()
 	robot := &fakeRobot{}
-	g := awake(Answer, robot, &fakeCamera{}, now)
+	cam := &fakeCamera{moving: true}
+	g := awake(Answer, robot, cam, now)
 	g.heard = "and port 3"
 	g.Step(now.Add(time.Second))
 	if g.State() != Answer || len(robot.said) != 1 || !strings.Contains(robot.said[0], "Port 3") {
-		t.Fatalf("follow-up port: state %s said %q, want port 3's card and a follow-up", g.State(), robot.said)
+		t.Fatalf("follow-up port: state %s said %q, want port 3's card", g.State(), robot.said)
+	}
+	for i := 2; i <= 50; i++ {
+		g.Step(now.Add(time.Duration(i) * time.Second))
+	}
+	if g.State() != Answer || len(robot.said) != 1 {
+		t.Fatalf("50 s of silence with the tech still there: state %s said %q, want it watching quietly", g.State(), robot.said)
+	}
+	cam.moving = false
+	g.Step(now.Add(111 * time.Second))
+	if g.State() != Sleep || robot.homes != 1 || len(robot.said) != 1 {
+		t.Fatalf("60 s still: state %s homes %d said %q, want sleep and home without speaking", g.State(), robot.homes, robot.said)
+	}
+}
+
+func TestAHandOnAPortGetsOneLineAboutIt(t *testing.T) {
+	now := time.Now()
+	robot := &fakeRobot{}
+	g := awake(Ask, robot, &fakeCamera{moving: true}, now)
+	hand := 3
+	g.Scene = func() narrate.Scene { return narrate.Scene{HandPort: hand} }
+	g.Narrator = &fakeNarrator{reply: narrate.Reply{Port: 3, Line: "That's port 3, the NAS, safe to pull."}}
+	g.Step(now.Add(time.Second))
+	if g.State() != Answer || len(robot.said) != 1 || robot.said[0] != "That's port 3, the NAS, safe to pull." {
+		t.Fatalf("hand on port 3: state %s said %q, want one line about port 3", g.State(), robot.said)
 	}
 	g.Step(now.Add(2 * time.Second))
-	g.Step(now.Add(20 * time.Second))
-	if g.State() != Answer || len(robot.said) != 1 {
-		t.Fatalf("19 s of silence: state %s said %q, want it still listening", g.State(), robot.said)
+	if len(robot.said) != 1 {
+		t.Fatalf("hand still on port 3: said %q, want no repeat", robot.said)
 	}
-	g.Step(now.Add(21 * time.Second))
-	if g.State() != Sleep || robot.said[1] != closing || robot.homes != 1 {
-		t.Fatalf("20 s of silence: state %s said %q homes %d, want a closing line and home", g.State(), robot.said, robot.homes)
+
+	hand = 2
+	g.Step(now.Add(3 * time.Second))
+	if len(robot.said) != 1 {
+		t.Fatalf("hand on do-not-touch port 2: said %q, want the reach warning to speak instead", robot.said)
 	}
 
 	robot = &fakeRobot{}
-	g = awake(Answer, robot, &fakeCamera{}, now)
-	hand := 4
-	g.Scene = func() narrate.Scene { return narrate.Scene{HandPort: hand} }
-	g.Step(now.Add(19 * time.Second))
-	hand = 0
-	g.Step(now.Add(30 * time.Second))
-	if g.State() != Answer || len(robot.said) != 0 {
-		t.Fatalf("silent with a hand on port 4 until 19 s: state %s said %q, want it still listening at 30 s", g.State(), robot.said)
-	}
-
-	robot = &fakeRobot{}
-	g = awake(Answer, robot, &fakeCamera{}, now)
-	g.heard = "port 3"
-	g.Step(now.Add(60 * time.Second))
-	if g.State() != Sleep || robot.homes != 1 || len(robot.said) != 0 {
-		t.Fatalf("60 s still: state %s homes %d said %q, want sleep and home without speaking", g.State(), robot.homes, robot.said)
+	g = awake(Ask, robot, &fakeCamera{moving: true}, now)
+	g.Scene = func() narrate.Scene { return narrate.Scene{HandPort: 3} }
+	g.Narrator = &fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is do not touch."}}
+	g.Step(now.Add(time.Second))
+	if len(robot.said) != 1 || robot.said[0] != Line(3, table(), "") {
+		t.Fatalf("model talked about another port: said %q, want port 3's template", robot.said)
 	}
 }
 
@@ -215,6 +231,7 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 		{"model error", "pulling port 2", fakeNarrator{err: errors.New("503")}, template},
 		{"model chat with a verdict and no port", "hello", fakeNarrator{reply: narrate.Reply{Line: "Hi! Everything here is safe."}}, missLine},
 		{"model chat", "hello", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "Hi! Which cable are you after?"}}, "Hi! Which cable are you after?"},
+		{"a device name doesn't override the model", "the NAS please", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "The one on the left or the right?"}}, "The one on the left or the right?"},
 	}
 	for _, c := range cases {
 		now := time.Now()
@@ -226,6 +243,16 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 		if len(robot.said) != 1 || robot.said[0] != c.want {
 			t.Errorf("%s: said %q, want %q", c.name, robot.said, c.want)
 		}
+	}
+
+	now := time.Now()
+	robot := &fakeRobot{}
+	g := awake(Ask, robot, &fakeCamera{}, now)
+	g.Narrator = &fakeNarrator{reply: narrate.Reply{}}
+	g.heard = "just watch the switch"
+	g.Step(now.Add(time.Second))
+	if len(robot.said) != 0 || g.State() != Ask {
+		t.Fatalf("quiet reply: state %s said %q, want nothing said", g.State(), robot.said)
 	}
 }
 

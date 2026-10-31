@@ -51,6 +51,10 @@ func TestParse(t *testing.T) {
 	if err != nil || r.Port != 0 || !r.Unclear {
 		t.Fatalf("unclear reply: %+v %v", r, err)
 	}
+	r, err = parse(`{"port": null, "unclear": false, "goodbye": false, "line": ""}`)
+	if err != nil || r.Line != "" {
+		t.Fatalf("quiet reply: %+v %v", r, err)
+	}
 	for _, bad := range []string{"Port 2 is do not touch.", `{"port": 0, "line": "x"}`, `{"port": 2, "line": ""}`} {
 		if _, err := parse(bad); err == nil {
 			t.Errorf("parse(%q) accepted", bad)

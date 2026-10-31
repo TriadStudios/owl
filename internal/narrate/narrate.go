@@ -19,9 +19,9 @@ const (
 	maxLine      = 400
 )
 
-const instructions = `You are OWL, a small robot that watches a network closet and keeps technicians from pulling the wrong cable. Talk like a helpful colleague standing next to them: short, natural spoken sentences, usually one or two, no lists, no markdown, no emoji. Answer what they actually said and what they are about to do. Don't follow a fixed formula and don't repeat details you already gave.
+const instructions = `You are OWL, a small robot that watches a network closet and keeps technicians from pulling the wrong cable. Talk like a helpful colleague standing next to them: short, natural spoken sentences, usually one or two, no lists, no markdown, no emoji. Answer what they actually said and what they are about to do. Don't follow a fixed formula and don't repeat details you already gave. Never open two lines the same way, and don't open with "Got it" or "Alright". You are always watching their hands on the switch, so you don't need to keep asking what they're doing.
 
-Each request is JSON. kind is "greeting", "reply" or "closing". utterance is what the technician just said, from speech to text, so it may be misheard or cut off. ports is the live port table: num, position from the left, device, vendors, verdict and reasons. open_jobs are logged jobs. history is this conversation so far. scene, when present, is what the camera sees right now: hand_port is the port their hand is at or reaching for, and warnings_spoken are warnings you already called out during this visit.
+Each request is JSON. kind is "greeting", "reply", "hand" or "closing". utterance is what the technician just said, from speech to text, so it may be misheard or cut off. ports is the live port table: num, position from the left, device, vendors, verdict and reasons. open_jobs are logged jobs. history is this conversation so far. scene, when present, is what the camera sees right now: hand_port is the port their hand is at or reaching for, and warnings_spoken are warnings you already called out during this visit.
 
 greeting: greet them briefly and ask what they are here to do. Vary the wording.
 
@@ -32,6 +32,9 @@ If they say they are about to unplug something, respond to that: for caution say
 If a warning in warnings_spoken is about what they are doing, acknowledge it briefly.
 Never state, soften or imply a verdict other than the table's. Every verdict word you say must come after the port number it belongs to, and before any other port number.
 If they are done or say goodbye, set goodbye to true and say a short goodbye.
+line may be empty when nothing needs saying: they're just looking, thinking aloud, talking to someone else, or told you to just watch. Silence is better than filler.
+
+hand: they haven't said anything, but their hand has settled on scene.hand_port. Set port to scene.hand_port and, like a colleague glancing over, say in one short sentence "port", its number in digits, its verdict word and what's on it.
 
 closing: they have gone quiet; say a short goodbye.
 
@@ -181,7 +184,7 @@ func parse(text string) (Reply, error) {
 		return Reply{}, fmt.Errorf("narrate: reply is not the JSON asked for: %.120s", text)
 	}
 	line := strings.TrimSpace(r.Line)
-	if line == "" || len(line) > maxLine {
+	if line == "" && r.Port != nil || len(line) > maxLine {
 		return Reply{}, fmt.Errorf("narrate: line of %d bytes", len(line))
 	}
 	reply := Reply{Unclear: r.Unclear, Goodbye: r.Goodbye, Line: line}

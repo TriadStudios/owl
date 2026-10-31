@@ -31,7 +31,6 @@ const (
 	wakeAfter       = time.Second
 	sleepAfter      = 60 * time.Second
 	quietBeforeIdle = 10 * time.Second
-	silenceEnd      = 20 * time.Second
 	maxUnclear      = 3
 	narrateBudget   = 4 * time.Second
 	missLine        = "Sorry, which port?"
@@ -80,7 +79,6 @@ type Guardian struct {
 	state       State
 	motionSince time.Time
 	lastMotion  time.Time
-	lastSpeech  time.Time
 	heard       string
 	unclear     int
 	greeting    <-chan string
@@ -123,25 +121,28 @@ func (g *Guardian) Step(now time.Time) {
 			g.state, g.motionSince = Idle, time.Time{}
 		}
 	case Wake:
+		// A tech may ignore OWL and go straight for a cable, so watch the switch from the first word.
+		if g.Watch != nil {
+			g.Watch(g.ports())
+		}
 		g.say(<-g.greeting)
-		g.heard, g.lastSpeech = g.Robot.Listen(), now
+		g.heard = g.Robot.Listen()
 		g.state = Ask
 	default:
-		if g.Scene != nil && g.Scene().HandPort != 0 {
-			g.lastSpeech = now
+		hand := 0
+		if g.Scene != nil {
+			hand = g.Scene().HandPort
 		}
 		switch {
 		case now.Sub(g.lastMotion) >= sleepAfter:
 			g.Robot.Home()
 			g.state = Sleep
-		case g.heard == "" && now.Sub(g.lastSpeech) >= silenceEnd:
-			g.say(g.chat("closing", "", closing))
-			g.Robot.Home()
-			g.state = Sleep
+		case g.heard == "" && hand != 0 && !g.told[hand] && g.verdicts(g.ports())[hand] != "do not touch":
+			g.say(g.handLine(hand))
+			g.state = Answer
 		case g.heard == "":
 			g.heard = g.Robot.Listen()
 		default:
-			g.lastSpeech = now
 			line, port, bye := g.respond(g.heard)
 			g.unclear++
 			if port != 0 || bye || line != missLine {
@@ -158,9 +159,6 @@ func (g *Guardian) Step(now time.Time) {
 			}
 			if port != 0 {
 				g.state = Answer
-				if g.Watch != nil {
-					g.Watch(g.ports())
-				}
 			}
 			g.heard = g.Robot.Listen()
 		}
@@ -172,14 +170,19 @@ var (
 	numberWord = map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "to": 2, "too": 2, "for": 4}
 )
 
-func ParseUtterance(text string, ports []reconcile.Port) int {
+func spokenPort(text string) int {
 	if m := portNumber.FindStringSubmatch(text); m != nil {
 		if n, err := strconv.Atoi(m[1]); err == nil {
 			return n
 		}
-		if n, ok := numberWord[strings.ToLower(m[1])]; ok {
-			return n
-		}
+		return numberWord[strings.ToLower(m[1])]
+	}
+	return 0
+}
+
+func ParseUtterance(text string, ports []reconcile.Port) int {
+	if n := spokenPort(text); n != 0 {
+		return n
 	}
 	words := strings.Fields(text)
 	best, bestDist, tied := 0, 0, false

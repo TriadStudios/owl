@@ -28,6 +28,9 @@ func (g *Guardian) log() *slog.Logger {
 }
 
 func (g *Guardian) say(line string) {
+	if line == "" {
+		return
+	}
 	g.Robot.Say(line)
 	g.remember("robot", line)
 }
@@ -79,6 +82,9 @@ func (g *Guardian) ask(kind, utterance string, ports []reconcile.Port) (narrate.
 func (g *Guardian) chat(kind, utterance, fallback string) string {
 	ports := g.ports()
 	r, took, err := g.ask(kind, utterance, ports)
+	if err == nil && r.Line == "" {
+		err = fmt.Errorf("empty %s line", kind)
+	}
 	if err == nil {
 		err = narrate.Check(r.Line, 0, g.verdicts(ports), false)
 	}
@@ -97,7 +103,7 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 	r, took, err := g.ask("reply", heard, ports)
 	switch {
 	case err != nil:
-	case parsed != 0 && r.Port != parsed:
+	case spokenPort(heard) != 0 && r.Port != parsed:
 		err = fmt.Errorf("model chose port %d, the utterance says port %d", r.Port, parsed)
 	case r.Port != 0:
 		verdict, _ := facts(r.Port, ports, g.Colors[r.Port])
@@ -125,6 +131,25 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 		g.log().Info("narrate fallback", "kind", "reply", "reason", errText(err), "took_ms", took.Milliseconds())
 		return missLine, 0, false
 	}
+}
+
+func (g *Guardian) handLine(port int) string {
+	ports := g.ports()
+	verdict, _ := facts(port, ports, g.Colors[port])
+	r, took, err := g.ask("hand", "", ports)
+	if err == nil && r.Port != port {
+		err = fmt.Errorf("model talked about port %d, the hand is on port %d", r.Port, port)
+	}
+	if err == nil {
+		err = narrate.Check(r.Line, port, g.verdicts(ports), true)
+	}
+	line, source := r.Line, "model"
+	if err != nil {
+		line, source = Line(port, ports, g.Colors[port]), "template"
+	}
+	g.tell(port)
+	g.logSafety("", port, verdict, source, line, errText(err), took, ports)
+	return line
 }
 
 func (g *Guardian) tell(port int) {
