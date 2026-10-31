@@ -97,11 +97,12 @@ def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
     (dx, dy), _ = cv2.phaseCorrelate(ref, cur, cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
     warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
     try:
-        _, warp = cv2.findTransformECC(ref, cur, warp, cv2.MOTION_EUCLIDEAN, ALIGN_CRITERIA, None, 5)
+        # A rotation term fits the tech and the background as much as the switch; the head only shifts the view.
+        _, warp = cv2.findTransformECC(ref, cur, warp, cv2.MOTION_TRANSLATION, ALIGN_CRITERIA, None, 5)
     except cv2.error:
         pass
     warp[:, 2] /= ALIGN_SCALE
-    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px, rotation {np.degrees(np.arctan2(warp[1, 0], warp[0, 0])):.2f} deg", flush=True)
+    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px", flush=True)
     return warp
 
 

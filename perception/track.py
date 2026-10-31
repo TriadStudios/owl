@@ -21,6 +21,7 @@ MIN_TEMPLATE = 8
 REGION_DOWN = 1.0
 REGION_SIDE = 0.25
 TIP_BAND = 15
+ALIGN_EVERY = 1.0
 CLIP_SECONDS = 15
 CLIP_WIDTH = 640
 EVIDENCE = segment.ROOT / "data" / "evidence"
@@ -115,7 +116,7 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
         # The bridge homes the head before tracking starts; a second goto from this connection races it and the SDK times the task out.
         with camera_lock:
             threading.Thread(target=detector, daemon=True).start()
-            box, template, tip_dx, used, next_at, offset = None, None, 0.0, -1, 0.0, None
+            box, template, tip_dx, used, next_at, offset, align_at = None, None, 0.0, -1, 0.0, None, 0.0
             for frame in capture.bridged(float("inf")):
                 if stop.is_set():
                     return
@@ -123,9 +124,9 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                 if now < next_at:
                     continue
                 next_at = now + 1 / fps
-                if offset is None:
-                    # The port boxes and row come from the segmented frame and this visit's home lands up to half a port away, so report in that frame's pixels.
-                    offset = shift(frame)
+                if now >= align_at:
+                    # The port boxes and row come from the segmented frame and this visit's home lands up to half a port away, and the head is still settling when tracking starts.
+                    offset, align_at = shift(frame), now + ALIGN_EVERY
                 dx, dy = offset
                 rx0, ry0, rx1, ry1 = region(*frame.shape[:2])
                 crop = frame[ry0:ry1, rx0:rx1]
