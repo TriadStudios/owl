@@ -113,10 +113,15 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 		now := time.Now()
 		robot, cam := &fakeRobot{}, &fakeCamera{}
 		g := awake(Ask, robot, cam, now)
+		watched := false
+		g.Watch = func([]reconcile.Port) { watched = true }
 		g.heard = c.heard
 		g.Step(now.Add(time.Second))
 		if g.State() != Answer || len(robot.said) != 1 {
 			t.Fatalf("%q: state %s said %q, want answer and one line", c.heard, g.State(), robot.said)
+		}
+		if !watched {
+			t.Errorf("%q: hand tracking did not start after the answer", c.heard)
 		}
 		for _, w := range c.want {
 			if !strings.Contains(robot.said[0], w) {

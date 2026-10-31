@@ -156,6 +156,9 @@ func (g *Guardian) Step(now time.Time) {
 			}
 			if port != 0 {
 				g.state = Answer
+				if g.Watch != nil {
+					g.Watch(g.ports())
+				}
 			}
 			g.heard = g.Robot.Listen()
 		}
