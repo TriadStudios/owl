@@ -21,6 +21,7 @@ MIN_TEMPLATE = 8
 REGION_DOWN = 1.0
 REGION_SIDE = 0.25
 TIP_SHARE = 10
+TIP_ABOVE_ROW = 15
 CLIP_SECONDS = 15
 CLIP_WIDTH = 640
 EVIDENCE = segment.ROOT / "data" / "evidence"
@@ -49,9 +50,13 @@ def detect_hand(rgb: np.ndarray, row: tuple[float, float]) -> tuple[list[float],
     # The crop holds the tech's other hand too, often on a phone above the switch; the one that matters is nearest the ports.
     k = min(hands, key=lambda i: max(0.0, row[0] - boxes[i][3], boxes[i][1] - row[1]))
     ys, xs = np.nonzero(result["masks"][k].cpu().numpy())
-    # A hand reaching down over the switch has its fingers at the bottom of its mask, often far from the box center.
-    tip = float(np.median(xs[ys >= np.percentile(ys, 100 - TIP_SHARE)])) if len(xs) else (boxes[k][0] + boxes[k][2]) / 2
-    return boxes[k], scores[k], tip
+    if not len(xs):
+        return boxes[k], scores[k], (boxes[k][0] + boxes[k][2]) / 2
+    # Pulling a plug pinches it with a finger on each side, so the plug sits between the outermost fingers at the row, not under either one or the box center.
+    near = ys >= row[0] - TIP_ABOVE_ROW
+    if near.any():
+        return boxes[k], scores[k], float(xs[near].min() + xs[near].max()) / 2
+    return boxes[k], scores[k], float(np.median(xs[ys >= np.percentile(ys, 100 - TIP_SHARE)]))
 
 
 def region(height: int, width: int) -> list[int]:
