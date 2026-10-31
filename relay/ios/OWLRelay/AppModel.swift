@@ -19,7 +19,7 @@ final class AppModel: ObservableObject {
     @Published var connected = false
     @Published var overlay = Overlay()
     @Published var toasts: [Toast] = []
-    @Published var sentFPS = 0
+    @Published var roundTrip: TimeInterval?
     @Published var talking = false
     @Published var fps: Int {
         didSet {
@@ -31,12 +31,14 @@ final class AppModel: ObservableObject {
         didSet { UserDefaults.standard.set(voice, forKey: "voice") }
     }
 
-    let camera = PhoneCamera()
+    let camera = ARCamera()
+    lazy var scene = ARScene(session: camera.session)
     private let relay = RelayClient()
     private let speechIn: SpeechIn = AppleSpeechIn()
     private let speechOut: SpeechOut = AppleSpeechOut()
-    private var frameCount = 0
     private var started = false
+    private var sent: (geometry: FrameGeometry?, at: Date)?
+    private var timeout: Task<Void, Never>?
 
     var active: Pairing? {
         pairings.first { $0.id == activeID }
@@ -58,15 +60,16 @@ final class AppModel: ObservableObject {
         camera.fps = fps
 
         relay.onConnected = { [weak self] up in
-            Task { @MainActor in self?.connected = up }
+            Task { @MainActor in
+                self?.connected = up
+                self?.camera.ready = true
+            }
         }
         relay.onMessage = { [weak self] msg in
             Task { @MainActor in self?.handle(msg) }
         }
-        let relay = relay
-        camera.onFrame = { [weak self] jpeg in
-            relay.sendFrame(jpeg)
-            Task { @MainActor in self?.frameCount += 1 }
+        camera.onFrame = { [weak self] jpeg, geometry in
+            Task { @MainActor in self?.send(jpeg, geometry) }
         }
     }
 
@@ -77,13 +80,16 @@ final class AppModel: ObservableObject {
         try? AVAudioSession.sharedInstance().setActive(true)
         AppleSpeechIn.requestAccess()
         if let active { relay.connect(active) }
-        Task { [weak self] in
-            while true {
-                try? await Task.sleep(for: .seconds(1))
-                guard let self else { return }
-                self.sentFPS = self.frameCount
-                self.frameCount = 0
-            }
+    }
+
+    // One frame in flight at a time, so each overlay is known to belong to the camera pose it was sent from.
+    private func send(_ jpeg: Data, _ geometry: FrameGeometry?) {
+        sent = (geometry, Date())
+        relay.sendFrame(jpeg)
+        timeout?.cancel()
+        timeout = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(15))
+            if !Task.isCancelled { self?.camera.ready = true }
         }
     }
 
@@ -139,6 +145,7 @@ final class AppModel: ObservableObject {
         findings = []
         loadError = nil
         overlay = Overlay()
+        scene.clear()
         relay.connect(pairing)
         Task { await refresh() }
     }
@@ -154,6 +161,7 @@ final class AppModel: ObservableObject {
         activeID = nil
         relay.disconnect()
         overlay = Overlay()
+        scene.clear()
         health = nil
         ports = nil
         findings = []
@@ -191,6 +199,13 @@ final class AppModel: ObservableObject {
         case .overlay(let o):
             let had = overlay.labels.contains { $0.verdict == .doNotTouch }
             overlay = o
+            if let sent {
+                if let geometry = sent.geometry { scene.pin(o, from: geometry) }
+                roundTrip = Date().timeIntervalSince(sent.at)
+                self.sent = nil
+            }
+            timeout?.cancel()
+            camera.ready = true
             if !had && o.labels.contains(where: { $0.verdict == .doNotTouch }) {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
             }

@@ -1,3 +1,4 @@
+import RealityKit
 import SwiftUI
 
 struct LiveView: View {
@@ -5,12 +6,10 @@ struct LiveView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
-            ZStack {
-                CameraPreview(session: model.camera.session)
-                OverlayView(overlay: model.overlay)
-            }
-            .aspectRatio(9.0 / 16.0, contentMode: .fit)
+            ARViewContainer(view: model.scene.view)
+                .ignoresSafeArea()
+            PinnedTags(scene: model.scene)
+                .ignoresSafeArea()
             VStack(spacing: 10) {
                 Text(status)
                     .font(.footnote.monospaced())
@@ -58,6 +57,43 @@ struct LiveView: View {
     private var status: String {
         let link = model.connected ? "connected" : "offline"
         let pair = model.active?.displayName ?? "unpaired"
-        return "\(link) · \(pair) · \(model.sentFPS)/\(model.fps) fps"
+        let trip = model.roundTrip.map { String(format: "tags %.1f s", $0) } ?? "waiting for tags"
+        return "\(link) · \(pair) · \(trip)"
+    }
+}
+
+struct ARViewContainer: UIViewRepresentable {
+    let view: ARView
+
+    func makeUIView(context: Context) -> ARView { view }
+
+    func updateUIView(_ view: ARView, context: Context) {}
+}
+
+struct PinnedTags: View {
+    @ObservedObject var scene: ARScene
+
+    var body: some View {
+        Canvas { ctx, size in
+            for shape in scene.shapes {
+                var path = Path()
+                path.addLines(shape.points)
+                path.closeSubpath()
+                let color = Color(hex: shape.color)
+                ctx.fill(path, with: .color(color.opacity(0.25)))
+                ctx.stroke(path, with: .color(color), lineWidth: 2)
+            }
+            for tag in scene.labels {
+                let text = Text("\(tag.label.text) · \(tag.label.verdict.title)")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                let resolved = ctx.resolve(text)
+                let box = resolved.measure(in: size)
+                let rect = CGRect(x: tag.at.x - box.width / 2 - 4, y: tag.at.y - box.height - 8, width: box.width + 8, height: box.height + 4)
+                ctx.fill(Path(roundedRect: rect, cornerRadius: 4), with: .color(Color(hex: tag.color)))
+                ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.midY))
+            }
+        }
+        .allowsHitTesting(false)
     }
 }
