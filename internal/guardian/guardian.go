@@ -33,9 +33,8 @@ const (
 	quietBeforeIdle = 10 * time.Second
 	silenceEnd      = 20 * time.Second
 	maxUnclear      = 3
-	narrateBudget   = 2500 * time.Millisecond
-	missLine        = "I didn't catch a port. Say port and a number, or the device's name."
-	followUp        = "Anything else?"
+	narrateBudget   = 4 * time.Second
+	missLine        = "Sorry, which port?"
 	closing         = "Okay. I'll keep watching."
 )
 
@@ -255,7 +254,7 @@ func distance(a, b string) int {
 var lines = template.Must(template.New("").Parse(`
 {{- define "do-not-touch"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Do not touch: {{.Reason}}. {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
 {{- define "caution"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{.Downstream}}. Caution: {{.Liveness}}, {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
-{{- define "safe"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{.Downstream}}, {{.Liveness}}. Safe.{{end}}
+{{- define "safe"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{if .Downstream}}{{.Downstream}}, {{.Liveness}}{{else}}Nothing plugged in{{end}}. Safe.{{end}}
 {{- define "unknown"}}Port {{.Num}}: unknown. I can't tell, {{.Reason}}.{{end}}`))
 
 type lineData struct {

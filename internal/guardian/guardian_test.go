@@ -151,7 +151,7 @@ func TestAnswerListensForMoreThenCloses(t *testing.T) {
 	g := awake(Answer, robot, &fakeCamera{}, now)
 	g.heard = "and port 3"
 	g.Step(now.Add(time.Second))
-	if g.State() != Answer || len(robot.said) != 1 || !strings.Contains(robot.said[0], "Port 3") || !strings.HasSuffix(robot.said[0], followUp) {
+	if g.State() != Answer || len(robot.said) != 1 || !strings.Contains(robot.said[0], "Port 3") {
 		t.Fatalf("follow-up port: state %s said %q, want port 3's card and a follow-up", g.State(), robot.said)
 	}
 	g.Step(now.Add(2 * time.Second))
@@ -200,7 +200,7 @@ func (n *fakeNarrator) Reply(ctx context.Context, req narrate.Request) (narrate.
 }
 
 func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
-	template := Line(2, table(), "blue") + " " + followUp
+	template := Line(2, table(), "blue")
 	cases := []struct {
 		name  string
 		heard string
@@ -211,7 +211,7 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 		{"model finds the port by device name", "the NAS please", fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is the NAS, it's safe."}}, "Port 3 is the NAS, it's safe."},
 		{"model says safe for a do-not-touch port", "pulling port 2", fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is safe to pull."}}, template},
 		{"model picks another port than the one said", "pulling port 2", fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe."}}, template},
-		{"model slower than the budget", "pulling port 2", fakeNarrator{delay: 3 * time.Second, reply: narrate.Reply{Port: 2, Line: "Port 2, do not touch."}}, template},
+		{"model slower than the budget", "pulling port 2", fakeNarrator{delay: narrateBudget + time.Second, reply: narrate.Reply{Port: 2, Line: "Port 2, do not touch."}}, template},
 		{"model error", "pulling port 2", fakeNarrator{err: errors.New("503")}, template},
 		{"model chat with a verdict and no port", "hello", fakeNarrator{reply: narrate.Reply{Line: "Hi! Everything here is safe."}}, missLine},
 		{"model chat", "hello", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "Hi! Which cable are you after?"}}, "Hi! Which cable are you after?"},

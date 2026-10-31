@@ -114,7 +114,7 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 	switch {
 	case parsed != 0:
 		verdict, _ := facts(parsed, ports, g.Colors[parsed])
-		line := Line(parsed, ports, g.Colors[parsed]) + " " + followUp
+		line := Line(parsed, ports, g.Colors[parsed])
 		g.tell(parsed)
 		g.logSafety(heard, parsed, verdict, "template", line, errText(err), took, ports)
 		return line, parsed, false
