@@ -3,12 +3,14 @@ import SwiftUI
 
 struct LiveView: View {
     @EnvironmentObject var model: AppModel
+    @State private var selected: Int?
 
     var body: some View {
         ZStack {
             ARViewContainer(view: model.scene.view)
                 .ignoresSafeArea()
-            PinnedTags(scene: model.scene)
+                .onTapGesture(coordinateSpace: .local) { selected = model.scene.port(at: $0) }
+            PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [])
                 .ignoresSafeArea()
             VStack(spacing: 10) {
                 Text(status)
@@ -52,6 +54,12 @@ struct LiveView: View {
         }
         .onAppear { model.startLive() }
         .onDisappear { model.stopLive() }
+        .task {
+            while !Task.isCancelled {
+                await model.refresh()
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
     }
 
     private var status: String {
@@ -72,8 +80,25 @@ struct ARViewContainer: UIViewRepresentable {
 
 struct PinnedTags: View {
     @ObservedObject var scene: ARScene
+    let selected: Int?
+    let ports: [Port]
 
     var body: some View {
+        GeometryReader { geo in
+            canvas
+            if let tag = scene.labels.first(where: { $0.label.port == selected }) {
+                VStack {
+                    PortCard(tag: tag, port: ports.first { $0.num == tag.label.port })
+                    Spacer(minLength: 0)
+                }
+                .frame(width: PortCard.width, height: 360)
+                .position(x: min(max(tag.at.x, PortCard.width / 2 + 16), geo.size.width - PortCard.width / 2 - 16), y: tag.at.y + 8 + 180)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private var canvas: some View {
         Canvas { ctx, size in
             for shape in scene.shapes {
                 var path = Path()
@@ -94,6 +119,54 @@ struct PinnedTags: View {
                 ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.midY))
             }
         }
-        .allowsHitTesting(false)
+    }
+}
+
+struct PortCard: View {
+    static let width: CGFloat = 260
+
+    let tag: ScreenLabel
+    let port: Port?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Port \(tag.label.port)").font(.headline)
+                Spacer()
+                Text(tag.label.verdict.title)
+                    .font(.caption.bold())
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color(hex: tag.color), in: Capsule())
+            }
+            if let port {
+                if !port.downstream.isEmpty {
+                    Text(port.downstream).font(.subheadline).foregroundStyle(.secondary)
+                }
+                ForEach(port.devices.prefix(4), id: \.mac) { device in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Circle().fill(device.online ? Verdict.safe.color : Verdict.unknown.color).frame(width: 8, height: 8)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(device.hostname ?? device.ip ?? device.mac).font(.callout)
+                            let detail = [device.vendor, device.hostname == nil ? nil : device.ip].compactMap { $0 }
+                            if !detail.isEmpty {
+                                Text(detail.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                if port.behind > min(port.devices.count, 4) {
+                    Text("\(port.behind) devices behind this port").font(.caption).foregroundStyle(.secondary)
+                } else if port.devices.isEmpty {
+                    Text("No devices seen").font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Loading port details…").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(12)
+        .background(.black.opacity(0.8), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color(hex: tag.color), lineWidth: 2))
     }
 }

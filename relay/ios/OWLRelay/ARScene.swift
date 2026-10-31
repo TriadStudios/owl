@@ -73,6 +73,18 @@ final class ARScene: ObservableObject {
         project()
     }
 
+    func port(at p: CGPoint) -> Int? {
+        let hit = shapes.last { shape in
+            var path = Path()
+            path.addLines(shape.points)
+            path.closeSubpath()
+            return path.contains(p)
+        }
+        if let hit { return hit.port }
+        let near = labels.min { hypot($0.at.x - p.x, $0.at.y - p.y) < hypot($1.at.x - p.x, $1.at.y - p.y) }
+        return near.flatMap { hypot($0.at.x - p.x, $0.at.y - p.y) < 44 ? $0.label.port : nil }
+    }
+
     private func project() {
         let shapes = pins.compactMap { pin -> ScreenShape? in
             let points = pin.points.compactMap { view.project($0) }
