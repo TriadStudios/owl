@@ -18,6 +18,7 @@ type Finding struct {
 	AfterFrame  string    `json:"after_frame,omitempty"`
 	Diff        string    `json:"diff,omitempty"`
 	JobID       int       `json:"job_id,omitempty"`
+	Evidence    string    `json:"evidence,omitempty"`
 }
 
 func Load(path string) ([]Finding, error) {

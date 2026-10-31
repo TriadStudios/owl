@@ -1173,6 +1173,25 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		Clip:  func() (string, error) { return cam.Clip(ctx) },
 		Log:   log,
 	}
+	ifIndex := map[int]int{}
+	for num, sp := range in.Cur.Ports {
+		ifIndex[num] = sp.IfIndex
+	}
+	pulls := &guardian.Pulls{
+		Links: func() (map[int]bool, error) { return discovery.OperUp(cfg, ifIndex) },
+		Jobs: func() []job.Job {
+			jobs, err := job.Load(jobsPath)
+			if err != nil {
+				log.Error("jobs", "err", err)
+			}
+			return jobs
+		},
+		Alert:  bridge.Alert,
+		Clip:   func() (string, error) { return cam.Clip(ctx) },
+		Record: func(f finding.Finding) error { return finding.Append(findingsPath, []finding.Finding{f}) },
+		Every:  time.Second,
+		Log:    log,
+	}
 	var stopReach context.CancelFunc
 	defer func() {
 		if stopReach != nil {
@@ -1191,6 +1210,7 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 			a := approachFor(frame, cur, log)
 			log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
 			go reach.Run(rctx, a, cur)
+			go pulls.Run(rctx, cur)
 			if err := bridge.Prepare(guardian.WarningLines(a, cur)); err != nil {
 				log.Warn("prepare warnings", "err", err)
 			}
