@@ -1,0 +1,195 @@
+import collections
+import hashlib
+import json
+import queue
+import tempfile
+import threading
+import time
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+import capture
+import segment
+
+HAND_PROMPT = "hand"
+HAND_MIN_SCORE = 0.4
+FOLLOW_MIN_SCORE = 0.5
+FOLLOW_SEARCH = 1.0
+MIN_TEMPLATE = 8
+REGION_DOWN = 1.0
+REGION_SIDE = 0.25
+TIP_BAND = 15
+ALIGN_EVERY = 1.0
+CLIP_SECONDS = 15
+CLIP_WIDTH = 640
+EVIDENCE = segment.ROOT / "data" / "evidence"
+
+state: dict[str, object] = {"frozen": False}
+clip_lock = threading.Lock()
+clip: collections.deque[tuple[float, np.ndarray]] = collections.deque()
+
+
+def frozen() -> bool:
+    return bool(state["frozen"])
+
+
+def detect_hand(rgb: np.ndarray, row: tuple[float, float]) -> tuple[list[float], float, float] | None:
+    import torch
+
+    processor, model = segment.local_model()
+    inputs = processor(images=rgb, text=HAND_PROMPT, return_tensors="pt").to("cuda", torch.float16)
+    with torch.inference_mode():
+        outputs = model(**inputs)
+    result = processor.post_process_instance_segmentation(outputs, target_sizes=[rgb.shape[:2]])[0]
+    boxes, scores = result["boxes"].float().cpu().tolist(), result["scores"].float().cpu().tolist()
+    hands = [i for i, score in enumerate(scores) if score >= HAND_MIN_SCORE]
+    if not hands:
+        return None
+    # The crop holds the tech's other hand too, often on a phone above the switch; the one that matters is nearest the ports.
+    k = min(hands, key=lambda i: max(0.0, row[0] - boxes[i][3], boxes[i][1] - row[1]))
+    ys, xs = np.nonzero(result["masks"][k].cpu().numpy())
+    if not len(xs):
+        return boxes[k], scores[k], (boxes[k][0] + boxes[k][2]) / 2
+    # A pinch holds the plug between the two lowest fingertips; curled knuckles beside them also reach the port row, so take only the bottom of the hand.
+    low = ys >= ys.max() - TIP_BAND
+    return boxes[k], scores[k], float(xs[low].min() + xs[low].max()) / 2
+
+
+def region(height: int, width: int) -> list[int]:
+    x0, y0, x1, y1 = json.loads(segment.ROI_PATH.read_text())["rect"]
+    side = int(REGION_SIDE * (x1 - x0))
+    # Techs reach down over the top of the switch, so a crop starting at the port row only ever sees fingertips.
+    return [max(0, x0 - side), 0, min(width, x1 + side), min(height, int(y1 + REGION_DOWN * (y1 - y0)))]
+
+
+def follow(gray: np.ndarray, template: np.ndarray, box: list[float]) -> tuple[list[float], float] | None:
+    h, w = template.shape
+    if h < MIN_TEMPLATE or w < MIN_TEMPLATE:
+        return None
+    x0, y0 = int(max(box[0] - FOLLOW_SEARCH * w, 0)), int(max(box[1] - FOLLOW_SEARCH * h, 0))
+    x1, y1 = int(min(box[2] + FOLLOW_SEARCH * w, gray.shape[1])), int(min(box[3] + FOLLOW_SEARCH * h, gray.shape[0]))
+    window = gray[y0:y1, x0:x1]
+    if window.shape[0] < h or window.shape[1] < w:
+        return None
+    _, score, _, (mx, my) = cv2.minMaxLoc(cv2.matchTemplate(window, template, cv2.TM_CCOEFF_NORMED))
+    if score < FOLLOW_MIN_SCORE:
+        return None
+    return [x0 + mx, y0 + my, x0 + mx + w, y0 + my + h], float(score)
+
+
+def emit(lines: queue.Queue, line: str | None) -> None:
+    while True:
+        try:
+            lines.put_nowait(line)
+            return
+        except queue.Full:
+            try:
+                lines.get_nowait()
+            except queue.Empty:
+                pass
+
+
+def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event, camera_lock: threading.Lock, shift) -> None:
+    latest: dict[str, object] = {"rgb": None, "gray": None, "seq": 0, "band": (0.0, 0.0)}
+    found: dict[str, object] = {"seq": -1}
+    lock = threading.Lock()
+
+    def detector() -> None:
+        while not stop.is_set():
+            with lock:
+                rgb, gray, seq, band = latest["rgb"], latest["gray"], latest["seq"], latest["band"]
+            if rgb is None:
+                time.sleep(0.02)
+                continue
+            try:
+                hand = detect_hand(rgb, band)
+            except Exception as error:
+                emit(lines, json.dumps({"error": f"hand detector: {error}"}) + "\n")
+                stop.set()
+                return
+            with lock:
+                found.update(seq=seq, hand=hand, gray=gray)
+
+    try:
+        # The bridge homes the head before tracking starts; a second goto from this connection races it and the SDK times the task out.
+        with camera_lock:
+            threading.Thread(target=detector, daemon=True).start()
+            box, template, tip_dx, used, next_at, offset, align_at = None, None, 0.0, -1, 0.0, None, 0.0
+            for frame in capture.bridged(float("inf")):
+                if stop.is_set():
+                    return
+                now = time.monotonic()
+                if now < next_at:
+                    continue
+                next_at = now + 1 / fps
+                if now >= align_at:
+                    # The port boxes and row come from the segmented frame and this visit's home lands up to half a port away, and the head is still settling when tracking starts.
+                    offset, align_at = shift(frame), now + ALIGN_EVERY
+                dx, dy = offset
+                rx0, ry0, rx1, ry1 = region(*frame.shape[:2])
+                crop = frame[ry0:ry1, rx0:rx1]
+                gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                with lock:
+                    latest["seq"] = int(latest["seq"]) + 1
+                    latest.update(rgb=cv2.cvtColor(crop, cv2.COLOR_BGR2RGB), gray=gray, band=(row[0] + dy - ry0, row[1] + dy - ry0))
+                    seen = dict(found)
+                source, score = "", 0.0
+                if seen["seq"] != used:
+                    used = seen["seq"]
+                    if seen["hand"] is not None:
+                        box, score, tip = seen["hand"]
+                        h, w = seen["gray"].shape
+                        box = [min(max(box[0], 0), w), min(max(box[1], 0), h), min(max(box[2], 0), w), min(max(box[3], 0), h)]
+                        tip_dx = tip - box[0]
+                        x0, y0, x1, y1 = (int(round(v)) for v in box)
+                        template = seen["gray"][y0:y1, x0:x1] if x1 - x0 >= MIN_TEMPLATE and y1 - y0 >= MIN_TEMPLATE else None
+                        source = "sam3"
+                        followed = follow(gray, template, box) if template is not None else None
+                        if followed:
+                            box = followed[0]
+                    else:
+                        box, template = None, None
+                elif template is not None and box is not None:
+                    followed = follow(gray, template, box)
+                    box, score = followed if followed else (None, 0.0)
+                    source = "follow" if followed else ""
+                hand = [round(box[0] + rx0 - dx, 1), round(box[1] + ry0 - dy, 1), round(box[2] + rx0 - dx, 1), round(box[3] + ry0 - dy, 1)] if box is not None else None
+                state["frozen"] = hand is not None and hand[1] < row[1] and hand[3] > row[0]
+                with clip_lock:
+                    scale = CLIP_WIDTH / frame.shape[1]
+                    clip.append((time.time(), cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)))
+                    while clip and clip[0][0] < time.time() - CLIP_SECONDS:
+                        clip.popleft()
+                tip_x = round(box[0] + tip_dx + rx0 - dx, 1) if box is not None else None
+                emit(lines, json.dumps({"t": round(time.time(), 3), "hand": hand, "tip": tip_x, "source": source, "score": round(score, 3), "frozen": state["frozen"]}) + "\n")
+    except Exception as error:
+        emit(lines, json.dumps({"error": str(error)}) + "\n")
+    finally:
+        state["frozen"] = False
+        stop.set()
+        emit(lines, None)
+
+
+def save_clip() -> str:
+    with clip_lock:
+        frames = list(clip)
+    if not frames:
+        raise ValueError("no tracked frames to save")
+    span = max(frames[-1][0] - frames[0][0], 1e-3)
+    fps = max(1.0, (len(frames) - 1) / span)
+    height, width = frames[0][1].shape[:2]
+    EVIDENCE.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=EVIDENCE) as tmp:
+        path = Path(tmp) / "clip.mp4"
+        writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+        for _, image in frames:
+            writer.write(image)
+        writer.release()
+        data = path.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        final = EVIDENCE / f"{digest}.mp4"
+        if not final.exists():
+            path.replace(final)
+    return digest

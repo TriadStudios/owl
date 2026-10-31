@@ -28,7 +28,12 @@ import (
 
 	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/drift"
 	"github.com/triadstudios/owl/internal/enroll"
+	"github.com/triadstudios/owl/internal/finding"
+	"github.com/triadstudios/owl/internal/guardian"
+	"github.com/triadstudios/owl/internal/job"
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/netbox"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
@@ -38,25 +43,30 @@ import (
 )
 
 const (
-	passiveWindows  = 3
-	pulseOn         = 4 * time.Second
-	pulseOff        = 4 * time.Second
-	pulseCycles     = 5
-	pulseSample     = time.Second
-	maxPingTargets  = 4
-	pulseRate       = 256 << 10
-	pingPayload     = 64000
-	enrollBurst     = 10 * time.Second
-	touchMinChange  = 12.0
-	touchDominance  = 1.5
-	touchStripDepth = 1.0
-	baselinePath    = "data/baseline.json"
-	devicesPath     = "data/devices.json"
-	tlsDir          = "data/tls"
-	evidenceDir     = "data/evidence"
+	passiveWindows    = 3
+	pulseOn           = 4 * time.Second
+	pulseOff          = 4 * time.Second
+	pulseCycles       = 5
+	pulseSample       = time.Second
+	maxPingTargets    = 4
+	pulseRate         = 256 << 10
+	pingPayload       = 64000
+	enrollBurst       = 10 * time.Second
+	touchMinChange    = 12.0
+	touchDominance    = 1.5
+	touchStripDepth   = 1.0
+	baselinePath      = "data/baseline.json"
+	devicesPath       = "data/devices.json"
+	jobsPath          = "data/jobs.json"
+	findingsPath      = "data/findings.json"
+	framesDir         = "data/frames"
+	tlsDir            = "data/tls"
+	evidenceDir       = "data/evidence"
+	trackFPS          = 10
+	benchCaptureTries = 3
 )
 
-const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME"
+const usage = "usage: owl snmp walk|dump [-host H] [-community C] [-out FILE] | owl reconcile -image FILE [-leases CSV] [-perception URL] [-rules FILE] | owl blast -port N -image FILE [-leases CSV] [-rules FILE] | owl enroll | owl diff -image FILE [-perception URL] | owl bench -expect XXX...X. [-captures 20] [-frames 5] [-every 30s] | owl watch [-leases CSV] [-robot URL] | owl netbox seed [-leases CSV] [-uplink NAMES] [-critical NAMES] | owl policy lint [-rules FILE] | owl serve [-addr A] [-image FILE] [-leases CSV] [-rules FILE] [-robot URL] | owl pair [-name N] [-url wss://HOST:PORT] | owl pair list | owl pair revoke NAME | owl job add -port N -tech NAME -window HH:MM-HH:MM [-note TEXT] | owl job list | owl job close ID"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -72,7 +82,9 @@ func run(args []string) error {
 		cmd, args = args[0]+" "+args[1], args[2:]
 	case len(args) >= 2 && args[0] == "pair" && (args[1] == "list" || args[1] == "revoke"):
 		cmd, args = args[0]+" "+args[1], args[2:]
-	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "serve" || args[0] == "pair"):
+	case len(args) >= 2 && args[0] == "job" && (args[1] == "add" || args[1] == "list" || args[1] == "close"):
+		cmd, args = args[0]+" "+args[1], args[2:]
+	case len(args) >= 1 && (args[0] == "reconcile" || args[0] == "blast" || args[0] == "enroll" || args[0] == "diff" || args[0] == "bench" || args[0] == "watch" || args[0] == "serve" || args[0] == "pair"):
 		cmd, args = args[0], args[1:]
 	default:
 		return errors.New(usage)
@@ -96,6 +108,13 @@ func run(args []string) error {
 	addr := fset.String("addr", "0.0.0.0:8080", "serve listen address")
 	robotURL := fset.String("robot", "http://127.0.0.1:8702", "robot bridge URL")
 	pairName := fset.String("name", "phone", "paired device name")
+	captures := fset.Int("captures", 20, "bench captures")
+	burstFrames := fset.Int("frames", 5, "bench frames per capture, majority vote")
+	every := fset.Duration("every", 30*time.Second, "bench time between captures")
+	expect := fset.String("expect", "", "bench expected occupancy left to right, X plugged . empty")
+	tech := fset.String("tech", "", "technician doing the job")
+	window := fset.String("window", "", "job window HH:MM-HH:MM, today local; an end before the start is tomorrow")
+	note := fset.String("note", "", "job note")
 	pairURL := fset.String("url", "", "relay URL in the pairing QR (default wss://<this box's address toward the switch>:<addr port>)")
 	if err := fset.Parse(args); err != nil {
 		return err
@@ -588,6 +607,85 @@ func run(args []string) error {
 			fmt.Println("  " + c)
 		}
 		return nil
+	case "diff":
+		if *image == "" {
+			return errors.New("diff needs -image FILE")
+		}
+		data, err := os.ReadFile(baselinePath)
+		if err != nil {
+			return fmt.Errorf("%w; run owl enroll first", err)
+		}
+		var baseline enroll.Baseline
+		if err := json.Unmarshal(data, &baseline); err != nil {
+			return fmt.Errorf("%s: %w", baselinePath, err)
+		}
+		cam := perception.Client{BaseURL: *perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+		ctx := context.Background()
+		segment := func(path string) (*perception.Result, []byte, error) {
+			frame, err := os.ReadFile(path)
+			if err != nil {
+				return nil, nil, err
+			}
+			res, err := cam.Segment(ctx, frame, http.DetectContentType(frame))
+			if err != nil {
+				return nil, nil, fmt.Errorf("%s: %w", path, err)
+			}
+			return res, frame, nil
+		}
+		before, beforeFrame, err := segment(filepath.Join(framesDir, baseline.FrameHash+".png"))
+		if err != nil {
+			return err
+		}
+		after, afterFrame, err := segment(*image)
+		if err != nil {
+			return err
+		}
+		found := drift.Compare(before, after, time.Now())
+		jobs, err := job.Load(jobsPath)
+		if err != nil {
+			return err
+		}
+		for i := range found {
+			if j := job.Covering(jobs, found[i].Port, found[i].TS); j != nil {
+				found[i].JobID = j.ID
+			}
+		}
+		if len(found) > 0 {
+			for _, ev := range []struct {
+				hash  string
+				frame []byte
+			}{{before.FrameHash, beforeFrame}, {after.FrameHash, afterFrame}} {
+				if err := saveEvidence(ev.hash, ev.frame); err != nil {
+					return err
+				}
+			}
+			if err := finding.Append(findingsPath, found); err != nil {
+				return err
+			}
+		}
+		fmt.Printf("baseline %s (enrolled %s) vs %s\n", before.FrameHash[:16], baseline.EnrolledAt.Local().Format(time.DateTime), after.FrameHash[:16])
+		if len(found) == 0 {
+			fmt.Println("no drift")
+			return nil
+		}
+		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(tw, "PORT\tDIFF\tJOB")
+		for _, f := range found {
+			covered := "none (deviation)"
+			if f.JobID != 0 {
+				covered = strconv.Itoa(f.JobID)
+			}
+			fmt.Fprintf(tw, "%d\t%s\t%s\n", f.Port, f.Diff, covered)
+		}
+		if err := tw.Flush(); err != nil {
+			return err
+		}
+		fmt.Printf("%d finding(s) appended to %s\n", len(found), findingsPath)
+		return nil
+	case "bench":
+		return bench(*perceptionURL, *captures, *burstFrames, *every, *expect)
+	case "watch":
+		return watch(cfg, *perceptionURL, *leases, *rulesPath, *robotURL)
 	case "netbox seed":
 		nb, err := newNetbox()
 		if err != nil {
@@ -629,7 +727,17 @@ func run(args []string) error {
 			}
 			fmt.Fprintf(tw, "%s\t%s\t%s\n", d.Name, d.Created.Local().Format(time.DateTime), seen)
 		}
-		return tw.Flush()
+		if err := tw.Flush(); err != nil {
+			return err
+		}
+		stale, err := ui.StalePairCodes(devicesPath, time.Now())
+		if err != nil {
+			return err
+		}
+		for _, code := range stale {
+			fmt.Printf("warning: %s is over 10 min old and unused; it holds a live token, scan it or delete it\n", code)
+		}
+		return nil
 	case "pair revoke":
 		if fset.NArg() != 1 {
 			return errors.New("usage: owl pair revoke NAME")
@@ -638,6 +746,45 @@ func run(args []string) error {
 			return err
 		}
 		fmt.Printf("revoked %s\n", fset.Arg(0))
+		return nil
+	case "job add":
+		start, end, err := job.ParseWindow(*window, time.Now())
+		if err != nil {
+			return err
+		}
+		j, err := job.Add(jobsPath, job.Job{Port: *port, Tech: *tech, Start: start, End: end, Note: *note, Created: time.Now().UTC()})
+		if err != nil {
+			return err
+		}
+		fmt.Printf("job %d: port %d, %s, %s-%s\n", j.ID, j.Port, j.Tech, j.Start.Format("Jan 2 15:04"), j.End.Format("Jan 2 15:04"))
+		return nil
+	case "job list":
+		jobs, err := job.Load(jobsPath)
+		if err != nil {
+			return err
+		}
+		tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(tw, "ID\tPORT\tTECH\tWINDOW\tSTATE\tNOTE")
+		for _, j := range jobs {
+			state := "open"
+			if !j.Closed.IsZero() {
+				state = "closed " + j.Closed.Local().Format("Jan 2 15:04")
+			}
+			fmt.Fprintf(tw, "%d\t%d\t%s\t%s-%s\t%s\t%s\n", j.ID, j.Port, j.Tech, j.Start.Local().Format("Jan 2 15:04"), j.End.Local().Format("Jan 2 15:04"), state, j.Note)
+		}
+		return tw.Flush()
+	case "job close":
+		if fset.NArg() != 1 {
+			return errors.New("usage: owl job close ID")
+		}
+		id, err := strconv.Atoi(fset.Arg(0))
+		if err != nil {
+			return fmt.Errorf("job id %q: %w", fset.Arg(0), err)
+		}
+		if err := job.Close(jobsPath, id, time.Now()); err != nil {
+			return err
+		}
+		fmt.Printf("closed job %d\n", id)
 		return nil
 	case "policy lint":
 		rf, err := os.Open(*rulesPath)
@@ -682,6 +829,7 @@ func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPa
 		AttributionMin: in.AttributionMin,
 		AggregationMin: in.AggregationMin,
 		EvidenceDir:    evidenceDir,
+		FindingsPath:   findingsPath,
 		Devices:        &ui.Registry{Path: devicesPath},
 		Log:            log,
 	}
@@ -777,7 +925,7 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	if err != nil {
 		return err
 	}
-	pngPath := filepath.Join("data", "pair-"+name+".png")
+	pngPath := ui.PairCodePath(devicesPath, name)
 	f, err := os.OpenFile(pngPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
@@ -790,8 +938,353 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 		return err
 	}
 	fmt.Print(qr.Terminal(code))
-	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token, delete it once scanned\n", name, relayURL, fingerprint, pngPath)
+	fmt.Printf("paired %s -> %s\ncert sha256 %s\nQR also in %s; it holds the token and is deleted on the device's first connection\n", name, relayURL, fingerprint, pngPath)
 	return nil
+}
+
+type benchCapture struct {
+	Capture int      `json:"capture"`
+	Frames  []string `json:"frames"`
+	Votes   []string `json:"votes"`
+	Vote    string   `json:"vote"`
+	OK      bool     `json:"ok"`
+}
+
+func bench(perceptionURL string, captures, frames int, every time.Duration, expect string) error {
+	if !regexp.MustCompile(`^[X.]+$`).MatchString(expect) {
+		return errors.New("bench needs -expect, e.g. XXX...X. for ports 1-3 and 7 plugged")
+	}
+	if captures < 1 || frames < 1 || frames > 10 {
+		return errors.New("bench wants -captures >= 1 and -frames in 1..10")
+	}
+	cam := &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	report := make([]benchCapture, captures)
+	work := make(chan int, captures)
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for i := range work {
+			for _, hash := range report[i].Frames {
+				vote := "rejected: "
+				frame, err := os.ReadFile(filepath.Join(framesDir, hash+".png"))
+				var res *perception.Result
+				if err == nil {
+					res, err = cam.Segment(ctx, frame, "image/png")
+				}
+				if err != nil {
+					vote += err.Error()
+				} else {
+					var b strings.Builder
+					for _, p := range res.Ports {
+						if p.Occupied {
+							b.WriteByte('X')
+						} else {
+							b.WriteByte('.')
+						}
+					}
+					vote = b.String()
+				}
+				report[i].Votes = append(report[i].Votes, vote)
+			}
+		}
+	})
+	start := time.Now()
+	for i := range captures {
+		select {
+		case <-ctx.Done():
+		case <-time.After(time.Until(start.Add(time.Duration(i) * every))):
+		}
+		if ctx.Err() != nil {
+			break
+		}
+		var hashes []string
+		var err error
+		for try := range benchCaptureTries {
+			if hashes, err = cam.Capture(ctx, frames, 200*time.Millisecond); err == nil || ctx.Err() != nil {
+				break
+			}
+			fmt.Printf("capture %d try %d failed: %v\n", i+1, try+1, err)
+		}
+		if err != nil {
+			close(work)
+			wg.Wait()
+			return fmt.Errorf("capture %d: %w", i+1, err)
+		}
+		report[i] = benchCapture{Capture: i + 1, Frames: hashes}
+		work <- i
+		fmt.Printf("capture %d/%d at %s, %d frames\n", i+1, captures, time.Since(start).Round(time.Second), len(hashes))
+	}
+	close(work)
+	wg.Wait()
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	good, single, total := 0, 0, 0
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(tw, "CAPTURE\tRESULT\tVOTE\tFRAMES")
+	for i := range report {
+		r := &report[i]
+		counts := map[string]int{}
+		for _, v := range r.Votes {
+			counts[v]++
+			total++
+			if v == expect {
+				single++
+			}
+		}
+		r.Vote = "no majority"
+		for v, n := range counts {
+			if 2*n > len(r.Votes) {
+				r.Vote = v
+			}
+		}
+		r.OK = r.Vote == expect
+		result := "FAIL"
+		if r.OK {
+			good++
+			result = "PASS"
+		}
+		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\n", r.Capture, result, r.Vote, strings.Join(r.Votes, " | "))
+	}
+	if err := tw.Flush(); err != nil {
+		return err
+	}
+	fmt.Printf("%d/%d captures voted %s; single frames %d/%d\n", good, captures, expect, single, total)
+	data, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll("data/bench", 0o755); err != nil {
+		return err
+	}
+	out := filepath.Join("data/bench", start.Format("20060102T150405")+".json")
+	if err := os.WriteFile(out, append(data, '\n'), 0o644); err != nil {
+		return err
+	}
+	fmt.Println("report", out)
+	return nil
+}
+
+func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL string) error {
+	if leasesPath == "" {
+		return errors.New("need -leases or OWL_DHCP_LEASES")
+	}
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	cam := perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	frame, err := cam.SegmentCamera(ctx, time.Second)
+	if err != nil {
+		return err
+	}
+	log.Info("camera", "frame_hash", frame.FrameHash, "ports", len(frame.Ports))
+	in, err := loadInputs(cfg, frame, leasesPath, rulesPath)
+	if err != nil {
+		return err
+	}
+	ports, err := reconcile.Join(in)
+	if err != nil {
+		return err
+	}
+	var mu sync.Mutex
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Minute):
+			}
+			prev, cur, err := pollTwice(cfg, in.Rules.LivenessWindow)
+			if err != nil {
+				log.Error("snmp poll", "err", err)
+				continue
+			}
+			next := in
+			next.Prev, next.Cur = prev, cur
+			fresh, err := reconcile.Join(next)
+			if err != nil {
+				log.Error("reconcile", "err", err)
+				continue
+			}
+			mu.Lock()
+			ports = fresh
+			mu.Unlock()
+		}
+	}()
+	bridge := &guardian.Bridge{BaseURL: robotURL, HTTP: &http.Client{Timeout: time.Minute}, Log: log}
+	g := &guardian.Guardian{
+		Robot:  bridge,
+		Camera: bridge,
+		Table: func() []reconcile.Port {
+			mu.Lock()
+			defer mu.Unlock()
+			return ports
+		},
+		Jobs: func() []narrate.Job {
+			jobs, err := job.Load(jobsPath)
+			if err != nil {
+				log.Error("jobs", "err", err)
+				return nil
+			}
+			now := time.Now()
+			var open []narrate.Job
+			for _, j := range jobs {
+				if j.Closed.IsZero() && !now.Before(j.Start) && !now.After(j.End) {
+					open = append(open, narrate.Job{ID: j.ID, Port: j.Port, Tech: j.Tech, Note: j.Note, Until: j.End.Local().Format("15:04")})
+				}
+			}
+			return open
+		},
+		Log: log,
+	}
+	bridge.Keyterms = func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return guardian.DeviceTerms(ports)
+	}
+	narrator := "templates only, OWL_META_API_KEY not set"
+	if key := os.Getenv("OWL_META_API_KEY"); key != "" {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.IdleConnTimeout = 2 * time.Minute
+		client := &narrate.Client{URL: narrate.DefaultURL, Model: narrate.DefaultModel, Key: key, HTTP: &http.Client{Timeout: 10 * time.Second, Transport: transport}}
+		g.Narrator, narrator = client, narrate.DefaultModel
+		go func() {
+			for {
+				if err := client.Warm(ctx); err != nil && ctx.Err() == nil {
+					log.Warn("narrate warm", "err", err)
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(20 * time.Second):
+				}
+			}
+		}()
+	}
+	log.Info("guardian watching", "robot", robotURL, "narrator", narrator)
+	trackClient := &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{}}
+	reach := &guardian.Reach{
+		Track: func(ctx context.Context, row [2]float64) (<-chan perception.TrackFrame, error) {
+			return trackClient.Track(ctx, row, trackFPS)
+		},
+		Alert: bridge.Alert,
+		Clip:  func() (string, error) { return cam.Clip(ctx) },
+		Log:   log,
+	}
+	ifIndex := map[int]int{}
+	for num, sp := range in.Cur.Ports {
+		ifIndex[num] = sp.IfIndex
+	}
+	pulls := &guardian.Pulls{
+		Links: func() (map[int]bool, error) { return discovery.OperUp(cfg, ifIndex) },
+		Jobs: func() []job.Job {
+			jobs, err := job.Load(jobsPath)
+			if err != nil {
+				log.Error("jobs", "err", err)
+			}
+			return jobs
+		},
+		Alert:  bridge.Alert,
+		Clip:   func() (string, error) { return cam.Clip(ctx) },
+		Record: func(f finding.Finding) error { return finding.Append(findingsPath, []finding.Finding{f}) },
+		Every:  time.Second,
+		Log:    log,
+	}
+	var stopReach context.CancelFunc
+	defer func() {
+		if stopReach != nil {
+			stopReach()
+		}
+	}()
+	g.Scene = reach.Scene
+	g.Watch = func(cur []reconcile.Port) {
+		if stopReach != nil {
+			return
+		}
+		rctx, cancel := context.WithCancel(ctx)
+		stopReach = cancel
+		go func() {
+			bridge.Home()
+			a := approachFor(frame, cur, log)
+			log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
+			go reach.Run(rctx, a, cur)
+			go pulls.Run(rctx, cur)
+			if err := bridge.Prepare(guardian.WarningLines(a, cur)); err != nil {
+				log.Warn("prepare warnings", "err", err)
+			}
+		}()
+	}
+	state := g.State()
+	for ctx.Err() == nil {
+		g.Step(time.Now())
+		if g.State() != state {
+			log.Info("guardian", "from", state, "to", g.State())
+			state = g.State()
+			if (state == guardian.Sleep || state == guardian.Idle) && stopReach != nil {
+				stopReach()
+				stopReach = nil
+				log.Info("reach watch stopped")
+			}
+		}
+		select {
+		case <-ctx.Done():
+		case <-time.After(200 * time.Millisecond):
+		}
+	}
+	return nil
+}
+
+func approachFor(frame *perception.Result, ports []reconcile.Port, log *slog.Logger) *guardian.Approach {
+	a := &guardian.Approach{RowY0: frame.Row[0], RowY1: frame.Row[1], DoNotTouch: map[int]bool{}, Populated: map[int]bool{}, JobPorts: map[int]int{}}
+	for _, c := range frame.Ports {
+		a.Ports = append(a.Ports, guardian.PortBox{Num: c.Num, X0: c.Box[0], X1: c.Box[2]})
+		if c.Occupied {
+			a.Populated[c.Num] = true
+		}
+	}
+	for _, p := range ports {
+		if p.Blast != nil && p.Blast.Unknown == "" && p.Blast.Verdict == blast.DoNotTouch {
+			a.DoNotTouch[p.Num] = true
+		}
+	}
+	jobs, err := job.Load(jobsPath)
+	if err != nil {
+		log.Error("jobs", "err", err)
+	}
+	now := time.Now()
+	for _, j := range jobs {
+		if j.Closed.IsZero() && !now.Before(j.Start) && !now.After(j.End) {
+			a.JobPorts[j.Port] = j.ID
+		}
+	}
+	return a
+}
+
+func saveEvidence(hash string, frame []byte) error {
+	ext := ".png"
+	if http.DetectContentType(frame) == "image/jpeg" {
+		ext = ".jpg"
+	}
+	if err := os.MkdirAll(evidenceDir, 0o755); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filepath.Join(evidenceDir, hash+ext), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+	if errors.Is(err, fs.ErrExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(frame)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		os.Remove(f.Name())
+	}
+	return err
 }
 
 func thresholds() (blast.Inputs, error) {
@@ -825,18 +1318,24 @@ func buildInputs(cfg discovery.Config, image, perceptionURL, leasesPath, rulesPa
 	if image == "" || leasesPath == "" {
 		return blast.Inputs{}, errors.New("need -image and -leases (or OWL_DHCP_LEASES)")
 	}
-	in, err := thresholds()
-	if err != nil {
-		return blast.Inputs{}, err
-	}
 	frame, err := os.ReadFile(image)
 	if err != nil {
 		return blast.Inputs{}, err
 	}
 	client := perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{Timeout: 6 * time.Minute}}
-	if in.Camera, err = client.Segment(context.Background(), frame, http.DetectContentType(frame)); err != nil {
+	cam, err := client.Segment(context.Background(), frame, http.DetectContentType(frame))
+	if err != nil {
 		return blast.Inputs{}, err
 	}
+	return loadInputs(cfg, cam, leasesPath, rulesPath)
+}
+
+func loadInputs(cfg discovery.Config, cam *perception.Result, leasesPath, rulesPath string) (blast.Inputs, error) {
+	in, err := thresholds()
+	if err != nil {
+		return blast.Inputs{}, err
+	}
+	in.Camera = cam
 	lf, err := os.Open(leasesPath)
 	if err != nil {
 		return blast.Inputs{}, err

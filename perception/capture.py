@@ -1,3 +1,5 @@
+import contextlib
+import http.client
 import json
 import sys
 import time
@@ -19,14 +21,52 @@ HOME_PASSES = 4
 HOME_TOLERANCE_DEG = 1.5
 HOLD_TOLERANCE_DEG = 0.5
 FIRST_FRAME_TIMEOUT_S = 10
+BRIDGE_PORT = 8702
+BRIDGE_TIMEOUT_S = 5
 FRAME_INTERVAL_S = 1 / 30
 
 
-def connect(env: dict[str, str]) -> ReachyMini:
+class HeadOnly(ReachyMini):
+    def release_media(self) -> None:
+        # The SDK's no_media mode makes the daemon release the camera, which kills the bridge's stream.
+        pass
+
+
+def connect(env: dict[str, str], head_only: bool = False) -> ReachyMini:
     host = env.get("OWL_REACHY_HOST", "").strip()
     if not host:
         raise RuntimeError("OWL_REACHY_HOST missing from .env.local")
+    if head_only:
+        return HeadOnly(host=host, connection_mode="network", media_backend="no_media")
     return ReachyMini(host=host, connection_mode="network")
+
+
+shared: dict[str, ReachyMini | None] = {"mini": None}
+
+
+@contextlib.contextmanager
+def session(env: dict[str, str]) -> Iterator[ReachyMini]:
+    if shared["mini"] is None:
+        # Reachy cannot send two clean video streams at once, so this connection only moves the head and frames come from the bridge's stream.
+        mini = connect(env, head_only=True)
+        mini.__enter__()
+        shared["mini"] = mini
+    try:
+        yield shared["mini"]
+    except ValueError:
+        raise
+    except Exception:
+        drop()
+        raise
+
+
+def drop() -> None:
+    mini, shared["mini"] = shared["mini"], None
+    if mini is not None:
+        try:
+            mini.__exit__(None, None, None)
+        except Exception as error:
+            print(f"closing the robot connection failed: {error}", flush=True)
 
 
 def correct(mini: ReachyMini, head: np.ndarray, target: np.ndarray) -> tuple[float, np.ndarray]:
@@ -83,6 +123,28 @@ def frames(mini: ReachyMini, seconds: float) -> Iterator[np.ndarray]:
             if end is None:
                 end = time.monotonic() + seconds
         time.sleep(FRAME_INTERVAL_S)
+
+
+def bridged(seconds: float) -> Iterator[np.ndarray]:
+    conn = http.client.HTTPConnection("127.0.0.1", BRIDGE_PORT, timeout=BRIDGE_TIMEOUT_S)
+    seq, end = 0, None
+    try:
+        while end is None or time.monotonic() < end:
+            try:
+                conn.request("GET", f"/frame?after={seq}")
+                response = conn.getresponse()
+                body = response.read()
+            except (OSError, http.client.HTTPException) as error:
+                raise RuntimeError(f"robot bridge frame: {error}") from error
+            if response.status != 200:
+                raise RuntimeError(f"robot bridge frame: {response.status} {body[:200].decode(errors='replace')}")
+            seq = int(response.getheader("X-Seq"))
+            height, width = (int(v) for v in response.getheader("X-Size").split(","))
+            yield np.frombuffer(body, np.uint8).reshape(height, width, 3)
+            if end is None:
+                end = time.monotonic() + seconds
+    finally:
+        conn.close()
 
 
 def main() -> None:

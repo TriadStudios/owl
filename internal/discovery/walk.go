@@ -141,6 +141,34 @@ func Counters(cfg Config, ifIndex map[int]int) (Sample, error) {
 	return s, nil
 }
 
+func OperUp(cfg Config, ifIndex map[int]int) (map[int]bool, error) {
+	snmp, err := dial(cfg)
+	if err != nil {
+		return nil, err
+	}
+	defer snmp.Conn.Close()
+	port := map[string]int{}
+	var oids []string
+	for num, idx := range ifIndex {
+		oid := oidIfOperStatus + "." + strconv.Itoa(idx)
+		port[oid] = num
+		oids = append(oids, oid)
+	}
+	pkt, err := snmp.Get(oids)
+	if err != nil {
+		return nil, fmt.Errorf("get link state: %w", err)
+	}
+	up := map[int]bool{}
+	for _, v := range pkt.Variables {
+		num, ok := port[strings.TrimPrefix(v.Name, ".")]
+		if !ok || v.Type == gosnmp.NoSuchInstance || v.Type == gosnmp.NoSuchObject {
+			return nil, fmt.Errorf("link state %s missing", v.Name)
+		}
+		up[num] = gosnmp.ToBigInt(v.Value).Int64() == 1
+	}
+	return up, nil
+}
+
 func formatValue(pdu gosnmp.SnmpPDU) string {
 	switch v := pdu.Value.(type) {
 	case []byte:

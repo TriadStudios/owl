@@ -7,8 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
+	"image/color"
 	"image/jpeg"
 	"io"
+	"math/bits"
 	"net"
 	"net/http"
 	"strings"
@@ -26,6 +29,11 @@ const (
 	maxUtterance    = 1000
 	relayIdle       = 2 * time.Minute
 	pingEvery       = 30 * time.Second
+	perceptionGap   = 2 * time.Second
+	sameFrameBits   = 4
+	hashRows        = 8
+	hashCols        = 8
+	hashSamples     = 4
 )
 
 var verdictColor = map[string]string{
@@ -190,18 +198,52 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte) (uint16
 }
 
 func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames <-chan []byte) {
+	var lastCall time.Time
+	var lastHash uint64
+	var lastMsg *overlayMsg
+	processed, skipped := 0, 0
+	defer func() { s.Log.Info("relay frames", "device", device, "processed", processed, "skipped", skipped) }()
 	for frame := range frames {
+		if wait := time.Until(lastCall.Add(perceptionGap)); wait > 0 {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(wait):
+			}
+			select {
+			case newer, ok := <-frames:
+				if !ok {
+					return
+				}
+				frame = newer
+			default:
+			}
+		}
 		start := time.Now()
-		msg, err := s.frameOverlay(ctx, frame)
-		if ctx.Err() != nil {
-			return
+		hash, cfg, err := thumbHash(frame)
+		var msg overlayMsg
+		switch {
+		case err != nil:
+		case lastMsg != nil && bits.OnesCount64(hash^lastHash) <= sameFrameBits:
+			skipped++
+			msg = *lastMsg
+			s.Log.Debug("frame skipped", "device", device, "distance", bits.OnesCount64(hash^lastHash), "processed", processed, "skipped", skipped)
+		default:
+			lastCall = start
+			processed++
+			msg, err = s.frameOverlay(ctx, frame, cfg)
+			if ctx.Err() != nil {
+				return
+			}
+			if err == nil {
+				lastHash, lastMsg = hash, &msg
+				s.Log.Info("frame", "device", device, "bytes", len(frame), "ports", len(msg.Labels), "took_ms", time.Since(start).Milliseconds(), "processed", processed, "skipped", skipped)
+			}
 		}
 		if err != nil {
 			s.Log.Warn("frame rejected", "device", device, "bytes", len(frame), "took_ms", time.Since(start).Milliseconds(), "err", err)
-			// A stale overlay would sit on whatever cable the phone points at now.
+			lastMsg = nil
 			msg = overlayMsg{Type: "overlay", Polygons: []polygonJSON{}, Labels: []labelJSON{}}
-		} else {
-			s.Log.Info("frame", "device", device, "bytes", len(frame), "ports", len(msg.Labels), "took_ms", time.Since(start).Milliseconds())
 		}
 		if err := s.send(c, msg); err != nil {
 			s.Log.Warn("relay send", "device", device, "err", err)
@@ -210,14 +252,44 @@ func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames 
 	}
 }
 
-func (s *Server) frameOverlay(ctx context.Context, frame []byte) (overlayMsg, error) {
+func thumbHash(frame []byte) (uint64, image.Config, error) {
 	cfg, err := jpeg.DecodeConfig(bytes.NewReader(frame))
 	if err != nil {
-		return overlayMsg{}, fmt.Errorf("not a JPEG: %w", err)
+		return 0, cfg, fmt.Errorf("not a JPEG: %w", err)
 	}
 	if cfg.Width < 1 || cfg.Height < 1 || cfg.Width > maxFrameSide || cfg.Height > maxFrameSide {
-		return overlayMsg{}, fmt.Errorf("frame %dx%d outside 1..%d px", cfg.Width, cfg.Height, maxFrameSide)
+		return 0, cfg, fmt.Errorf("frame %dx%d outside 1..%d px", cfg.Width, cfg.Height, maxFrameSide)
 	}
+	img, err := jpeg.Decode(bytes.NewReader(frame))
+	if err != nil {
+		return 0, cfg, fmt.Errorf("not a JPEG: %w", err)
+	}
+	b := img.Bounds()
+	var gray [hashRows][hashCols + 1]float64
+	for y := range hashRows {
+		for x := range hashCols + 1 {
+			for sy := range hashSamples {
+				for sx := range hashSamples {
+					px := b.Min.X + (x*hashSamples+sx)*b.Dx()/((hashCols+1)*hashSamples)
+					py := b.Min.Y + (y*hashSamples+sy)*b.Dy()/(hashRows*hashSamples)
+					gray[y][x] += float64(color.GrayModel.Convert(img.At(px, py)).(color.Gray).Y)
+				}
+			}
+		}
+	}
+	var hash uint64
+	for y := range hashRows {
+		for x := range hashCols {
+			hash <<= 1
+			if gray[y][x] > gray[y][x+1] {
+				hash |= 1
+			}
+		}
+	}
+	return hash, cfg, nil
+}
+
+func (s *Server) frameOverlay(ctx context.Context, frame []byte, cfg image.Config) (overlayMsg, error) {
 	res, err := s.Perception.Segment(ctx, frame, "image/jpeg")
 	if err != nil {
 		return overlayMsg{}, err

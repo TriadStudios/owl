@@ -1,6 +1,7 @@
 import hashlib
 import itertools
 import json
+import queue
 import threading
 import time
 from datetime import datetime, timezone
@@ -9,17 +10,24 @@ import cv2
 import numpy as np
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
 import capture
 import leds
 import segment
+import track
 
 MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
 MAX_RECORD_S = 300
 RECORD_START_TIMEOUT_S = 20
-CAMERA_ATTEMPTS = 3
+CAMERA_ATTEMPTS = 5
+CAMERA_RETRY_S = 2.0
+MAX_CAPTURE_FRAMES = 10
+CAPTURE_GRACE_S = 5
+MAX_TRACK_FPS = 15
+TRACK_BACKLOG = 64
 POLYGON_EPSILON_PX = 1.5
 HOLD_INTERVAL_S = 1.0
 HOLD_SETTLE_S = 0.4
@@ -81,19 +89,33 @@ def small_gray(frame: np.ndarray) -> np.ndarray:
     return cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), None, fx=ALIGN_SCALE, fy=ALIGN_SCALE, interpolation=cv2.INTER_AREA).astype(np.float32)
 
 
-def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
-    # The head lands a little differently every session, so move the boxes from the segmented frame onto this one.
+def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
+    # The head lands a little differently every session, so measure how this frame sits against the segmented one.
     if "gray" not in reference:
-        return rects
+        return None
     ref, cur = reference["gray"], small_gray(frame)
-    (dx, dy), _ = cv2.phaseCorrelate(ref, cur, cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
+    # OpenCV 5.0 phaseCorrelate applies the window to its inputs in place, which would wear the stored reference away.
+    (dx, dy), _ = cv2.phaseCorrelate(ref.copy(), cur.copy(), cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
     warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
     try:
-        _, warp = cv2.findTransformECC(ref, cur, warp, cv2.MOTION_EUCLIDEAN, ALIGN_CRITERIA, None, 5)
+        # A rotation term fits the tech and the background as much as the switch; the head only shifts the view.
+        _, warp = cv2.findTransformECC(ref, cur, warp, cv2.MOTION_TRANSLATION, ALIGN_CRITERIA, None, 5)
     except cv2.error:
         pass
     warp[:, 2] /= ALIGN_SCALE
-    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px, rotation {np.degrees(np.arctan2(warp[1, 0], warp[0, 0])):.2f} deg")
+    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px", flush=True)
+    return warp
+
+
+def shift_from_reference(frame: np.ndarray) -> tuple[float, float]:
+    warp = warp_from_reference(frame)
+    return (0.0, 0.0) if warp is None else (float(warp[0, 2]), float(warp[1, 2]))
+
+
+def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
+    warp = warp_from_reference(frame)
+    if warp is None:
+        return rects
     moved = []
     for x0, y0, x1, y1 in rects:
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
@@ -136,10 +158,13 @@ def describe_upload(image_bytes: bytes) -> dict[str, object]:
 
 
 def describe_camera(burst: float) -> dict[str, object]:
-    with camera_lock, capture.connect(segment.load_env()) as mini:
+    with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
         for attempt in range(1, CAMERA_ATTEMPTS + 1):
-            frame = next(capture.frames(mini, 0))
+            if attempt > 1:
+                # The WebRTC stream degrades into codec blocks for several seconds at a time, so retry on a later frame.
+                time.sleep(CAMERA_RETRY_S)
+            frame = next(capture.bridged(0))
             ok, encoded = cv2.imencode(".png", frame)
             if not ok:
                 raise ValueError("failed to encode the camera frame")
@@ -153,7 +178,7 @@ def describe_camera(burst: float) -> dict[str, object]:
         reference["gray"] = small_gray(frame)
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
-        result["leds"] = watch("segment-leds", capture.frames(mini, burst), led_boxes(result))
+        result["leds"] = watch("segment-leds", capture.bridged(burst), led_boxes(result))
     return result
 
 
@@ -161,10 +186,10 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
     changes = [0.0] * len(regions)
     state["changes"] = changes
     try:
-        with camera_lock, capture.connect(segment.load_env()) as mini:
+        with camera_lock, capture.session(segment.load_env()) as mini:
             locked = capture.home(mini)
             base = None
-            for frame in capture.frames(mini, MAX_RECORD_S):
+            for frame in capture.bridged(MAX_RECORD_S):
                 now = time.monotonic()
                 if base is None:
                     regions = [[int(round(v)) for v in r] for r in align(frame, regions)]
@@ -181,7 +206,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
                         settled = now + HOLD_SETTLE_S
                 # Frames while the head is still settling from a hold correction are blurred, so they would score as motion everywhere.
                 if now >= settled:
-                    (dx, dy), _ = cv2.phaseCorrelate(base_small, small_gray(frame), window)
+                    (dx, dy), _ = cv2.phaseCorrelate(base_small.copy(), small_gray(frame), window)
                     back = np.float32([[1, 0, -dx / ALIGN_SCALE], [0, 1, -dy / ALIGN_SCALE]])
                     gray = cv2.warpAffine(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), back, base.shape[::-1]).astype(np.int16)
                     for i, (x0, y0, x1, y1) in enumerate(regions):
@@ -223,10 +248,35 @@ def stop_recording() -> dict[str, object]:
     return {"changes": [round(c, 2) for c in recording["changes"]]}
 
 
-def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
-    with camera_lock, capture.connect(segment.load_env()) as mini:
+def capture_frames(count: int, spacing: float) -> dict[str, object]:
+    hashes: list[str] = []
+    with camera_lock, capture.session(segment.load_env()) as mini:
         capture.home(mini)
-        return {"leds": watch("leds", capture.frames(mini, seconds), boxes)}
+        next_at = 0.0
+        for frame in capture.bridged(count * spacing + CAPTURE_GRACE_S):
+            now = time.monotonic()
+            if now < next_at:
+                continue
+            ok, encoded = cv2.imencode(".png", frame)
+            if not ok:
+                raise ValueError("failed to encode the camera frame")
+            data = encoded.tobytes()
+            digest = hashlib.sha256(data).hexdigest()
+            FRAMES.mkdir(parents=True, exist_ok=True)
+            (FRAMES / f"{digest}.png").write_bytes(data)
+            hashes.append(digest)
+            next_at = now + spacing
+            if len(hashes) == count:
+                break
+    if len(hashes) < count:
+        raise RuntimeError(f"camera gave {len(hashes)} of {count} frames")
+    return {"frames": hashes}
+
+
+def watch_leds(boxes: list[list[float]], seconds: float) -> dict[str, object]:
+    with camera_lock, capture.session(segment.load_env()) as mini:
+        capture.home(mini)
+        return {"leds": watch("leds", capture.bridged(seconds), boxes)}
 
 
 async def run(fn, *args) -> dict[str, object]:
@@ -238,8 +288,41 @@ async def run(fn, *args) -> dict[str, object]:
         raise HTTPException(503, str(error)) from error
 
 
+def refuse_while_frozen() -> None:
+    if track.frozen():
+        raise HTTPException(409, "attribution frozen: a hand is over the port row")
+
+
+@app.get("/track")
+def track_stream(row: str, fps: float = 10) -> StreamingResponse:
+    try:
+        band = [float(v) for v in row.split(",")]
+    except ValueError:
+        band = []
+    if len(band) != 2 or band[0] >= band[1] or not 1 <= fps <= MAX_TRACK_FPS:
+        raise HTTPException(400, f"want row=y0,y1 in frame pixels and fps in 1..{MAX_TRACK_FPS}")
+    lines: queue.Queue = queue.Queue(maxsize=TRACK_BACKLOG)
+    stop = threading.Event()
+    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock, shift_from_reference), daemon=True).start()
+
+    def stream():
+        try:
+            while (line := lines.get()) is not None:
+                yield line
+        finally:
+            stop.set()
+
+    return StreamingResponse(stream(), media_type="application/x-ndjson")
+
+
+@app.post("/track/clip")
+async def track_clip() -> dict[str, object]:
+    return {"hash": await run(track.save_clip)}
+
+
 @app.post("/segment")
 async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]:
+    refuse_while_frozen()
     image_bytes = await request.body()
     if burst:
         if image_bytes or not 0 < burst <= MAX_BURST_S:
@@ -248,6 +331,13 @@ async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]
     if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(413 if image_bytes else 400, f"send one image of at most {MAX_IMAGE_BYTES} bytes as the request body")
     return await run(describe_upload, image_bytes)
+
+
+@app.post("/capture")
+async def capture_burst(frames: int = 5, spacing: float = 0.2) -> dict[str, object]:
+    if not 1 <= frames <= MAX_CAPTURE_FRAMES or not 0 <= spacing <= 2:
+        raise HTTPException(400, f"frames in 1..{MAX_CAPTURE_FRAMES}, spacing in 0..2 s")
+    return await run(capture_frames, frames, spacing)
 
 
 @app.post("/motion/start")
@@ -267,6 +357,7 @@ async def motion_stop() -> dict[str, object]:
 
 @app.post("/leds")
 async def leds_burst(request: Request) -> dict[str, object]:
+    refuse_while_frozen()
     body = await request.json()
     boxes, seconds = body.get("boxes"), body.get("seconds")
     if (
@@ -279,4 +370,6 @@ async def leds_burst(request: Request) -> dict[str, object]:
 
 
 def main() -> None:
+    # Loading lazily from the tracker's detector thread raced the transformers import and killed that visit's tracking.
+    segment.local_model()
     uvicorn.run(app, host="127.0.0.1", port=8701)

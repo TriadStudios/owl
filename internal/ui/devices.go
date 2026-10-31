@@ -14,11 +14,15 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 )
 
-const seenEvery = time.Minute
+const (
+	seenEvery      = time.Minute
+	pairCodeMaxAge = 10 * time.Minute
+)
 
 type Device struct {
 	Name        string    `json:"name"`
@@ -91,6 +95,37 @@ func Revoke(path, name string) error {
 	return SaveDevices(path, kept)
 }
 
+func PairCodePath(devicesPath, name string) string {
+	return filepath.Join(filepath.Dir(devicesPath), "pair-"+name+".png")
+}
+
+func StalePairCodes(devicesPath string, now time.Time) ([]string, error) {
+	devices, err := LoadDevices(devicesPath)
+	if err != nil {
+		return nil, err
+	}
+	codes, err := filepath.Glob(PairCodePath(devicesPath, "*"))
+	if err != nil {
+		return nil, err
+	}
+	var stale []string
+	for _, code := range codes {
+		info, err := os.Stat(code)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		name := strings.TrimSuffix(strings.TrimPrefix(filepath.Base(code), "pair-"), ".png")
+		used := slices.ContainsFunc(devices, func(d Device) bool { return d.Name == name && !d.LastSeen.IsZero() })
+		if !used && now.Sub(info.ModTime()) > pairCodeMaxAge {
+			stale = append(stale, code)
+		}
+	}
+	return stale, nil
+}
+
 func tokenHash(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
@@ -131,11 +166,17 @@ func (r *Registry) Authenticate(token string, now time.Time) (string, error) {
 	if i < 0 {
 		return "", nil
 	}
+	first := r.devices[i].LastSeen.IsZero()
 	r.devices[i].LastSeen = now.UTC()
 	if err := SaveDevices(r.Path, r.devices); err != nil {
 		return "", err
 	}
 	r.loaded = false
+	if first {
+		if err := os.Remove(PairCodePath(r.Path, name)); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return name, fmt.Errorf("delete pairing QR: %w", err)
+		}
+	}
 	return name, nil
 }
 

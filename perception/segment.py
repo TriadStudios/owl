@@ -1,4 +1,6 @@
 import base64
+import contextlib
+import functools
 import hashlib
 import json
 import os
@@ -16,10 +18,14 @@ from meta_sam_parser import CompletedOutcome, decode_mask_to_raster, image_segme
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "sam-cache"
 SPEND_PATH = CACHE / "spend.json"
+SPEND_LOCK_TIMEOUT_S = 30
 ROI_PATH = ROOT / "data" / "port-roi.json"
-ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 8, 3, 4
+ROI_PAD_X, ROI_PAD_UP, ROI_PAD_DOWN = 2, 3, 4
+ROI_PITCH = 1.2
+ROI_MIN_BOXES = 4
 META_API_URL = "https://api.meta.ai/v1/responses"
-LOCAL_MODEL = "unsloth/sam3.1"
+LOCAL_MODEL = "facebook/sam3"
+LOCAL_LONG_SIDE = 1280
 SOCKET_PROMPTS = ("ethernet port", "network port")
 CABLE_PROMPT = "cable"
 PROMPTS = (*SOCKET_PROMPTS, CABLE_PROMPT)
@@ -55,6 +61,38 @@ def iou(a: list[float], b: list[float]) -> float:
     return inter / union if union > 0 else 0.0
 
 
+def read_spend() -> dict[str, int]:
+    return json.loads(SPEND_PATH.read_text()) if SPEND_PATH.exists() else {}
+
+
+@contextlib.contextmanager
+def spend_lock():
+    lock = SPEND_PATH.with_suffix(".lock")
+    give_up = time.monotonic() + SPEND_LOCK_TIMEOUT_S
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            break
+        except (FileExistsError, PermissionError):
+            if time.monotonic() > give_up:
+                raise RuntimeError(f"{lock} held for {SPEND_LOCK_TIMEOUT_S} s; delete it if no OWL process is billing")
+            time.sleep(0.01)
+    try:
+        yield
+    finally:
+        os.close(fd)
+        os.unlink(lock)
+
+
+def add_spend(today: str) -> None:
+    with spend_lock():
+        spend = read_spend()
+        spend[today] = spend.get(today, 0) + 1
+        tmp = SPEND_PATH.with_suffix(".tmp")
+        tmp.write_text(json.dumps(spend))
+        os.replace(tmp, SPEND_PATH)
+
+
 def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
@@ -71,10 +109,11 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         if cache_path.exists():
             raw[prompt] = json.loads(cache_path.read_text())["output_text"]
             continue
-        spend: dict[str, int] = json.loads(SPEND_PATH.read_text()) if SPEND_PATH.exists() else {}
         today = datetime.now(timezone.utc).date().isoformat()
-        if spend.get(today, 0) >= cap:
-            raise RuntimeError(f"SAM daily cap reached: {spend[today]}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
+        with spend_lock():
+            spent = read_spend().get(today, 0)
+        if spent >= cap:
+            raise RuntimeError(f"SAM daily cap reached: {spent}/{cap} images billed on {today} UTC; raise OWL_SAM_DAILY_CAP to continue")
 
         body = {
             "model": "sam-3.1",
@@ -97,8 +136,7 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         except urllib.error.HTTPError as error:
             raise RuntimeError(f"Meta SAM API returned {error.code} for '{prompt}': {error.read().decode(errors='replace')[:500]}")
 
-        spend[today] = spend.get(today, 0) + 1
-        SPEND_PATH.write_text(json.dumps(spend))
+        add_spend(today)
         billed += 1
         if reply.get("status") != "completed":
             raise RuntimeError(f"Meta SAM API response for '{prompt}' not completed: {json.dumps(reply)[:500]}")
@@ -139,16 +177,26 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
     return results
 
 
-def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+@functools.cache
+def local_model():
     import torch
     from transformers import Sam3Model, Sam3Processor
 
-    height, width = rgb.shape[:2]
     processor = Sam3Processor.from_pretrained(LOCAL_MODEL)
     model = Sam3Model.from_pretrained(LOCAL_MODEL, dtype=torch.float16).to("cuda").eval()
+    return processor, model
+
+
+def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+    import torch
+
+    height, width = rgb.shape[:2]
+    scale = min(1.0, LOCAL_LONG_SIDE / max(height, width))
+    small = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else rgb
+    processor, model = local_model()
     results: dict[str, list[Instance]] = {}
     for prompt in PROMPTS:
-        inputs = processor(images=rgb, text=prompt, return_tensors="pt").to("cuda", torch.float16)
+        inputs = processor(images=small, text=prompt, return_tensors="pt").to("cuda", torch.float16)
         with torch.inference_mode():
             outputs = model(**inputs)
         result = processor.post_process_instance_segmentation(outputs, target_sizes=[(height, width)])[0]
@@ -165,6 +213,13 @@ def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
 
 
 def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
+    row = port_row(results)
+    if len(row) != COPPER_PORTS:
+        raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
+    return row
+
+
+def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     sockets: list[Instance] = []
     for instance in sorted(
         (instance for prompt in SOCKET_PROMPTS for instance in results[prompt]),
@@ -188,6 +243,8 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         for s, y in zip(sockets, centers_y)
         if abs(y - row_y) <= socket_height / 2
     ]
+    # Small boxes off the row (the SFP cages' LEDs) pull the all-socket median down and the console port and merged double boxes in the row push it up; the row's lower quartile tracks the real sockets.
+    socket_width = float(np.percentile([c["box"][2] - c["box"][0] for c in candidates], 25))
     for cable_index, cable in enumerate(results[CABLE_PROMPT]):
         mask = decode_rle(cable["mask_rle"])
         rows = np.flatnonzero(mask.any(axis=1))
@@ -210,6 +267,11 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
                 ]
                 candidates.append({"box": box, "occupied": True, "cable": cable_index, "score": cable["score"]})
 
+    # The gap between two neighbouring plugs can read as a socket that overlaps neither plug by half; no port fits between neighbours.
+    plugs = sorted(((c["box"][0] + c["box"][2]) / 2, c["box"][2] - c["box"][0]) for c in candidates if c["occupied"])
+    between = [(a, b) for (a, wa), (b, wb) in zip(plugs, plugs[1:]) if b - a < wa + wb]
+    candidates = [c for c in candidates if c["occupied"] or not any(a < (c["box"][0] + c["box"][2]) / 2 < b for a, b in between)]
+
     candidates.sort(key=lambda c: c["box"][0] + c["box"][2])
     runs: list[list[dict[str, object]]] = []
     for candidate in candidates:
@@ -219,8 +281,6 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         else:
             runs.append([candidate])
     row = max(runs, key=len, default=[])
-    if len(row) != COPPER_PORTS:
-        raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
     for port in row:
         port["row_band"] = [top, bottom]
     return row
@@ -254,15 +314,19 @@ def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[s
 
     if not ROI_PATH.exists():
         try:
-            full_row = ports(segment(image_bytes, image, env))
+            full_row = port_row(segment(image_bytes, image, env))
         except ValueError as error:
             raise ValueError(f"cannot place the port-row crop: {error}") from error
+        # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
+        if len(full_row) < ROI_MIN_BOXES:
+            raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
         box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
         box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
+        pad_x = ROI_PAD_X + ROI_PITCH * max(0, COPPER_PORTS - len(full_row))
         rect = [
-            max(int(min(p["box"][0] for p in full_row) - ROI_PAD_X * box_width), 0),
+            max(int(min(p["box"][0] for p in full_row) - pad_x * box_width), 0),
             max(int(min(p["box"][1] for p in full_row) - ROI_PAD_UP * box_height), 0),
-            min(int(max(p["box"][2] for p in full_row) + ROI_PAD_X * box_width), width),
+            min(int(max(p["box"][2] for p in full_row) + pad_x * box_width), width),
             min(int(max(p["box"][3] for p in full_row) + ROI_PAD_DOWN * box_height), height),
         ]
         ROI_PATH.parent.mkdir(parents=True, exist_ok=True)
