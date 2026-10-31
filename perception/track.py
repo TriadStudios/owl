@@ -88,7 +88,7 @@ def emit(lines: queue.Queue, line: str | None) -> None:
                 pass
 
 
-def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event, camera_lock: threading.Lock) -> None:
+def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event, camera_lock: threading.Lock, shift) -> None:
     latest: dict[str, object] = {"rgb": None, "gray": None, "seq": 0, "band": (0.0, 0.0)}
     found: dict[str, object] = {"seq": -1}
     lock = threading.Lock()
@@ -113,7 +113,7 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
         # The bridge homes the head before tracking starts; a second goto from this connection races it and the SDK times the task out.
         with camera_lock:
             threading.Thread(target=detector, daemon=True).start()
-            box, template, tip_dx, used, next_at = None, None, 0.0, -1, 0.0
+            box, template, tip_dx, used, next_at, offset = None, None, 0.0, -1, 0.0, None
             for frame in capture.bridged(float("inf")):
                 if stop.is_set():
                     return
@@ -121,12 +121,16 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                 if now < next_at:
                     continue
                 next_at = now + 1 / fps
+                if offset is None:
+                    # The port boxes and row come from the segmented frame and this visit's home lands up to half a port away, so report in that frame's pixels.
+                    offset = shift(frame)
+                dx, dy = offset
                 rx0, ry0, rx1, ry1 = region(*frame.shape[:2])
                 crop = frame[ry0:ry1, rx0:rx1]
                 gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
                 with lock:
                     latest["seq"] = int(latest["seq"]) + 1
-                    latest.update(rgb=cv2.cvtColor(crop, cv2.COLOR_BGR2RGB), gray=gray, band=(row[0] - ry0, row[1] - ry0))
+                    latest.update(rgb=cv2.cvtColor(crop, cv2.COLOR_BGR2RGB), gray=gray, band=(row[0] + dy - ry0, row[1] + dy - ry0))
                     seen = dict(found)
                 source, score = "", 0.0
                 if seen["seq"] != used:
@@ -148,14 +152,14 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
                     followed = follow(gray, template, box)
                     box, score = followed if followed else (None, 0.0)
                     source = "follow" if followed else ""
-                hand = [round(box[0] + rx0, 1), round(box[1] + ry0, 1), round(box[2] + rx0, 1), round(box[3] + ry0, 1)] if box is not None else None
+                hand = [round(box[0] + rx0 - dx, 1), round(box[1] + ry0 - dy, 1), round(box[2] + rx0 - dx, 1), round(box[3] + ry0 - dy, 1)] if box is not None else None
                 state["frozen"] = hand is not None and hand[1] < row[1] and hand[3] > row[0]
                 with clip_lock:
                     scale = CLIP_WIDTH / frame.shape[1]
                     clip.append((time.time(), cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)))
                     while clip and clip[0][0] < time.time() - CLIP_SECONDS:
                         clip.popleft()
-                tip_x = round(box[0] + tip_dx + rx0, 1) if box is not None else None
+                tip_x = round(box[0] + tip_dx + rx0 - dx, 1) if box is not None else None
                 emit(lines, json.dumps({"t": round(time.time(), 3), "hand": hand, "tip": tip_x, "source": source, "score": round(score, 3), "frozen": state["frozen"]}) + "\n")
     except Exception as error:
         emit(lines, json.dumps({"error": str(error)}) + "\n")

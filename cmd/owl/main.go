@@ -1188,15 +1188,8 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		stopReach = cancel
 		go func() {
 			bridge.Home()
-			// Each home lands within about 1.5 degrees, up to half a port width, so the startup port boxes drift off the sockets between visits.
-			seen := frame
-			if fresh, err := cam.SegmentCamera(rctx, time.Second); err != nil {
-				log.Warn("reach segment, using the startup ports", "err", err)
-			} else {
-				seen = fresh
-			}
-			a := approachFor(seen, cur, log)
-			log.Info("reach watch", "frame_hash", seen.FrameHash, "row", seen.Row, "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
+			a := approachFor(frame, cur, log)
+			log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
 			go reach.Run(rctx, a, cur)
 			if err := bridge.Prepare(guardian.WarningLines(a, cur)); err != nil {
 				log.Warn("prepare warnings", "err", err)

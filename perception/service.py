@@ -89,10 +89,10 @@ def small_gray(frame: np.ndarray) -> np.ndarray:
     return cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), None, fx=ALIGN_SCALE, fy=ALIGN_SCALE, interpolation=cv2.INTER_AREA).astype(np.float32)
 
 
-def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
-    # The head lands a little differently every session, so move the boxes from the segmented frame onto this one.
+def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
+    # The head lands a little differently every session, so measure how this frame sits against the segmented one.
     if "gray" not in reference:
-        return rects
+        return None
     ref, cur = reference["gray"], small_gray(frame)
     (dx, dy), _ = cv2.phaseCorrelate(ref, cur, cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
     warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
@@ -101,7 +101,19 @@ def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
     except cv2.error:
         pass
     warp[:, 2] /= ALIGN_SCALE
-    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px, rotation {np.degrees(np.arctan2(warp[1, 0], warp[0, 0])):.2f} deg")
+    print(f"aligned to the segmented frame: shift {warp[0, 2]:.1f},{warp[1, 2]:.1f} px, rotation {np.degrees(np.arctan2(warp[1, 0], warp[0, 0])):.2f} deg", flush=True)
+    return warp
+
+
+def shift_from_reference(frame: np.ndarray) -> tuple[float, float]:
+    warp = warp_from_reference(frame)
+    return (0.0, 0.0) if warp is None else (float(warp[0, 2]), float(warp[1, 2]))
+
+
+def align(frame: np.ndarray, rects: list[list[float]]) -> list[list[float]]:
+    warp = warp_from_reference(frame)
+    if warp is None:
+        return rects
     moved = []
     for x0, y0, x1, y1 in rects:
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
@@ -289,7 +301,7 @@ def track_stream(row: str, fps: float = 10) -> StreamingResponse:
         raise HTTPException(400, f"want row=y0,y1 in frame pixels and fps in 1..{MAX_TRACK_FPS}")
     lines: queue.Queue = queue.Queue(maxsize=TRACK_BACKLOG)
     stop = threading.Event()
-    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock), daemon=True).start()
+    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock, shift_from_reference), daemon=True).start()
 
     def stream():
         try:
