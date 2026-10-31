@@ -213,9 +213,11 @@ final class AppModel: ObservableObject {
             if voice { speechOut.say(text) }
             let toast = Toast(text: text)
             toasts.append(toast)
+            scene.speaking = true
             Task {
                 try? await Task.sleep(for: .seconds(5))
                 toasts.removeAll { $0.id == toast.id }
+                scene.speaking = !toasts.isEmpty
             }
         case .unknown:
             break

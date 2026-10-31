@@ -19,6 +19,8 @@ struct ScreenLabel {
 final class ARScene: ObservableObject {
     @Published private(set) var shapes: [ScreenShape] = []
     @Published private(set) var labels: [ScreenLabel] = []
+    @Published private(set) var reachyAt: CGPoint?
+    var speaking = false
 
     let view: ARView
 
@@ -37,12 +39,22 @@ final class ARScene: ObservableObject {
     private var pins: [Pin] = []
     private var labelPins: [LabelPin] = []
     private var updates: Cancellable?
+    private let reachy = Reachy()
+    private let reachyAnchor = AnchorEntity(world: .zero)
+    private var placed = false
+    private var time: Float = 0
 
     init(session: ARSession) {
         view = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
         view.session = session
-        updates = view.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
-            self?.project()
+        reachy.root.isEnabled = false
+        reachyAnchor.addChild(reachy.root)
+        view.scene.addAnchor(reachyAnchor)
+        updates = view.scene.subscribe(to: SceneEvents.Update.self) { [weak self] event in
+            guard let self else { return }
+            time += Float(event.deltaTime)
+            animateReachy()
+            project()
         }
     }
 
@@ -64,7 +76,29 @@ final class ARScene: ObservableObject {
             let top = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).min()!)
             return LabelPin(label: label, color: polygon.color, point: world(top))
         }
+        if !labelPins.isEmpty {
+            let center = labelPins.map(\.point).reduce(.zero, +) / Float(labelPins.count)
+            let toward = view.cameraTransform.translation - center
+            let target = center + normalize(SIMD3(toward.x, 0, toward.z)) * 0.1 + [0, 0.1, 0]
+            if !placed || distance(target, reachyAnchor.position) > 0.15 {
+                reachyAnchor.move(to: Transform(translation: target), relativeTo: nil, duration: placed ? 0.8 : 0)
+                placed = true
+            }
+        }
         project()
+    }
+
+    private func animateReachy() {
+        let camera = view.cameraTransform.translation
+        if !placed, case .normal = view.session.currentFrame?.camera.trackingState {
+            let back = view.cameraTransform.matrix.columns.2
+            reachyAnchor.position = camera - normalize(SIMD3(back.x, 0, back.z)) * 0.6 + [0, -0.25, 0]
+            placed = true
+        }
+        guard placed else { return }
+        reachy.root.isEnabled = true
+        reachy.animate(time: time, facing: camera, speaking: speaking)
+        reachyAt = view.project(reachy.head)
     }
 
     func clear() {

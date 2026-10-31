@@ -10,7 +10,7 @@ struct LiveView: View {
             ARViewContainer(view: model.scene.view)
                 .ignoresSafeArea()
                 .onTapGesture(coordinateSpace: .local) { selected = model.scene.port(at: $0) }
-            PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [])
+            PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [], speech: model.toasts.last?.text)
                 .ignoresSafeArea()
             VStack(spacing: 10) {
                 Text(status)
@@ -30,7 +30,7 @@ struct LiveView: View {
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(label.verdict.color, in: RoundedRectangle(cornerRadius: 14))
                 }
-                ForEach(model.toasts) { toast in
+                ForEach(model.scene.reachyAt == nil ? model.toasts : []) { toast in
                     Text(toast.text)
                         .font(.callout)
                         .padding(12)
@@ -82,10 +82,21 @@ struct PinnedTags: View {
     @ObservedObject var scene: ARScene
     let selected: Int?
     let ports: [Port]
+    let speech: String?
 
     var body: some View {
         GeometryReader { geo in
             canvas
+            if let speech, let at = scene.reachyAt {
+                Text(speech)
+                    .font(.callout)
+                    .foregroundStyle(.black)
+                    .padding(10)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 14))
+                    .frame(maxWidth: 240)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .position(x: min(max(at.x, 136), geo.size.width - 136), y: at.y - 30)
+            }
             if let tag = scene.labels.first(where: { $0.label.port == selected }) {
                 VStack {
                     PortCard(tag: tag, port: ports.first { $0.num == tag.label.port })
