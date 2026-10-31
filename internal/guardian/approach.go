@@ -127,7 +127,7 @@ func (a *Approach) Update(o *HandObs, now time.Time) []ApproachEvent {
 }
 
 func (a *Approach) lead(b [4]float64) (float64, float64) {
-	x := a.tip(b)
+	x := (b[0] + b[2]) / 2
 	switch {
 	case b[1] > a.RowY1:
 		return x, b[1]
@@ -136,21 +136,6 @@ func (a *Approach) lead(b [4]float64) (float64, float64) {
 	default:
 		return x, (a.RowY0 + a.RowY1) / 2
 	}
-}
-
-// A hand reaching in from the side brings its wrist and forearm into the box, so the box center sits ports away from the fingers.
-func (a *Approach) tip(b [4]float64) float64 {
-	if len(a.Ports) == 0 {
-		return (b[0] + b[2]) / 2
-	}
-	left, right, half := a.Ports[0].X0, a.Ports[len(a.Ports)-1].X1, a.portWidth()/2
-	switch {
-	case b[0] < left && b[2] < right:
-		return b[2] - half
-	case b[2] > right && b[0] > left:
-		return b[0] + half
-	}
-	return (b[0] + b[2]) / 2
 }
 
 func (a *Approach) gap(y float64) float64 {

@@ -203,25 +203,3 @@ func TestWithdrawnAfterASecondWithoutAHandAndANewReachCanWarnAgain(t *testing.T)
 		t.Fatalf("second reach: events %v, want one new stop", kinds(events))
 	}
 }
-
-func TestASideReachIsPlacedByTheFingertipsNotTheArm(t *testing.T) {
-	cases := []struct {
-		name string
-		box  func(a *Approach) [4]float64
-	}{
-		{"from the left", func(a *Approach) [4]float64 { return [4]float64{0, 180, a.Ports[2].X1, 260} }},
-		{"from the right", func(a *Approach) [4]float64 { return [4]float64{a.Ports[2].X0, 180, 1500, 260} }},
-	}
-	for _, c := range cases {
-		a := rack()
-		t0 := time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
-		var events []ApproachEvent
-		for i := range 4 {
-			t := t0.Add(time.Duration(i) * 100 * time.Millisecond)
-			events = append(events, a.Update(&HandObs{T: t, Box: c.box(a)}, t)...)
-		}
-		if len(events) < 2 || events[1].Kind != TargetLocked || events[1].Port != 3 {
-			t.Errorf("%s: events %+v, want port 3 locked under the fingertips", c.name, events)
-		}
-	}
-}
