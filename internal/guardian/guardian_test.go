@@ -166,6 +166,17 @@ func TestAnswerListensForMoreThenCloses(t *testing.T) {
 
 	robot = &fakeRobot{}
 	g = awake(Answer, robot, &fakeCamera{}, now)
+	hand := 4
+	g.Scene = func() narrate.Scene { return narrate.Scene{HandPort: hand} }
+	g.Step(now.Add(19 * time.Second))
+	hand = 0
+	g.Step(now.Add(30 * time.Second))
+	if g.State() != Answer || len(robot.said) != 0 {
+		t.Fatalf("silent with a hand on port 4 until 19 s: state %s said %q, want it still listening at 30 s", g.State(), robot.said)
+	}
+
+	robot = &fakeRobot{}
+	g = awake(Answer, robot, &fakeCamera{}, now)
 	g.heard = "port 3"
 	g.Step(now.Add(60 * time.Second))
 	if g.State() != Sleep || robot.homes != 1 || len(robot.said) != 0 {

@@ -128,6 +128,9 @@ func (g *Guardian) Step(now time.Time) {
 		g.heard, g.lastSpeech = g.Robot.Listen(), now
 		g.state = Ask
 	default:
+		if g.Scene != nil && g.Scene().HandPort != 0 {
+			g.lastSpeech = now
+		}
 		switch {
 		case now.Sub(g.lastMotion) >= sleepAfter:
 			g.Robot.Home()
