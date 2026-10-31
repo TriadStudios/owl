@@ -306,36 +306,46 @@ def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[
     return meta_api(image_bytes, image.shape[0], image.shape[1], env)
 
 
-def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
+def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> list[int]:
+    height, width = image.shape[:2]
+    try:
+        full_row = port_row(segment(image_bytes, image, env))
+    except ValueError as error:
+        raise ValueError(f"cannot place the port-row crop: {error}") from error
+    # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
+    if len(full_row) < ROI_MIN_BOXES:
+        raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
+    box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
+    box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
+    pad_x = ROI_PAD_X + ROI_PITCH * max(0, COPPER_PORTS - len(full_row))
+    return [
+        max(int(min(p["box"][0] for p in full_row) - pad_x * box_width), 0),
+        max(int(min(p["box"][1] for p in full_row) - ROI_PAD_UP * box_height), 0),
+        min(int(max(p["box"][2] for p in full_row) + pad_x * box_width), width),
+        min(int(max(p["box"][3] for p in full_row) + ROI_PAD_DOWN * box_height), height),
+    ]
+
+
+def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise ValueError("cannot decode image")
     height, width = image.shape[:2]
 
-    if not ROI_PATH.exists():
-        try:
-            full_row = port_row(segment(image_bytes, image, env))
-        except ValueError as error:
-            raise ValueError(f"cannot place the port-row crop: {error}") from error
-        # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
-        if len(full_row) < ROI_MIN_BOXES:
-            raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
-        box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
-        box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
-        pad_x = ROI_PAD_X + ROI_PITCH * max(0, COPPER_PORTS - len(full_row))
-        rect = [
-            max(int(min(p["box"][0] for p in full_row) - pad_x * box_width), 0),
-            max(int(min(p["box"][1] for p in full_row) - ROI_PAD_UP * box_height), 0),
-            min(int(max(p["box"][2] for p in full_row) + pad_x * box_width), width),
-            min(int(max(p["box"][3] for p in full_row) + ROI_PAD_DOWN * box_height), height),
-        ]
-        ROI_PATH.parent.mkdir(parents=True, exist_ok=True)
-        ROI_PATH.write_text(json.dumps({"rect": rect, "frame_size": [height, width]}))
-        print(f"port-row crop {rect} stored in {ROI_PATH.name}")
-    roi = json.loads(ROI_PATH.read_text())
-    if roi["frame_size"] != [height, width]:
-        raise ValueError(f"{ROI_PATH.name} was made for {roi['frame_size']} frames, this one is {[height, width]}; delete it to recompute")
-    x0, y0, x1, y1 = roi["rect"]
+    if handheld:
+        # A handheld camera never sees the ports in the same place twice, so the stored crop of the fixed camera does not apply.
+        rect = place_row(image_bytes, image, env)
+    else:
+        if not ROI_PATH.exists():
+            rect = place_row(image_bytes, image, env)
+            ROI_PATH.parent.mkdir(parents=True, exist_ok=True)
+            ROI_PATH.write_text(json.dumps({"rect": rect, "frame_size": [height, width]}))
+            print(f"port-row crop {rect} stored in {ROI_PATH.name}")
+        roi = json.loads(ROI_PATH.read_text())
+        if roi["frame_size"] != [height, width]:
+            raise ValueError(f"{ROI_PATH.name} was made for {roi['frame_size']} frames, this one is {[height, width]}; delete it to recompute")
+        rect = roi["rect"]
+    x0, y0, x1, y1 = rect
     crop = cv2.resize(image[y0:y1, x0:x1], None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     ok, encoded = cv2.imencode(".png", crop)
     if not ok:
@@ -343,7 +353,7 @@ def analyze(image_bytes: bytes, env: dict[str, str]) -> tuple[np.ndarray, dict[s
 
     start = time.perf_counter()
     results = segment(encoded.tobytes(), crop, env)
-    return crop, results, roi["rect"], time.perf_counter() - start
+    return crop, results, rect, time.perf_counter() - start
 
 
 def main() -> None:

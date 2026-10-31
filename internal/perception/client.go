@@ -52,6 +52,15 @@ func (c *Client) Segment(ctx context.Context, image []byte, contentType string) 
 	return Decode(io.LimitReader(body, maxResponseBytes))
 }
 
+func (c *Client) SegmentHandheld(ctx context.Context, image []byte, contentType string) (*Result, error) {
+	body, err := c.post(ctx, "/segment?handheld=true", image, contentType)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	return Decode(io.LimitReader(body, maxResponseBytes))
+}
+
 func (c *Client) SegmentCamera(ctx context.Context, burst time.Duration) (*Result, error) {
 	body, err := c.post(ctx, fmt.Sprintf("/segment?burst=%g", burst.Seconds()), nil, "")
 	if err != nil {

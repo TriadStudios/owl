@@ -47,9 +47,9 @@ def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
     return [round(x / 2 + rect[0], 1), round(y / 2 + rect[1], 1)]
 
 
-def describe(image_bytes: bytes) -> dict[str, object]:
+def describe(image_bytes: bytes, handheld: bool = False) -> dict[str, object]:
     with analyze_lock:
-        _, results, rect, _ = segment.analyze(image_bytes, segment.load_env())
+        _, results, rect, _ = segment.analyze(image_bytes, segment.load_env(), handheld)
     row = segment.ports(results)
     cables = results[segment.CABLE_PROMPT]
     ports = []
@@ -150,8 +150,8 @@ def health() -> dict[str, object]:
     }
 
 
-def describe_upload(image_bytes: bytes) -> dict[str, object]:
-    result = describe(image_bytes)
+def describe_upload(image_bytes: bytes, handheld: bool) -> dict[str, object]:
+    result = describe(image_bytes, handheld)
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     result["leds"] = leds.leds([image], led_boxes(result))
     return result
@@ -321,8 +321,9 @@ async def track_clip() -> dict[str, object]:
 
 
 @app.post("/segment")
-async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]:
-    refuse_while_frozen()
+async def segment_frame(request: Request, burst: float = 0, handheld: bool = False) -> dict[str, object]:
+    if not handheld:
+        refuse_while_frozen()
     image_bytes = await request.body()
     if burst:
         if image_bytes or not 0 < burst <= MAX_BURST_S:
@@ -330,7 +331,7 @@ async def segment_frame(request: Request, burst: float = 0) -> dict[str, object]
         return await run(describe_camera, burst)
     if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
         raise HTTPException(413 if image_bytes else 400, f"send one image of at most {MAX_IMAGE_BYTES} bytes as the request body")
-    return await run(describe_upload, image_bytes)
+    return await run(describe_upload, image_bytes, handheld)
 
 
 @app.post("/capture")

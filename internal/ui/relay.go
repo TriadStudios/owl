@@ -290,7 +290,7 @@ func thumbHash(frame []byte) (uint64, image.Config, error) {
 }
 
 func (s *Server) frameOverlay(ctx context.Context, frame []byte, cfg image.Config) (overlayMsg, error) {
-	res, err := s.Perception.Segment(ctx, frame, "image/jpeg")
+	res, err := s.Perception.SegmentHandheld(ctx, frame, "image/jpeg")
 	if err != nil {
 		return overlayMsg{}, err
 	}
