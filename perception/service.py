@@ -94,7 +94,8 @@ def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
     if "gray" not in reference:
         return None
     ref, cur = reference["gray"], small_gray(frame)
-    (dx, dy), _ = cv2.phaseCorrelate(ref, cur, cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
+    # OpenCV 5.0 phaseCorrelate applies the window to its inputs in place, which would wear the stored reference away.
+    (dx, dy), _ = cv2.phaseCorrelate(ref.copy(), cur.copy(), cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
     warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
     try:
         # A rotation term fits the tech and the background as much as the switch; the head only shifts the view.
@@ -205,7 +206,7 @@ def record(regions: list[list[int]], ready: threading.Event, stop: threading.Eve
                         settled = now + HOLD_SETTLE_S
                 # Frames while the head is still settling from a hold correction are blurred, so they would score as motion everywhere.
                 if now >= settled:
-                    (dx, dy), _ = cv2.phaseCorrelate(base_small, small_gray(frame), window)
+                    (dx, dy), _ = cv2.phaseCorrelate(base_small.copy(), small_gray(frame), window)
                     back = np.float32([[1, 0, -dx / ALIGN_SCALE], [0, 1, -dy / ALIGN_SCALE]])
                     gray = cv2.warpAffine(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), back, base.shape[::-1]).astype(np.int16)
                     for i, (x0, y0, x1, y1) in enumerate(regions):
