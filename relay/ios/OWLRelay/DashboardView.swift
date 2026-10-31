@@ -11,8 +11,10 @@ struct DashboardView: View {
                         .font(.callout)
                         .foregroundStyle(Verdict.caution.color)
                 }
+                if model.health != nil || model.ports != nil {
+                    SwitchCard(health: model.health, ports: model.ports, lastPoll: model.lastPoll)
+                }
                 if let ports = model.ports {
-                    SwitchCard(info: ports.switchInfo)
                     PortStrip(ports: ports.ports)
                     FindingsList(findings: model.findings, ports: ports.ports)
                 } else if model.loadError == nil {
@@ -22,32 +24,64 @@ struct DashboardView: View {
             .padding(16)
         }
         .refreshable { await model.refresh() }
-        .navigationTitle(model.ports?.closet.name ?? model.active?.displayName ?? "Closet")
+        .navigationTitle(model.active?.displayName ?? "Closet")
         .navigationDestination(for: Port.self) { PortDetailView(port: $0) }
-        .task { if model.ports == nil { await model.refresh() } }
+        .task(id: model.activeID) { if model.ports == nil { await model.refresh() } }
     }
 }
 
 struct SwitchCard: View {
-    let info: SwitchInfo
+    let health: Health?
+    let ports: PortsResponse?
+    let lastPoll: Date?
 
     var body: some View {
         Card {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(info.model).font(.title2.bold())
-                Text(info.name).font(.subheadline).foregroundStyle(.secondary)
+            HStack {
+                Text("Switch").font(.title2.bold())
+                Spacer()
+                if let health {
+                    StatusDot(on: health.switch_reachable, label: health.switch_reachable ? "Reachable" : "Unreachable")
+                }
             }
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(info.ports_in_use)")
-                    .font(.system(size: 34, weight: .semibold).monospacedDigit())
-                Text("of \(info.ports_total) ports in use")
+            if let ports {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(ports.portsInUse)")
+                        .font(.system(size: 34, weight: .semibold).monospacedDigit())
+                    Text("of \(ports.portsTotal) ports in use")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                Text(pollText(now: ctx.date))
+                    .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            if let poll = info.last_poll {
-                Text("Last poll \(poll, format: .relative(presentation: .named))")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+            if let health {
+                HStack(spacing: 16) {
+                    StatusDot(on: health.perception_up, label: "Camera AI")
+                    StatusDot(on: health.robot_attached, label: "Robot")
+                }
+                .font(.footnote)
             }
+        }
+    }
+
+    private func pollText(now: Date) -> String {
+        guard let lastPoll else { return "No switch poll yet" }
+        let s = max(0, Int(now.timeIntervalSince(lastPoll)))
+        return s < 60 ? "Last poll \(s) s ago" : "Last poll \(s / 60) min \(s % 60) s ago"
+    }
+}
+
+struct StatusDot: View {
+    let on: Bool
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(on ? Verdict.safe.color : Verdict.unknown.color).frame(width: 8, height: 8)
+            Text(label).foregroundStyle(.secondary)
         }
     }
 }
@@ -58,11 +92,19 @@ struct PortStrip: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Ports").font(.headline)
+            if ports.isEmpty {
+                Card { Text("The switch reported no ports.").foregroundStyle(.secondary) }
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(ports) { port in
                         NavigationLink(value: port) {
-                            PortChip(num: port.num, color: port.color, verdict: port.verdict)
+                            VStack(spacing: 4) {
+                                PortChip(num: port.num, verdict: port.verdict)
+                                Text(port.isUp ? "up" : port.switchState)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Port \(port.num), \(port.verdict.title)")
@@ -71,7 +113,7 @@ struct PortStrip: View {
                 .padding(.vertical, 2)
             }
             HStack(spacing: 14) {
-                ForEach([Verdict.safe, .caution, .do_not_touch, .unknown], id: \.self) { v in
+                ForEach([Verdict.safe, .caution, .doNotTouch, .unknown], id: \.self) { v in
                     HStack(spacing: 4) {
                         Circle().strokeBorder(v.color, lineWidth: 2).frame(width: 10, height: 10)
                         Text(v.title)
@@ -115,14 +157,18 @@ struct FindingRow: View {
             Circle().fill(finding.severity.color).frame(width: 10, height: 10).padding(.top, 6)
             VStack(alignment: .leading, spacing: 4) {
                 Text(finding.title).font(.body.weight(.semibold))
-                Text(finding.detail).font(.subheadline).foregroundStyle(.secondary)
-                Text(finding.ts, format: .relative(presentation: .named))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                if let detail = finding.detail {
+                    Text(detail).font(.subheadline).foregroundStyle(.secondary)
+                }
+                if let ts = finding.ts {
+                    Text(ts, format: .relative(presentation: .named))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
             Spacer(minLength: 0)
             if let port {
-                PortChip(num: port.num, color: port.color, verdict: port.verdict, size: 32)
+                PortChip(num: port.num, verdict: port.verdict, size: 32)
             }
         }
         .padding(16)

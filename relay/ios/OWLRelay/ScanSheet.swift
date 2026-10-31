@@ -21,7 +21,7 @@ struct ScanSheet: View {
             VStack(spacing: 12) {
                 Text(error ?? "Point at the pairing QR on the OWL server.")
                     .font(.callout)
-                    .foregroundStyle(error == nil ? .white : Verdict.do_not_touch.color)
+                    .foregroundStyle(error == nil ? .white : Verdict.doNotTouch.color)
                     .multilineTextAlignment(.center)
                 Button("Cancel") { dismiss() }
                     .font(.headline)

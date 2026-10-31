@@ -38,17 +38,11 @@ struct SettingsView: View {
                 }
             }
             Section("Live") {
-                Stepper("\(model.fps) fps", value: $model.fps, in: 1...PhoneCamera.maxFPS)
+                Stepper("\(model.fps) fps", value: $model.fps, in: 1...ARCamera.maxFPS)
                     .frame(minHeight: 44)
                 Toggle("Speak replies", isOn: $model.voice)
                     .frame(minHeight: 44)
             }
-            #if DEBUG
-            Section("Developer") {
-                Toggle("Use sample data", isOn: $model.mock)
-                    .frame(minHeight: 44)
-            }
-            #endif
         }
         .navigationTitle("Settings")
         .sheet(isPresented: $scanning) { ScanSheet() }
