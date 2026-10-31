@@ -100,7 +100,12 @@ def run(fps: float, row: list[float], lines: queue.Queue, stop: threading.Event,
             if rgb is None:
                 time.sleep(0.02)
                 continue
-            hand = detect_hand(rgb, band)
+            try:
+                hand = detect_hand(rgb, band)
+            except Exception as error:
+                emit(lines, json.dumps({"error": f"hand detector: {error}"}) + "\n")
+                stop.set()
+                return
             with lock:
                 found.update(seq=seq, hand=hand, gray=gray)
 

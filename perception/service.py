@@ -356,4 +356,6 @@ async def leds_burst(request: Request) -> dict[str, object]:
 
 
 def main() -> None:
+    # Loading lazily from the tracker's detector thread raced the transformers import and killed that visit's tracking.
+    segment.local_model()
     uvicorn.run(app, host="127.0.0.1", port=8701)
