@@ -79,7 +79,8 @@ final class ARCamera: NSObject, FrameSource, ARSessionDelegate {
     }
 
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        guard frame.timestamp - lastFrame >= 1.0 / Double(fps), ready, let onFrame else { return }
+        guard case .normal = frame.camera.trackingState,
+              frame.timestamp - lastFrame >= 1.0 / Double(fps), ready, let onFrame else { return }
         lastFrame = frame.timestamp
         let image = CIImage(cvPixelBuffer: frame.capturedImage).oriented(.right)
         let scale = 960 / max(image.extent.width, image.extent.height)

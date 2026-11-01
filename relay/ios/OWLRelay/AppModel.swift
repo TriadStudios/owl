@@ -88,7 +88,7 @@ final class AppModel: ObservableObject {
         relay.sendFrame(jpeg)
         timeout?.cancel()
         timeout = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(15))
+            try? await Task.sleep(for: .seconds(60))
             if !Task.isCancelled { self?.camera.ready = true }
         }
     }
