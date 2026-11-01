@@ -120,7 +120,7 @@ struct PinnedTags: View {
                 ctx.stroke(path, with: .color(color), lineWidth: 2)
             }
             for tag in scene.labels {
-                let text = Text("\(tag.label.text) · \(tag.label.verdict.title)")
+                let text = Text("\(tag.label.port)")
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                 let resolved = ctx.resolve(text)

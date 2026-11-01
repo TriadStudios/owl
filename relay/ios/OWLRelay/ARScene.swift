@@ -76,10 +76,10 @@ final class ARScene: ObservableObject {
             let top = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).min()!)
             return LabelPin(label: label, color: polygon.color, point: world(top))
         }
-        if !labelPins.isEmpty {
-            let center = labelPins.map(\.point).reduce(.zero, +) / Float(labelPins.count)
-            let toward = view.cameraTransform.translation - center
-            let target = center + normalize(SIMD3(toward.x, 0, toward.z)) * 0.1 + [0, 0.1, 0]
+        if let first = labelPins.min(by: { $0.label.port < $1.label.port }), let last = labelPins.max(by: { $0.label.port < $1.label.port }) {
+            let along = last.point - first.point
+            let side = simd_length(along) > 0.01 ? normalize(SIMD3(along.x, 0, along.z)) : SIMD3<Float>(1, 0, 0)
+            let target = last.point + side * 0.12 + [0, 0.02, 0]
             if !placed || distance(target, reachyAnchor.position) > 0.15 {
                 reachyAnchor.move(to: Transform(translation: target), relativeTo: nil, duration: placed ? 0.8 : 0)
                 placed = true

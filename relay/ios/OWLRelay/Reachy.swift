@@ -31,11 +31,12 @@ final class Reachy {
             return pivot
         }
         antennas.forEach { body.addChild($0) }
+        body.scale = SIMD3(repeating: 0.5)
         root.addChild(body)
     }
 
     var head: SIMD3<Float> {
-        root.position(relativeTo: nil) + [0, 0.26, 0]
+        root.position(relativeTo: nil) + [0, 0.14, 0]
     }
 
     func animate(time t: Float, facing camera: SIMD3<Float>, speaking: Bool) {
