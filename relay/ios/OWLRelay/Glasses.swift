@@ -63,6 +63,28 @@ final class Glasses: ObservableObject {
         }
     }
 
+    var details: [String] {
+        guard let wearables else { return [] }
+        return wearables.devices.compactMap(wearables.deviceForIdentifier).map { d in
+            let battery = d.batteryLevel.map { " · battery \($0)%" } ?? ""
+            return "\(d.nameOrId()): \(d.linkState) · \(d.compatibility()) · worn \(d.donState) · hinges \(d.hingeState)\(battery)"
+        }
+    }
+
+    fileprivate func issue(with id: DeviceIdentifier) -> String? {
+        guard let device = wearables?.deviceForIdentifier(id) else { return "Meta AI lost track of the glasses. Try again." }
+        switch device.compatibility() {
+        case .deviceUpdateRequired: return "The glasses need a software update. Update them in the Meta AI app, then try again."
+        case .sdkUpdateRequired: return "These glasses need a newer Meta toolkit than this app has (1.0.1)."
+        default: break
+        }
+        if device.linkState != .connected {
+            return "The glasses aren't linked right now (\(device.linkState)). Open Meta AI, wake the glasses and try again."
+        }
+        if device.hingeState == .closed { return "Unfold the glasses so the camera can start." }
+        return nil
+    }
+
     fileprivate func show(_ image: UIImage?, streaming: Bool) {
         if let image { frame = image }
         if streaming != self.streaming { self.streaming = streaming }
@@ -122,7 +144,24 @@ final class GlassesCamera: FrameSource {
                 glasses.problem = "Allow camera access for OWL Relay in the Meta AI app."
                 return
             }
-            let session = try wearables.createSession(deviceSelector: AutoDeviceSelector(wearables: wearables))
+            glasses.problem = nil
+            // The selector needs a moment after launch to pick up the glasses Meta AI is linked to.
+            let selector = AutoDeviceSelector(wearables: wearables)
+            var device: DeviceIdentifier?
+            for _ in 0..<30 {
+                device = selector.activeDevice ?? wearables.devices.first
+                if device != nil { break }
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+            guard let device else {
+                glasses.problem = "No glasses found. Turn them on, unfold them and check they're connected in the Meta AI app."
+                return
+            }
+            if let issue = glasses.issue(with: device) {
+                glasses.problem = issue
+                return
+            }
+            let session = try wearables.createSession(deviceSelector: SpecificDeviceSelector(device: device))
             self.session = session
             try session.start()
             for await state in session.stateStream() {

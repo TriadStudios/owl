@@ -61,6 +61,9 @@ struct GlassesSection: View {
     var body: some View {
         Section {
             LabeledContent("Status", value: status)
+            TimelineView(.periodic(from: .now, by: 2)) { _ in
+                ForEach(glasses.details, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
+            }
             if glasses.registered {
                 Button("Disconnect glasses", role: .destructive) { Task { await glasses.disconnect() } }
                     .frame(minHeight: 44)
