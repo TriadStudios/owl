@@ -13,11 +13,7 @@ struct LiveView: View {
             PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [], speech: model.toasts.last?.text)
                 .ignoresSafeArea()
             VStack(spacing: 10) {
-                Text(status)
-                    .font(.footnote.monospaced())
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.black.opacity(0.6), in: Capsule())
+                LiveStatus(scene: model.scene)
                 if let label = model.bannerLabel {
                     HStack(spacing: 10) {
                         Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
@@ -61,12 +57,58 @@ struct LiveView: View {
             }
         }
     }
+}
 
-    private var status: String {
-        let link = model.connected ? "connected" : "offline"
-        let pair = model.active?.displayName ?? "unpaired"
-        let trip = model.roundTrip.map { String(format: "tags %.1f s", $0) } ?? "waiting for tags"
-        return "\(link) · \(pair) · \(trip)"
+struct LiveStatus: View {
+    @EnvironmentObject var model: AppModel
+    @ObservedObject var scene: ARScene
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            HStack(alignment: .top, spacing: 12) {
+                icon
+                    .frame(width: 22, height: 22)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title(at: context.date)).font(.subheadline.bold())
+                    Text(hint).font(.caption).foregroundStyle(.white.opacity(0.75))
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.white)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.black.opacity(0.65), in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    @ViewBuilder private var icon: some View {
+        if !model.connected {
+            Image(systemName: "wifi.exclamationmark")
+        } else if model.readingSince != nil {
+            ProgressView().tint(.white)
+        } else {
+            Image(systemName: "viewfinder")
+        }
+    }
+
+    private func title(at now: Date) -> String {
+        if !model.connected { return "Can't reach the OWL server" }
+        if !scene.tracking { return "Starting the camera…" }
+        if let since = model.readingSince {
+            return "Reading the switch… \(Int(now.timeIntervalSince(since))) s"
+        }
+        return "Looking for the switch"
+    }
+
+    private var hint: String {
+        if !model.connected { return "Join the closet Wi-Fi to reach \(model.active?.displayName ?? "the server")" }
+        if !scene.tracking { return "Move the phone slowly so AR can find its place" }
+        let trip = model.roundTrip.map { String(format: " in %.0f s", $0) } ?? ""
+        switch model.lastPorts {
+        case nil: return "Hold steady with all 8 ports in view. The first look takes about 20 s."
+        case 0?: return "Last look found no ports\(trip). Hold steady, square on, all 8 ports in view."
+        case let n?: return "Last look found \(n) port\(n == 1 ? "" : "s")\(trip). Tap a port for its devices."
+        }
     }
 }
 

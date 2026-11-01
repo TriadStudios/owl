@@ -20,6 +20,7 @@ final class ARScene: ObservableObject {
     @Published private(set) var shapes: [ScreenShape] = []
     @Published private(set) var labels: [ScreenLabel] = []
     @Published private(set) var reachyAt: CGPoint?
+    @Published private(set) var tracking = false
     var speaking = false
 
     let view: ARView
@@ -53,6 +54,8 @@ final class ARScene: ObservableObject {
         updates = view.scene.subscribe(to: SceneEvents.Update.self) { [weak self] event in
             guard let self else { return }
             time += Float(event.deltaTime)
+            let normal = if case .normal = view.session.currentFrame?.camera.trackingState { true } else { false }
+            if normal != tracking { tracking = normal }
             animateReachy()
             project()
         }

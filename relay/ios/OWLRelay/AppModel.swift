@@ -20,6 +20,8 @@ final class AppModel: ObservableObject {
     @Published var overlay = Overlay()
     @Published var toasts: [Toast] = []
     @Published var roundTrip: TimeInterval?
+    @Published var readingSince: Date?
+    @Published var lastPorts: Int?
     @Published var talking = false
     @Published var fps: Int {
         didSet {
@@ -62,6 +64,7 @@ final class AppModel: ObservableObject {
         relay.onConnected = { [weak self] up in
             Task { @MainActor in
                 self?.connected = up
+                self?.readingSince = nil
                 self?.camera.ready = true
             }
         }
@@ -85,6 +88,7 @@ final class AppModel: ObservableObject {
     // One frame in flight at a time, so each overlay is known to belong to the camera pose it was sent from.
     private func send(_ jpeg: Data, _ geometry: FrameGeometry?) {
         sent = (geometry, Date())
+        readingSince = sent?.at
         relay.sendFrame(jpeg)
         timeout?.cancel()
         timeout = Task { [weak self] in
@@ -205,9 +209,15 @@ final class AppModel: ObservableObject {
                 self.sent = nil
             }
             timeout?.cancel()
+            readingSince = nil
+            let found = Set(o.polygons.map(\.port)).count
+            let hadPorts = (lastPorts ?? 0) > 0
+            lastPorts = found
             camera.ready = true
             if !had && o.labels.contains(where: { $0.verdict == .doNotTouch }) {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
+            } else if !hadPorts && found > 0 {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         case .say(let text):
             if voice { speechOut.say(text) }
