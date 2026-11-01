@@ -58,6 +58,9 @@ final class ARCamera: NSObject, FrameSource, ARSessionDelegate {
     private let queue = DispatchQueue(label: "owl.camera")
     private let context = CIContext()
     private var lastFrame: TimeInterval = 0
+    private var orientation = CGImagePropertyOrientation.right
+    private static let longSide: CGFloat = 1920
+    private static let maxJPEG = 1_500_000
 
     override init() {
         super.init()
@@ -82,25 +85,46 @@ final class ARCamera: NSObject, FrameSource, ARSessionDelegate {
         guard case .normal = frame.camera.trackingState,
               frame.timestamp - lastFrame >= 1.0 / Double(fps), ready, let onFrame else { return }
         lastFrame = frame.timestamp
-        let image = CIImage(cvPixelBuffer: frame.capturedImage).oriented(.right)
-        let scale = 960 / max(image.extent.width, image.extent.height)
-        guard let jpeg = context.jpegRepresentation(
-            of: image.transformed(by: CGAffineTransform(scaleX: scale, y: scale)),
-            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-            options: [kCGImageDestinationLossyCompressionQuality as CIImageRepresentationOption: 0.6]
-        ) else { return }
+        orientation = Self.upright(frame.camera.transform) ?? orientation
+        let image = CIImage(cvPixelBuffer: frame.capturedImage).oriented(orientation)
+        let scale = min(1, Self.longSide / max(image.extent.width, image.extent.height))
+        let scaled = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        // The relay closes on messages over 2 MB and base64 adds a third, so step quality down until the JPEG fits.
+        guard let jpeg = [0.85, 0.7, 0.55].lazy.compactMap({ quality in
+            self.context.jpegRepresentation(
+                of: scaled,
+                colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
+                options: [kCGImageDestinationLossyCompressionQuality as CIImageRepresentationOption: quality]
+            )
+        }).first(where: { $0.count <= Self.maxJPEG }) else { return }
         ready = false
-        let size = frame.camera.imageResolution
         let (depth, w, h) = Self.copy(frame.sceneDepth?.depthMap)
         onFrame(jpeg, FrameGeometry(
             transform: frame.camera.transform,
             intrinsics: frame.camera.intrinsics,
-            imageSize: size,
-            toImage: frame.displayTransform(for: .portrait, viewportSize: CGSize(width: size.height, height: size.width)).inverted(),
+            imageSize: frame.camera.imageResolution,
+            toImage: Self.toImage(orientation),
             depth: depth,
             depthWidth: w,
             depthHeight: h
         ))
+    }
+
+    // World up seen in the camera's native landscape image picks the rotation that makes the image upright.
+    private static func upright(_ transform: simd_float4x4) -> CGImagePropertyOrientation? {
+        let up = simd_transpose(transform) * SIMD4<Float>(0, 1, 0, 0)
+        guard hypot(up.x, up.y) > 0.5 else { return nil }
+        if abs(up.x) > abs(up.y) { return up.x < 0 ? .right : .left }
+        return up.y > 0 ? .up : .down
+    }
+
+    private static func toImage(_ orientation: CGImagePropertyOrientation) -> CGAffineTransform {
+        switch orientation {
+        case .right: CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: 1)
+        case .left: CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: 1, ty: 0)
+        case .down: CGAffineTransform(a: -1, b: 0, c: 0, d: -1, tx: 1, ty: 1)
+        default: .identity
+        }
     }
 
     private static func copy(_ buffer: CVPixelBuffer?) -> ([Float], Int, Int) {
