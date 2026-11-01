@@ -163,14 +163,28 @@ final class GlassesCamera: FrameSource {
             }
             let session = try wearables.createSession(deviceSelector: SpecificDeviceSelector(device: device))
             self.session = session
+            var failure: DeviceSessionError?
+            session.errorPublisher.listen { error in
+                Task { @MainActor in failure = error }
+            }.store(in: tokens)
+            let states = session.stateStream()
             try session.start()
-            for await state in session.stateStream() {
+            var seen: [DeviceSessionState] = []
+            for await state in states {
+                seen.append(state)
                 if state == .started { break }
-                if state == .stopped {
-                    glasses.problem = "The glasses session stopped. Are the glasses on and connected in Meta AI?"
-                    self.session = nil
-                    return
+                // The stream can open on the session's previous state, so only a stop after it began starting is a failure.
+                guard state == .stopped, seen.contains(.starting) || seen.count > 1 else { continue }
+                try? await Task.sleep(for: .milliseconds(500))
+                self.session = nil
+                if failure == .datAppOnTheGlassesUpdateRequired {
+                    glasses.problem = "The glasses need an update for third-party apps. Opening Meta AI to install it."
+                    try? await wearables.openDATGlassesAppUpdate()
+                } else {
+                    let reason = failure.map { "\($0.localizedDescription) (\($0))" } ?? "no reason given"
+                    glasses.problem = "The glasses session stopped: \(reason). States: \(seen.map { "\($0)" }.joined(separator: " → "))"
                 }
+                return
             }
             guard let camera = try session.addCamera(config: StreamConfiguration(videoCodec: .raw, resolution: .high, frameRate: 15)) else {
                 glasses.problem = "The glasses camera is not available."
