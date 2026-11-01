@@ -13,8 +13,6 @@ import numpy as np
 import capture
 import segment
 
-HAND_PROMPT = "hand"
-HAND_MIN_SCORE = 0.4
 FOLLOW_MIN_SCORE = 0.5
 FOLLOW_SEARCH = 1.0
 MIN_TEMPLATE = 8
@@ -39,12 +37,12 @@ def detect_hand(rgb: np.ndarray, row: tuple[float, float]) -> tuple[list[float],
     import torch
 
     processor, model = segment.local_model()
-    inputs = processor(images=rgb, text=HAND_PROMPT, return_tensors="pt").to("cuda", torch.float16)
+    inputs = processor(images=rgb, text=segment.HAND_PROMPT, return_tensors="pt").to("cuda", torch.float16)
     with torch.inference_mode():
         outputs = model(**inputs)
     result = processor.post_process_instance_segmentation(outputs, target_sizes=[rgb.shape[:2]])[0]
     boxes, scores = result["boxes"].float().cpu().tolist(), result["scores"].float().cpu().tolist()
-    hands = [i for i, score in enumerate(scores) if score >= HAND_MIN_SCORE]
+    hands = [i for i, score in enumerate(scores) if score >= segment.HAND_MIN_SCORE]
     if not hands:
         return None
     # The crop holds the tech's other hand too, often on a phone above the switch; the one that matters is nearest the ports.

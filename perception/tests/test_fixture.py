@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 import leds
 import segment
@@ -35,6 +36,22 @@ class FixtureFrame(unittest.TestCase):
         x0, y0 = self.sam["rect"][:2]
         boxes = [[p["box"][0] / 2 + x0, p["row_band"][0] / 2 + y0, p["box"][2] / 2 + x0, p["row_band"][1] / 2 + y0] for p in self.row]
         self.assertEqual([led["link_on"] for led in leds.leds([frame], boxes)], [True] * 3 + [False] * 5)
+
+
+    def test_pinch_is_placed_between_the_lowest_fingertips_not_by_the_knuckles_beside_them(self) -> None:
+        x0, y0, x1, y1 = (int(v) for v in self.row[4]["box"])
+        n1 = int(self.row[5]["box"][2])
+        hand = np.zeros((2 * y1, 2 * int(self.row[-1]["box"][2])), np.uint8)
+        hand[: (y0 + y1) // 2, x0:n1] = 1
+        hand[:y1, x0 - 3 : x0 + 3] = 1
+        hand[:y1, x1 - 3 : x1 + 3] = 1
+        self.assertEqual(segment.touching(self.row, [{"score": 0.9, "mask_rle": segment.encode_rle(hand)}]), 5)
+
+    def test_hand_above_the_switch_touches_nothing(self) -> None:
+        y0, y1 = self.row[4]["box"][1::2]
+        hand = np.zeros((2 * int(y1), 2 * int(self.row[-1]["box"][2])), np.uint8)
+        hand[: int(y0 - 2 * (y1 - y0)), :] = 1
+        self.assertIsNone(segment.touching(self.row, [{"score": 0.9, "mask_rle": segment.encode_rle(hand)}]))
 
 
 class AdjacentPlugsFrame(unittest.TestCase):

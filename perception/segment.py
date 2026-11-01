@@ -30,6 +30,11 @@ LOCAL_LONG_SIDE = 1280
 SOCKET_PROMPTS = ("ethernet port", "network port")
 CABLE_PROMPT = "cable"
 PROMPTS = (*SOCKET_PROMPTS, CABLE_PROMPT)
+HAND_PROMPT = "hand"
+HAND_MIN_SCORE = 0.4
+TIP_ABOVE = 0.5
+TIP_BELOW = 1.5
+TIP_BAND = 0.5
 COPPER_PORTS = 8
 PORT_PALETTE = (
     (75, 25, 230), (75, 180, 60), (25, 225, 255), (200, 130, 0), (48, 130, 245), (180, 30, 145),
@@ -94,7 +99,7 @@ def add_spend(today: str) -> None:
         os.replace(tmp, SPEND_PATH)
 
 
-def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
+def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str], prompts: tuple[str, ...]) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OWL_META_API_KEY missing from .env.local")
@@ -148,14 +153,14 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
         return text, True
 
     # Each prompt is its own API round trip, so asking them together cuts a pass to its slowest prompt.
-    with ThreadPoolExecutor(max_workers=len(PROMPTS)) as pool:
-        fetched = dict(zip(PROMPTS, pool.map(fetch, PROMPTS)))
+    with ThreadPoolExecutor(max_workers=len(prompts)) as pool:
+        fetched = dict(zip(prompts, pool.map(fetch, prompts)))
     raw = {prompt: text for prompt, (text, _) in fetched.items()}
     billed = sum(paid for _, paid in fetched.values())
-    print(f"billed {billed} images this run, {len(PROMPTS) - billed} prompts from cache")
+    print(f"billed {billed} images this run, {len(prompts) - billed} prompts from cache")
 
     results: dict[str, list[Instance]] = {}
-    for prompt in PROMPTS:
+    for prompt in prompts:
         parser = image_segmentation_format().create_parser()
         parser.push(raw[prompt])
         parsed = parser.finish(CompletedOutcome()).result
@@ -192,7 +197,7 @@ def local_model():
     return processor, model
 
 
-def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+def local(rgb: np.ndarray, prompts: tuple[str, ...]) -> dict[str, list[Instance]]:
     import torch
 
     height, width = rgb.shape[:2]
@@ -200,7 +205,7 @@ def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
     small = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else rgb
     processor, model = local_model()
     results: dict[str, list[Instance]] = {}
-    for prompt in PROMPTS:
+    for prompt in prompts:
         inputs = processor(images=small, text=prompt, return_tensors="pt").to("cuda", torch.float16)
         with torch.inference_mode():
             outputs = model(**inputs)
@@ -222,6 +227,32 @@ def ports(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     if len(row) != COPPER_PORTS:
         raise ValueError(f"{len(row)} port/plug boxes in the port row, the layout has {COPPER_PORTS} copper ports")
     return row
+
+
+def touching(row: list[dict[str, object]], hands: list[Instance]) -> int | None:
+    top = float(np.median([p["box"][1] for p in row]))
+    bottom = float(np.median([p["box"][3] for p in row]))
+    height = bottom - top
+    centers = [(p["box"][0] + p["box"][2]) / 2 for p in row]
+    pitch = float(np.median(np.diff(centers)))
+    best, best_gap = None, float("inf")
+    for hand in hands:
+        if (hand["score"] or 0.0) < HAND_MIN_SCORE:
+            continue
+        ys, xs = np.nonzero(decode_rle(hand["mask_rle"]))
+        if not len(xs):
+            continue
+        tip_y = float(ys.max())
+        if not top - TIP_ABOVE * height <= tip_y <= bottom + TIP_BELOW * height:
+            continue
+        # A pinch holds the plug between the two lowest fingertips; the thumb and knuckles beside them cover the neighbours, so only the bottom of the hand places it.
+        low = ys >= tip_y - TIP_BAND * height
+        tip_x = float(xs[low].min() + xs[low].max()) / 2
+        nearest = min(range(len(row)), key=lambda i: abs(centers[i] - tip_x))
+        gap = abs(tip_y - (top + bottom) / 2)
+        if abs(centers[nearest] - tip_x) <= pitch / 2 and gap < best_gap:
+            best, best_gap = nearest + 1, gap
+    return best
 
 
 def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
@@ -305,10 +336,10 @@ def backend(env: dict[str, str]) -> str:
     return name
 
 
-def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[str, list[Instance]]:
+def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str], prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
     if backend(env) == "local":
-        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    return meta_api(image_bytes, image.shape[0], image.shape[1], env)
+        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), prompts)
+    return meta_api(image_bytes, image.shape[0], image.shape[1], env, prompts)
 
 
 def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> list[int]:
@@ -358,7 +389,7 @@ def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> 
         raise ValueError("failed to encode the port-row crop")
 
     start = time.perf_counter()
-    results = segment(encoded.tobytes(), crop, env)
+    results = segment(encoded.tobytes(), crop, env, (*PROMPTS, HAND_PROMPT) if handheld else PROMPTS)
     return crop, results, rect, time.perf_counter() - start
 
 

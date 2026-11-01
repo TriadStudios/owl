@@ -34,6 +34,12 @@ HOLD_SETTLE_S = 0.4
 FRAMES = segment.ROOT / "data" / "frames"
 DEBUG = segment.ROOT / "data" / "debug"
 ALIGN_SCALE = 0.5
+HANDHELD_REUSE_S = 30
+ORB_FEATURES = 3000
+MIN_INLIERS = 40
+MIN_AGREE_IOU = 0.3
+MIN_AGREE_PORTS = 3
+MIN_AGREE_SHARE = 0.75
 ALIGN_CRITERIA = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1e-5)
 
 app = FastAPI()
@@ -41,6 +47,7 @@ analyze_lock = threading.Lock()
 camera_lock = threading.Lock()
 recording: dict[str, object] = {}
 reference: dict[str, np.ndarray] = {}
+last_full_row: dict[str, object] = {}
 
 
 def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
@@ -50,7 +57,21 @@ def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
 def describe(image_bytes: bytes, handheld: bool = False) -> dict[str, object]:
     with analyze_lock:
         _, results, rect, _ = segment.analyze(image_bytes, segment.load_env(), handheld)
-    row = segment.ports(results)
+        try:
+            row = segment.ports(results)
+        except ValueError:
+            moved = from_last_full_row(image_bytes, results, rect) if handheld else None
+            if moved is None:
+                raise
+            return moved
+        result = numbered(image_bytes, results, rect, row)
+        if handheld:
+            result["touching"] = segment.touching(row, results[segment.HAND_PROMPT])
+            last_full_row.update(at=time.monotonic(), gray=cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE), result=result)
+        return result
+
+
+def numbered(image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int], row: list[dict[str, object]]) -> dict[str, object]:
     cables = results[segment.CABLE_PROMPT]
     ports = []
     for number, port in enumerate(row, start=1):
@@ -70,6 +91,64 @@ def describe(image_bytes: bytes, handheld: bool = False) -> dict[str, object]:
         ports.append(entry)
     row_top, row_bottom = row[0]["row_band"]
     return {"ports": ports, "row": [row_top / 2 + rect[1], row_bottom / 2 + rect[1]], "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
+
+
+def homography(reference: np.ndarray, gray: np.ndarray) -> np.ndarray | None:
+    orb = cv2.ORB_create(ORB_FEATURES)
+    points_a, features_a = orb.detectAndCompute(reference, None)
+    points_b, features_b = orb.detectAndCompute(gray, None)
+    if features_a is None or features_b is None:
+        return None
+    pairs = cv2.BFMatcher(cv2.NORM_HAMMING).knnMatch(features_a, features_b, k=2)
+    good = [m for m, n in (pair for pair in pairs if len(pair) == 2) if m.distance < 0.75 * n.distance]
+    if len(good) < MIN_INLIERS:
+        return None
+    source = np.float32([points_a[m.queryIdx].pt for m in good])
+    target = np.float32([points_b[m.trainIdx].pt for m in good])
+    to_now, inliers = cv2.findHomography(source, target, cv2.RANSAC, 4.0)
+    if to_now is None or int(inliers.sum()) < MIN_INLIERS:
+        return None
+    return to_now
+
+
+def from_last_full_row(image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int]) -> dict[str, object] | None:
+    # A hand on the ports hides some of them, so place the row from the last frame that showed all eight, moved to where this frame sees it.
+    if not last_full_row or time.monotonic() - last_full_row["at"] > HANDHELD_REUSE_S:
+        return None
+    gray = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
+    to_now = homography(last_full_row["gray"], gray)
+    if to_now is None:
+        return None
+
+    def move(points: list[list[float]]) -> np.ndarray:
+        return cv2.perspectiveTransform(np.float32(points).reshape(-1, 1, 2), to_now).reshape(-1, 2)
+
+    previous = last_full_row["result"]
+    ports = []
+    for port in previous["ports"]:
+        x0, y0, x1, y1 = port["box"]
+        corners = move([[x0, y0], [x1, y0], [x1, y1], [x0, y1]])
+        entry = {**port, "box": [round(float(v), 1) for v in (*corners.min(axis=0), *corners.max(axis=0))]}
+        if "cable_polygon" in port:
+            entry["cable_polygon"] = [[round(float(x), 1), round(float(y), 1)] for x, y in move(port["cable_polygon"])]
+        ports.append(entry)
+    in_crop = [{"box": [(b[0] - rect[0]) * 2, (b[1] - rect[1]) * 2, (b[2] - rect[0]) * 2, (b[3] - rect[1]) * 2]} for b in (p["box"] for p in ports)]
+    # A homography fitted to the wrong features moves the whole row; only trust it where the ports this frame does show sit on the moved boxes.
+    try:
+        seen = segment.port_row(results)
+    except ValueError:
+        return None
+    agree = sum(any(segment.iou(s["box"], m["box"]) >= MIN_AGREE_IOU for m in in_crop) for s in seen)
+    if agree < max(MIN_AGREE_PORTS, MIN_AGREE_SHARE * len(seen)):
+        print(f"last full row rejected: {agree} of {len(seen)} visible ports on the moved boxes")
+        return None
+    return {
+        "ports": ports,
+        "row": [float(np.median([p["box"][1] for p in ports])), float(np.median([p["box"][3] for p in ports]))],
+        "frame_hash": hashlib.sha256(image_bytes).hexdigest(),
+        "touching": segment.touching(in_crop, results[segment.HAND_PROMPT]),
+        "ports_from": previous["frame_hash"],
+    }
 
 
 def debug_frame(kind: str, frame: np.ndarray, rects: list[list[float]], labels: list[str], lit: list[bool]) -> None:

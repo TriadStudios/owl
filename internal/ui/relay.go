@@ -75,6 +75,7 @@ type overlayMsg struct {
 	Type     string        `json:"type"`
 	Polygons []polygonJSON `json:"polygons"`
 	Labels   []labelJSON   `json:"labels"`
+	Touching int           `json:"touching,omitempty"`
 }
 
 type bucket struct {
@@ -305,7 +306,7 @@ func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames 
 			}
 			if err == nil {
 				lastHash, lastMsg = hash, &msg
-				s.Log.Info("frame", "device", device, "bytes", len(frame), "ports", len(msg.Labels), "took_ms", time.Since(start).Milliseconds(), "processed", processed, "skipped", skipped)
+				s.Log.Info("frame", "device", device, "bytes", len(frame), "ports", len(msg.Labels), "touching", msg.Touching, "took_ms", time.Since(start).Milliseconds(), "processed", processed, "skipped", skipped)
 			}
 		}
 		if err != nil {
@@ -395,6 +396,9 @@ func overlay(ports []reconcile.Port, cam *perception.Result, width, height float
 		}
 		short, _, _ := strings.Cut(card.Downstream, ":")
 		msg.Labels = append(msg.Labels, labelJSON{Port: c.Num, Text: strings.TrimSpace(fmt.Sprintf("%d %s", c.Num, short)), Verdict: card.Verdict})
+	}
+	if cam.Touching != nil {
+		msg.Touching = *cam.Touching
 	}
 	return msg
 }

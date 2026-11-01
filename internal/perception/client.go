@@ -19,6 +19,7 @@ type Result struct {
 	Row       [2]float64 `json:"row"`
 	LEDs      []LED      `json:"leds"`
 	FrameHash string     `json:"frame_hash"`
+	Touching  *int       `json:"touching"`
 }
 
 type LED struct {
