@@ -8,6 +8,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -93,22 +94,20 @@ def add_spend(today: str) -> None:
         os.replace(tmp, SPEND_PATH)
 
 
-def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
+def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str], prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OWL_META_API_KEY missing from .env.local")
     cap = int(env.get("OWL_SAM_DAILY_CAP", "2000"))
 
     CACHE.mkdir(parents=True, exist_ok=True)
-    data_url = "data:image/png;base64," + base64.b64encode(image_bytes).decode()
+    mime = "image/jpeg" if image_bytes[:2] == b"\xff\xd8" else "image/png"
+    data_url = f"data:{mime};base64," + base64.b64encode(image_bytes).decode()
 
-    raw: dict[str, str] = {}
-    billed = 0
-    for prompt in PROMPTS:
+    def fetch(prompt: str) -> tuple[str, bool]:
         cache_path = CACHE / f"{hashlib.sha256(image_bytes + prompt.encode()).hexdigest()}.json"
         if cache_path.exists():
-            raw[prompt] = json.loads(cache_path.read_text())["output_text"]
-            continue
+            return json.loads(cache_path.read_text())["output_text"], False
         today = datetime.now(timezone.utc).date().isoformat()
         with spend_lock():
             spent = read_spend().get(today, 0)
@@ -137,20 +136,26 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -
             raise RuntimeError(f"Meta SAM API returned {error.code} for '{prompt}': {error.read().decode(errors='replace')[:500]}")
 
         add_spend(today)
-        billed += 1
         if reply.get("status") != "completed":
             raise RuntimeError(f"Meta SAM API response for '{prompt}' not completed: {json.dumps(reply)[:500]}")
-        raw[prompt] = "".join(
+        text = "".join(
             part.get("text", "")
             for item in reply.get("output", [])
             for part in item.get("content", [])
             if part.get("type") == "output_text"
         )
-        cache_path.write_text(json.dumps({"prompt": prompt, "output_text": raw[prompt]}))
-    print(f"billed {billed} images this run, {len(PROMPTS) - billed} prompts from cache")
+        cache_path.write_text(json.dumps({"prompt": prompt, "output_text": text}))
+        return text, True
+
+    # Each prompt is its own API round trip, so asking them together cuts a pass to its slowest prompt.
+    with ThreadPoolExecutor(max_workers=len(prompts)) as pool:
+        fetched = dict(zip(prompts, pool.map(fetch, prompts)))
+    raw = {prompt: text for prompt, (text, _) in fetched.items()}
+    billed = sum(paid for _, paid in fetched.values())
+    print(f"billed {billed} images this run, {len(prompts) - billed} prompts from cache")
 
     results: dict[str, list[Instance]] = {}
-    for prompt in PROMPTS:
+    for prompt in prompts:
         parser = image_segmentation_format().create_parser()
         parser.push(raw[prompt])
         parsed = parser.finish(CompletedOutcome()).result
@@ -187,7 +192,7 @@ def local_model():
     return processor, model
 
 
-def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
+def local(rgb: np.ndarray, prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
     import torch
 
     height, width = rgb.shape[:2]
@@ -195,7 +200,7 @@ def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
     small = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else rgb
     processor, model = local_model()
     results: dict[str, list[Instance]] = {}
-    for prompt in PROMPTS:
+    for prompt in prompts:
         inputs = processor(images=small, text=prompt, return_tensors="pt").to("cuda", torch.float16)
         with torch.inference_mode():
             outputs = model(**inputs)
@@ -300,16 +305,16 @@ def backend(env: dict[str, str]) -> str:
     return name
 
 
-def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[str, list[Instance]]:
+def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str], prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
     if backend(env) == "local":
-        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    return meta_api(image_bytes, image.shape[0], image.shape[1], env)
+        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), prompts)
+    return meta_api(image_bytes, image.shape[0], image.shape[1], env, prompts)
 
 
 def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> list[int]:
     height, width = image.shape[:2]
     try:
-        full_row = port_row(segment(image_bytes, image, env))
+        full_row = port_row(segment(image_bytes, image, env, SOCKET_PROMPTS))
     except ValueError as error:
         raise ValueError(f"cannot place the port-row crop: {error}") from error
     # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
@@ -347,7 +352,8 @@ def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> 
         rect = roi["rect"]
     x0, y0, x1, y1 = rect
     crop = cv2.resize(image[y0:y1, x0:x1], None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    ok, encoded = cv2.imencode(".png", crop)
+    # Handheld frames go to the API every few seconds, and a JPEG of the 2x crop uploads in a fraction of the PNG's time.
+    ok, encoded = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 92]) if handheld else cv2.imencode(".png", crop)
     if not ok:
         raise ValueError("failed to encode the port-row crop")
 
