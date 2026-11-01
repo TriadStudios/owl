@@ -51,10 +51,6 @@ final class AppModel: ObservableObject {
         pairings.first { $0.id == activeID }
     }
 
-    var bannerLabel: OverlayLabel? {
-        overlay.labels.max { $0.verdict.rank < $1.verdict.rank }
-    }
-
     init() {
         let pairings = PairingStore.loadAll()
         let activeID = PairingStore.activeURL ?? pairings.first?.id
@@ -227,7 +223,6 @@ final class AppModel: ObservableObject {
     private func handle(_ msg: ServerMessage) {
         switch msg {
         case .overlay(let o):
-            let had = overlay.labels.contains { $0.verdict == .doNotTouch }
             overlay = o
             if let sent {
                 if let geometry = sent.geometry { scene.pin(o, from: geometry) }
@@ -241,9 +236,7 @@ final class AppModel: ObservableObject {
             let hadPorts = (lastPorts ?? 0) > 0
             lastPorts = found
             camera.ready = true
-            if !had && o.labels.contains(where: { $0.verdict == .doNotTouch }) {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-            } else if !hadPorts && found > 0 {
+            if !hadPorts && found > 0 {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         case .say(let text):

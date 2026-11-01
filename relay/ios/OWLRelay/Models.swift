@@ -18,15 +18,6 @@ enum Verdict: String, Decodable, Hashable {
         case .unknown: "Unknown"
         }
     }
-
-    var rank: Int {
-        switch self {
-        case .doNotTouch: 3
-        case .caution: 2
-        case .unknown: 1
-        case .safe: 0
-        }
-    }
 }
 
 enum Severity: String, Decodable, Hashable {

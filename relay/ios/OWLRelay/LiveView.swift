@@ -14,18 +14,7 @@ struct LiveView: View {
                 .ignoresSafeArea()
             VStack(spacing: 10) {
                 LiveStatus(scene: model.scene)
-                if let label = model.bannerLabel {
-                    HStack(spacing: 10) {
-                        Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
-                        Text("\(label.verdict.title.uppercased()) · \(label.text)")
-                            .lineLimit(1)
-                    }
-                    .font(.headline)
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 16)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(label.verdict.color, in: RoundedRectangle(cornerRadius: 14))
-                }
+                AimBanner(scene: model.scene)
                 ForEach(model.scene.reachyAt == nil ? model.toasts : []) { toast in
                     Text(toast.text)
                         .font(.callout)
@@ -55,6 +44,38 @@ struct LiveView: View {
                 await model.refresh()
                 try? await Task.sleep(for: .seconds(15))
             }
+        }
+    }
+}
+
+struct AimBanner: View {
+    @ObservedObject var scene: ARScene
+
+    var body: some View {
+        if let label = scene.aimed {
+            HStack(spacing: 10) {
+                Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("PORT \(label.port) · \(label.verdict.title.uppercased())").font(.headline)
+                    let detail = label.text.hasPrefix("\(label.port) ") ? String(label.text.dropFirst("\(label.port) ".count)) : label.text
+                    if detail != "\(label.port)" && !detail.isEmpty {
+                        Text(detail).font(.subheadline).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(label.verdict.color, in: RoundedRectangle(cornerRadius: 14))
+        } else if !scene.labels.isEmpty {
+            Text("Aim the dot at a port")
+                .font(.subheadline.bold())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.6), in: Capsule())
         }
     }
 }
@@ -136,6 +157,11 @@ struct PinnedTags: View {
     var body: some View {
         GeometryReader { geo in
             canvas
+            Circle()
+                .strokeBorder(scene.aimed.map { $0.verdict.color } ?? .white, lineWidth: 3)
+                .background(Circle().fill(.black.opacity(0.25)))
+                .frame(width: 22, height: 22)
+                .position(x: geo.size.width / 2, y: geo.size.height / 2)
             if let speech, let at = scene.reachyAt {
                 Text(speech)
                     .font(.callout)

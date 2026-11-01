@@ -21,6 +21,7 @@ final class ARScene: ObservableObject {
     @Published private(set) var labels: [ScreenLabel] = []
     @Published private(set) var reachyAt: CGPoint?
     @Published private(set) var tracking = false
+    @Published private(set) var aimed: OverlayLabel?
     var speaking = false
 
     let view: ARView
@@ -159,7 +160,7 @@ final class ARScene: ObservableObject {
         project()
     }
 
-    func port(at p: CGPoint) -> Int? {
+    func port(at p: CGPoint, within reach: CGFloat = 44) -> Int? {
         let hit = shapes.last { shape in
             var path = Path()
             path.addLines(shape.points)
@@ -168,7 +169,7 @@ final class ARScene: ObservableObject {
         }
         if let hit { return hit.port }
         let near = labels.min { hypot($0.at.x - p.x, $0.at.y - p.y) < hypot($1.at.x - p.x, $1.at.y - p.y) }
-        return near.flatMap { hypot($0.at.x - p.x, $0.at.y - p.y) < 44 ? $0.label.port : nil }
+        return near.flatMap { hypot($0.at.x - p.x, $0.at.y - p.y) < reach ? $0.label.port : nil }
     }
 
     private func project() {
@@ -181,6 +182,12 @@ final class ARScene: ObservableObject {
         }
         if !(shapes.isEmpty && self.shapes.isEmpty) { self.shapes = shapes }
         if !(labels.isEmpty && self.labels.isEmpty) { self.labels = labels }
+        let center = CGPoint(x: view.bounds.midX, y: view.bounds.midY)
+        let label = port(at: center, within: 60).flatMap { port in labels.first { $0.label.port == port }?.label }
+        if label?.port != aimed?.port || label?.verdict != aimed?.verdict {
+            aimed = label
+            if label?.verdict == .doNotTouch { UINotificationFeedbackGenerator().notificationOccurred(.error) }
+        }
     }
 
     private static func point(_ p: [Double]) -> CGPoint? {
