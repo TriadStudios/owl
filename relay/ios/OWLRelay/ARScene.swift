@@ -77,13 +77,25 @@ final class ARScene: ObservableObject {
         }
         centers.sort { $0.port < $1.port }
         let eye = geometry.ray(CGPoint(x: 0.5, y: 0.5))
-        let anchor = centers.isEmpty ? eye.0 + eye.1 * 0.5 : centers.map(\.point).reduce(.zero, +) / Float(centers.count)
-        let toEye = eye.0 - anchor
-        var normal = normalize(SIMD3(toEye.x, 0, toEye.z))
-        if let first = centers.first, let last = centers.last, simd_length(last.point - first.point) > 0.03 {
-            let row = last.point - first.point
-            normal = normalize(simd_cross(SIMD3(row.x, 0, row.z), [0, 1, 0]))
+        // A plug sticking out toward the camera reads several cm closer than the face, so take the vertical
+        // plane through the pair of port centers that the most other centers lie within 2 cm of.
+        var inliers = centers.map(\.point)
+        var best: SIMD3<Float>?
+        for i in centers.indices {
+            for j in centers.indices where j > i {
+                let row = centers[j].point - centers[i].point
+                guard simd_length(SIMD2(row.x, row.z)) > 0.03 else { continue }
+                let n = normalize(simd_cross(SIMD3(row.x, 0, row.z), [0, 1, 0]))
+                let near = centers.map(\.point).filter { abs(simd_dot(n, $0 - centers[i].point)) < 0.02 }
+                if best == nil || near.count > inliers.count {
+                    best = n
+                    inliers = near
+                }
+            }
         }
+        let anchor = inliers.isEmpty ? eye.0 + eye.1 * 0.5 : inliers.reduce(.zero, +) / Float(inliers.count)
+        let toEye = eye.0 - anchor
+        let normal = best ?? normalize(SIMD3(toEye.x, 0, toEye.z))
         func world(_ p: CGPoint) -> SIMD3<Float> {
             let (origin, direction) = geometry.ray(p)
             let facing = simd_dot(normal, direction)

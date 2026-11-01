@@ -42,7 +42,7 @@ final class AppModel: ObservableObject {
     private let speechIn: SpeechIn = AppleSpeechIn()
     private let speechOut: SpeechOut = AppleSpeechOut()
     private var started = false
-    private var sent: (geometry: FrameGeometry?, at: Date, number: Int)?
+    private var sent: (geometry: FrameGeometry?, at: Date, number: Int, jpeg: Data)?
     private var frameNumber = 0
     private let recorder = DebugRecorder()
     private var timeout: Task<Void, Never>?
@@ -93,15 +93,7 @@ final class AppModel: ObservableObject {
     // One frame in flight at a time, so each overlay is known to belong to the camera pose it was sent from.
     private func send(_ jpeg: Data, _ geometry: FrameGeometry?) {
         frameNumber += 1
-        sent = (geometry, Date(), frameNumber)
-        if recorder.recording {
-            let n = String(format: "%04d", frameNumber)
-            recorder.write("\(n)-frame.jpg", jpeg)
-            if let geometry {
-                recorder.json("\(n)-geometry.json", geometry.debug)
-                recorder.write("\(n)-depth.f32", geometry.depthData)
-            }
-        }
+        sent = (geometry, Date(), frameNumber, jpeg)
         readingSince = sent?.at
         relay.sendFrame(jpeg)
         timeout?.cancel()
@@ -212,8 +204,13 @@ final class AppModel: ObservableObject {
         speechIn.stop()
     }
 
-    private func record(_ overlay: Overlay, _ number: Int) {
-        let n = String(format: "%04d", number)
+    private func record(_ overlay: Overlay, _ sent: (geometry: FrameGeometry?, at: Date, number: Int, jpeg: Data)) {
+        let n = String(format: "%04d", sent.number)
+        recorder.write("\(n)-frame.jpg", sent.jpeg)
+        if let geometry = sent.geometry {
+            recorder.json("\(n)-geometry.json", geometry.debug)
+            recorder.write("\(n)-depth.f32", geometry.depthData)
+        }
         recorder.json("\(n)-overlay.json", ["overlay": overlay.debug, "fit": scene.lastFit, "round_trip_s": roundTrip ?? 0])
         for delay in [1, 4] {
             Task { [weak self] in
@@ -235,7 +232,7 @@ final class AppModel: ObservableObject {
             if let sent {
                 if let geometry = sent.geometry { scene.pin(o, from: geometry) }
                 roundTrip = Date().timeIntervalSince(sent.at)
-                if recorder.recording { record(o, sent.number) }
+                if recorder.recording { record(o, sent) }
                 self.sent = nil
             }
             timeout?.cancel()
