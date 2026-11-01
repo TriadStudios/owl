@@ -11,6 +11,19 @@ final class Glasses: ObservableObject {
     @Published private(set) var streaming = false
     @Published private(set) var frame: UIImage?
     @Published var problem: String?
+    @Published fileprivate(set) var trace = Trace()
+
+    struct Trace: Equatable {
+        var session = "none"
+        var stream = "none"
+        var framesIn = 0
+        var framesSent = 0
+        var lastSentKB = 0
+
+        var line: String {
+            "session \(session) · stream \(stream) · in \(framesIn) · sent \(framesSent)\(lastSentKB > 0 ? " (\(lastSentKB) KB)" : "")"
+        }
+    }
 
     let wearables: WearablesInterface?
 
@@ -171,6 +184,7 @@ final class GlassesCamera: FrameSource {
             try session.start()
             var seen: [DeviceSessionState] = []
             for await state in states {
+                glasses.trace.session = "\(state)"
                 seen.append(state)
                 if state == .started { break }
                 // The stream can open on the session's previous state, so only a stop after it began starting is a failure.
@@ -196,7 +210,10 @@ final class GlassesCamera: FrameSource {
             }.store(in: tokens)
             camera.stream.statePublisher.listen { [weak self] state in
                 guard let self else { return }
-                Task { @MainActor in self.glasses.show(nil, streaming: state == .streaming) }
+                Task { @MainActor in
+                    self.glasses.trace.stream = "\(state)"
+                    self.glasses.show(nil, streaming: state == .streaming)
+                }
             }.store(in: tokens)
             camera.stream.errorPublisher.listen { [weak self] error in
                 guard let self else { return }
@@ -210,12 +227,18 @@ final class GlassesCamera: FrameSource {
         }
     }
 
+    private var received = 0
     private func receive(_ frame: VideoFrame) {
         let now = CACurrentMediaTime()
+        received += 1
         if now - lastShown >= 0.1 {
             lastShown = now
             let image = frame.makeUIImage()
-            Task { @MainActor in self.glasses.show(image, streaming: true) }
+            let count = received
+            Task { @MainActor in
+                self.glasses.trace.framesIn = count
+                self.glasses.show(image, streaming: true)
+            }
         }
         guard now - lastSent >= 1.0 / Double(fps), ready, let onFrame,
               let pixels = CMSampleBufferGetImageBuffer(frame.sampleBuffer),
@@ -226,6 +249,11 @@ final class GlassesCamera: FrameSource {
               ) else { return }
         lastSent = now
         ready = false
+        let size = jpeg.count / 1024
+        Task { @MainActor in
+            self.glasses.trace.framesSent += 1
+            self.glasses.trace.lastSentKB = size
+        }
         onFrame(jpeg, nil)
     }
 }

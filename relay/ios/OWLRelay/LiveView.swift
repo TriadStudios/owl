@@ -115,6 +115,9 @@ struct LiveStatus: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title(at: context.date)).font(.subheadline.bold())
                     Text(hint).font(.caption).foregroundStyle(.white.opacity(0.75))
+                    if model.source == .glasses {
+                        Text(glasses.trace.line).font(.caption2.monospaced()).foregroundStyle(.white.opacity(0.6))
+                    }
                 }
                 Spacer(minLength: 0)
                 Button { model.recording.toggle() } label: {
