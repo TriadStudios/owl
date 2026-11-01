@@ -18,6 +18,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/triadstudios/owl/internal/guardian"
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/reconcile"
 )
@@ -34,6 +36,8 @@ const (
 	hashRows        = 8
 	hashCols        = 8
 	hashSamples     = 4
+	narrateBudget   = 6 * time.Second
+	maxHistory      = 8
 )
 
 var verdictColor = map[string]string{
@@ -109,8 +113,10 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithCancel(r.Context())
 	frames := make(chan []byte, 1)
+	utterances := make(chan string, 1)
 	var wg sync.WaitGroup
 	wg.Go(func() { s.overlays(ctx, c, device, frames) })
+	wg.Go(func() { s.answers(ctx, c, device, utterances) })
 	wg.Go(func() {
 		t := time.NewTicker(pingEvery)
 		defer t.Stop()
@@ -125,9 +131,10 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	})
-	code, reason, dropped := s.readRelay(c, device, frames)
+	code, reason, dropped := s.readRelay(c, device, frames, utterances)
 	cancel()
 	close(frames)
+	close(utterances)
 	if err := c.close(code, reason); err != nil && !errors.Is(err, net.ErrClosed) {
 		s.Log.Debug("relay close", "device", device, "err", err)
 	}
@@ -138,7 +145,7 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 	s.Log.Info("relay disconnected", "device", device, "code", code, "reason", reason, "frames_dropped_rate", dropped)
 }
 
-func (s *Server) readRelay(c *wsConn, device string, frames chan []byte) (uint16, string, int) {
+func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utterances chan string) (uint16, string, int) {
 	dropped := 0
 	for {
 		op, data, err := c.read(maxMessage, relayIdle)
@@ -183,9 +190,11 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte) (uint16
 				return closeBadData, "utterance needs text of at most 1000 bytes", dropped
 			}
 			s.Log.Info("utterance", "device", device, "text", text)
-			if err := s.send(c, sayMsg{Type: "say", Text: "not yet"}); err != nil {
-				return 1001, "write failed", dropped
+			select {
+			case <-utterances:
+			default:
 			}
+			utterances <- text
 		default:
 			t := m.Type
 			if len(t) > 32 {
@@ -195,6 +204,65 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte) (uint16
 			return closePolicy, "unknown message type", dropped
 		}
 	}
+}
+
+func (s *Server) answers(ctx context.Context, c *wsConn, device string, utterances <-chan string) {
+	var history []narrate.Turn
+	told := map[int]bool{}
+	for heard := range utterances {
+		history = append(history, narrate.Turn{Who: "tech", Text: heard})
+		line := s.answer(ctx, device, heard, history, told)
+		if ctx.Err() != nil {
+			return
+		}
+		if line == "" {
+			continue
+		}
+		history = append(history, narrate.Turn{Who: "robot", Text: line})
+		history = history[max(0, len(history)-maxHistory):]
+		if err := s.send(c, sayMsg{Type: "say", Text: line}); err != nil {
+			s.Log.Warn("relay send", "device", device, "err", err)
+			return
+		}
+	}
+}
+
+func (s *Server) answer(ctx context.Context, device, heard string, history []narrate.Turn, told map[int]bool) string {
+	s.mu.Lock()
+	ports := s.ports
+	s.mu.Unlock()
+	verdicts := guardian.Verdicts(ports, nil)
+	parsed := guardian.ParseUtterance(heard, ports)
+	start := time.Now()
+	err := errors.New("no narrator")
+	var r narrate.Reply
+	if s.Narrator != nil {
+		nctx, cancel := context.WithTimeout(ctx, narrateBudget)
+		r, err = s.Narrator.Reply(nctx, narrate.Request{Kind: "reply", Utterance: heard, Ports: guardian.NarratePorts(ports, nil), History: history})
+		cancel()
+	}
+	took := time.Since(start).Milliseconds()
+	switch {
+	case err != nil:
+	case guardian.SpokenPort(heard) != 0 && r.Port != parsed:
+		err = fmt.Errorf("model chose port %d, the utterance says port %d", r.Port, parsed)
+	default:
+		if err = narrate.Check(r.Line, r.Port, verdicts, r.Port != 0 && !told[r.Port]); err == nil {
+			if r.Port != 0 {
+				told[r.Port] = true
+				s.Log.Info("relay safety line", "device", device, "port", r.Port, "verdict", verdicts[r.Port], "source", "model", "text", r.Line, "utterance", heard, "narrate_ms", took)
+			}
+			return r.Line
+		}
+	}
+	if parsed == 0 {
+		s.Log.Info("relay narrate fallback", "device", device, "reason", err.Error(), "narrate_ms", took)
+		return guardian.MissLine
+	}
+	line := guardian.Line(parsed, ports, "")
+	told[parsed] = true
+	s.Log.Info("relay safety line", "device", device, "port", parsed, "verdict", verdicts[parsed], "source", "template", "text", line, "utterance", heard, "fallback_reason", err.Error(), "narrate_ms", took)
+	return line
 }
 
 func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames <-chan []byte) {

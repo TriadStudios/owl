@@ -23,6 +23,7 @@ import (
 	"github.com/triadstudios/owl/internal/blast"
 	"github.com/triadstudios/owl/internal/discovery"
 	"github.com/triadstudios/owl/internal/finding"
+	"github.com/triadstudios/owl/internal/guardian"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
 	"github.com/triadstudios/owl/internal/reconcile"
@@ -50,6 +51,7 @@ type Config struct {
 	EvidenceDir    string
 	FindingsPath   string
 	Devices        *Registry
+	Narrator       guardian.Narrator
 	Log            *slog.Logger
 }
 

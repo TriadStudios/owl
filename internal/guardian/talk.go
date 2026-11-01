@@ -49,10 +49,10 @@ func (g *Guardian) ports() []reconcile.Port {
 	return g.Table()
 }
 
-func (g *Guardian) verdicts(ports []reconcile.Port) map[int]string {
+func Verdicts(ports []reconcile.Port, colors map[int]string) map[int]string {
 	out := map[int]string{}
 	for _, p := range ports {
-		verdict, _ := facts(p.Num, ports, g.Colors[p.Num])
+		verdict, _ := facts(p.Num, ports, colors[p.Num])
 		out[p.Num] = narrate.SpokenVerdict(verdict)
 	}
 	return out
@@ -69,7 +69,7 @@ func (g *Guardian) ask(kind, utterance string, ports []reconcile.Port) (narrate.
 	ctx, cancel := context.WithTimeout(context.Background(), narrateBudget)
 	defer cancel()
 	start := time.Now()
-	req := narrate.Request{Kind: kind, Utterance: utterance, Ports: g.narratePorts(ports), Jobs: jobs, History: g.history}
+	req := narrate.Request{Kind: kind, Utterance: utterance, Ports: NarratePorts(ports, g.Colors), Jobs: jobs, History: g.history}
 	if g.Scene != nil {
 		if s := g.Scene(); s.HandPort != 0 || len(s.Warnings) > 0 {
 			req.Scene = &s
@@ -86,7 +86,7 @@ func (g *Guardian) chat(kind, utterance, fallback string) string {
 		err = fmt.Errorf("empty %s line", kind)
 	}
 	if err == nil {
-		err = narrate.Check(r.Line, 0, g.verdicts(ports), false)
+		err = narrate.Check(r.Line, 0, Verdicts(ports, g.Colors), false)
 	}
 	if err != nil {
 		g.log().Info("narrate fallback", "kind", kind, "reason", err.Error(), "took_ms", took.Milliseconds())
@@ -103,17 +103,17 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 	r, took, err := g.ask("reply", heard, ports)
 	switch {
 	case err != nil:
-	case spokenPort(heard) != 0 && r.Port != parsed:
+	case SpokenPort(heard) != 0 && r.Port != parsed:
 		err = fmt.Errorf("model chose port %d, the utterance says port %d", r.Port, parsed)
 	case r.Port != 0:
 		verdict, _ := facts(r.Port, ports, g.Colors[r.Port])
-		if err = narrate.Check(r.Line, r.Port, g.verdicts(ports), !g.told[r.Port]); err == nil {
+		if err = narrate.Check(r.Line, r.Port, Verdicts(ports, g.Colors), !g.told[r.Port]); err == nil {
 			g.tell(r.Port)
 			g.logSafety(heard, r.Port, verdict, "model", r.Line, "", took, ports)
 			return r.Line, r.Port, r.Goodbye
 		}
 	default:
-		if err = narrate.Check(r.Line, 0, g.verdicts(ports), false); err == nil {
+		if err = narrate.Check(r.Line, 0, Verdicts(ports, g.Colors), false); err == nil {
 			return r.Line, 0, r.Goodbye
 		}
 	}
@@ -129,7 +129,7 @@ func (g *Guardian) respond(heard string) (string, int, bool) {
 		return closing, 0, true
 	default:
 		g.log().Info("narrate fallback", "kind", "reply", "reason", errText(err), "took_ms", took.Milliseconds())
-		return missLine, 0, false
+		return MissLine, 0, false
 	}
 }
 
@@ -141,7 +141,7 @@ func (g *Guardian) handLine(port int) string {
 		err = fmt.Errorf("model talked about port %d, the hand is on port %d", r.Port, port)
 	}
 	if err == nil {
-		err = narrate.Check(r.Line, port, g.verdicts(ports), true)
+		err = narrate.Check(r.Line, port, Verdicts(ports, g.Colors), true)
 	}
 	line, source := r.Line, "model"
 	if err != nil {
@@ -176,10 +176,10 @@ func errText(err error) string {
 	return err.Error()
 }
 
-func (g *Guardian) narratePorts(ports []reconcile.Port) []narrate.Port {
+func NarratePorts(ports []reconcile.Port, colors map[int]string) []narrate.Port {
 	var out []narrate.Port
 	for _, p := range ports {
-		verdict, d := facts(p.Num, ports, g.Colors[p.Num])
+		verdict, d := facts(p.Num, ports, colors[p.Num])
 		np := narrate.Port{Num: p.Num, Position: d.Position + " from the left", Device: d.Downstream, Verdict: narrate.SpokenVerdict(verdict)}
 		if p.Camera == "" {
 			np.Position = "not visible to the camera"

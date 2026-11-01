@@ -836,6 +836,9 @@ func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPa
 	if nb, err := newNetbox(); err == nil {
 		sc.Tags = nb
 	}
+	if key := os.Getenv("OWL_META_API_KEY"); key != "" {
+		sc.Narrator = &narrate.Client{URL: narrate.DefaultURL, Model: narrate.DefaultModel, Key: key, HTTP: &http.Client{Timeout: 10 * time.Second}}
+	}
 	srv, err := ui.New(sc)
 	if err != nil {
 		return err

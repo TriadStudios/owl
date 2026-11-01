@@ -33,7 +33,7 @@ const (
 	quietBeforeIdle = 10 * time.Second
 	maxUnclear      = 3
 	narrateBudget   = 4 * time.Second
-	missLine        = "Sorry, which port?"
+	MissLine        = "Sorry, which port?"
 	closing         = "Okay. I'll keep watching."
 )
 
@@ -137,7 +137,7 @@ func (g *Guardian) Step(now time.Time) {
 		case now.Sub(g.lastMotion) >= sleepAfter:
 			g.Robot.Home()
 			g.state = Sleep
-		case g.heard == "" && hand != 0 && !g.told[hand] && g.verdicts(g.ports())[hand] != "do not touch":
+		case g.heard == "" && hand != 0 && !g.told[hand] && Verdicts(g.ports(), g.Colors)[hand] != "do not touch":
 			g.say(g.handLine(hand))
 			g.state = Answer
 		case g.heard == "":
@@ -145,7 +145,7 @@ func (g *Guardian) Step(now time.Time) {
 		default:
 			line, port, bye := g.respond(g.heard)
 			g.unclear++
-			if port != 0 || bye || line != missLine {
+			if port != 0 || bye || line != MissLine {
 				g.unclear = 0
 			}
 			if g.unclear >= maxUnclear {
@@ -170,7 +170,7 @@ var (
 	numberWord = map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "to": 2, "too": 2, "for": 4}
 )
 
-func spokenPort(text string) int {
+func SpokenPort(text string) int {
 	if m := portNumber.FindStringSubmatch(text); m != nil {
 		if n, err := strconv.Atoi(m[1]); err == nil {
 			return n
@@ -181,7 +181,7 @@ func spokenPort(text string) int {
 }
 
 func ParseUtterance(text string, ports []reconcile.Port) int {
-	if n := spokenPort(text); n != 0 {
+	if n := SpokenPort(text); n != 0 {
 		return n
 	}
 	words := strings.Fields(text)

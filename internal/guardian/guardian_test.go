@@ -135,7 +135,7 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 	g := awake(Ask, robot, &fakeCamera{}, now)
 	g.heard = "just looking"
 	g.Step(now.Add(time.Second))
-	if g.State() != Ask || g.heard != "port 3" || robot.said[0] != missLine {
+	if g.State() != Ask || g.heard != "port 3" || robot.said[0] != MissLine {
 		t.Fatalf("unparsed utterance: state %s said %q heard %q, want a re-ask", g.State(), robot.said, g.heard)
 	}
 	g.heard = "Okay, thank you."
@@ -229,7 +229,7 @@ func TestNarratedLinesAreCheckedOrReplacedByTheTemplate(t *testing.T) {
 		{"model picks another port than the one said", "pulling port 2", fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe."}}, template},
 		{"model slower than the budget", "pulling port 2", fakeNarrator{delay: narrateBudget + time.Second, reply: narrate.Reply{Port: 2, Line: "Port 2, do not touch."}}, template},
 		{"model error", "pulling port 2", fakeNarrator{err: errors.New("503")}, template},
-		{"model chat with a verdict and no port", "hello", fakeNarrator{reply: narrate.Reply{Line: "Hi! Everything here is safe."}}, missLine},
+		{"model chat with a verdict and no port", "hello", fakeNarrator{reply: narrate.Reply{Line: "Hi! Everything here is safe."}}, MissLine},
 		{"model chat", "hello", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "Hi! Which cable are you after?"}}, "Hi! Which cable are you after?"},
 		{"a device name doesn't override the model", "the NAS please", fakeNarrator{reply: narrate.Reply{Unclear: true, Line: "The one on the left or the right?"}}, "The one on the left or the right?"},
 	}

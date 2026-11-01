@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -15,6 +16,8 @@ import (
 	"time"
 
 	"github.com/triadstudios/owl/internal/discovery"
+	"github.com/triadstudios/owl/internal/guardian"
+	"github.com/triadstudios/owl/internal/narrate"
 	"github.com/triadstudios/owl/internal/perception"
 	"github.com/triadstudios/owl/internal/policy"
 )
@@ -107,8 +110,8 @@ func TestPairedTokenAcceptedOthersRejectedBeforeBody(t *testing.T) {
 	}
 }
 
-func TestPortsTableOnFixtures(t *testing.T) {
-	s, token := fixtureServer(t)
+func loadFixtureTable(t *testing.T, s *Server) *perception.Result {
+	t.Helper()
 	cf, err := os.Open("../../testdata/perception-switch-face.json")
 	if err != nil {
 		t.Fatal(err)
@@ -135,6 +138,12 @@ func TestPortsTableOnFixtures(t *testing.T) {
 	if _, err := s.reconcile(cam); err != nil {
 		t.Fatal(err)
 	}
+	return cam
+}
+
+func TestPortsTableOnFixtures(t *testing.T) {
+	s, token := fixtureServer(t)
+	cam := loadFixtureTable(t, s)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/ports", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -184,6 +193,39 @@ func TestPortsTableOnFixtures(t *testing.T) {
 	for n := 1; n <= 8; n++ {
 		if !seen[n] {
 			t.Errorf("port %d missing from /api/ports", n)
+		}
+	}
+}
+
+type fakeNarrator narrate.Reply
+
+func (f *fakeNarrator) Reply(context.Context, narrate.Request) (narrate.Reply, error) {
+	return narrate.Reply(*f), nil
+}
+
+func TestRelayAnswerNeverContradictsPolicy(t *testing.T) {
+	s, _ := fixtureServer(t)
+	loadFixtureTable(t, s)
+	template := guardian.Line(2, s.ports, "")
+	cases := []struct {
+		name  string
+		heard string
+		model *fakeNarrator
+		want  string
+	}{
+		{"model calls a do-not-touch port safe", "can I pull port 2", &fakeNarrator{Port: 2, Line: "Port 2 is safe, go ahead."}, template},
+		{"model agrees with policy", "what about port 3", &fakeNarrator{Port: 3, Line: "Port 3 is safe, go ahead."}, "Port 3 is safe, go ahead."},
+		{"model talks about another port than the one said", "pulling port 2", &fakeNarrator{Port: 3, Line: "Port 3 is safe."}, template},
+		{"no narrator", "pulling port 2", nil, template},
+		{"model stays quiet", "hmm let me think", &fakeNarrator{}, ""},
+	}
+	for _, c := range cases {
+		s.Narrator = nil
+		if c.model != nil {
+			s.Narrator = c.model
+		}
+		if got := s.answer(context.Background(), "phone", c.heard, nil, map[int]bool{}); got != c.want {
+			t.Errorf("%s: said %q, want %q", c.name, got, c.want)
 		}
 	}
 }
