@@ -62,12 +62,32 @@ final class ARScene: ObservableObject {
     }
 
     func pin(_ overlay: Overlay, from geometry: FrameGeometry) {
-        let all = overlay.polygons.flatMap(\.points).compactMap(Self.point)
-        let depths = all.compactMap(geometry.depthAt).sorted()
-        let fallback = depths.isEmpty ? 0.5 : depths[depths.count / 2]
+        // Depth at polygon corners lands in port holes, on cables or on the table behind, so measure only near
+        // each port box's middle and put everything on the switch face: a vertical plane through the port row.
+        var centers: [(port: Int, point: SIMD3<Float>)] = []
+        for polygon in overlay.polygons where !centers.contains(where: { $0.port == polygon.port }) {
+            let pts = polygon.points.compactMap(Self.point)
+            guard !pts.isEmpty else { continue }
+            let mid = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).reduce(0, +) / Double(pts.count))
+            let depths = ([mid] + pts.map { CGPoint(x: (mid.x + $0.x) / 2, y: (mid.y + $0.y) / 2) }).compactMap(geometry.depthAt).sorted()
+            guard !depths.isEmpty else { continue }
+            let (origin, direction) = geometry.ray(mid)
+            centers.append((polygon.port, origin + direction * depths[depths.count / 2]))
+        }
+        centers.sort { $0.port < $1.port }
+        let eye = geometry.ray(CGPoint(x: 0.5, y: 0.5))
+        let anchor = centers.isEmpty ? eye.0 + eye.1 * 0.5 : centers.map(\.point).reduce(.zero, +) / Float(centers.count)
+        let toEye = eye.0 - anchor
+        var normal = normalize(SIMD3(toEye.x, 0, toEye.z))
+        if let first = centers.first, let last = centers.last, simd_length(last.point - first.point) > 0.03 {
+            let row = last.point - first.point
+            normal = normalize(simd_cross(SIMD3(row.x, 0, row.z), [0, 1, 0]))
+        }
         func world(_ p: CGPoint) -> SIMD3<Float> {
             let (origin, direction) = geometry.ray(p)
-            return origin + direction * (geometry.depthAt(p) ?? fallback)
+            let facing = simd_dot(normal, direction)
+            let t = abs(facing) < 1e-4 ? 0.5 : simd_dot(normal, anchor - origin) / facing
+            return origin + direction * (t > 0 ? t : 0.5)
         }
         pins = overlay.polygons.map { polygon in
             Pin(port: polygon.port, color: polygon.color, points: polygon.points.compactMap(Self.point).map(world))
