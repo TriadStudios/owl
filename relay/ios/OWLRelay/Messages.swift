@@ -15,6 +15,7 @@ struct OverlayLabel: Decodable {
 struct Overlay: Decodable {
     var polygons: [OverlayPolygon] = []
     var labels: [OverlayLabel] = []
+    var touching: Int?
 }
 
 enum ServerMessage: Decodable {
@@ -22,7 +23,7 @@ enum ServerMessage: Decodable {
     case say(String)
     case unknown
 
-    private enum Keys: String, CodingKey { case type, polygons, labels, text }
+    private enum Keys: String, CodingKey { case type, polygons, labels, touching, text }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: Keys.self)
@@ -30,7 +31,8 @@ enum ServerMessage: Decodable {
         case "overlay":
             self = .overlay(Overlay(
                 polygons: try c.decodeIfPresent([OverlayPolygon].self, forKey: .polygons) ?? [],
-                labels: try c.decodeIfPresent([OverlayLabel].self, forKey: .labels) ?? []
+                labels: try c.decodeIfPresent([OverlayLabel].self, forKey: .labels) ?? [],
+                touching: try c.decodeIfPresent(Int.self, forKey: .touching)
             ))
         case "say":
             self = .say(try c.decode(String.self, forKey: .text))

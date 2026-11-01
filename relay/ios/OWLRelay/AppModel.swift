@@ -278,8 +278,11 @@ final class AppModel: ObservableObject {
         switch msg {
         case .overlay(let o):
             let aimedBefore = glassesAimed
+            let handBefore = overlay.touching
             overlay = o
-            if source == .glasses, let aimed = glassesAimed, aimed.verdict == .doNotTouch, aimed.port != aimedBefore?.port {
+            if let hand = o.touching, hand != handBefore, o.labels.first(where: { $0.port == hand })?.verdict == .doNotTouch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            } else if o.touching == nil, source == .glasses, let aimed = glassesAimed, aimed.verdict == .doNotTouch, aimed.port != aimedBefore?.port {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
             }
             if let sent {

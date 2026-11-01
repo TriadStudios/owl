@@ -64,6 +64,7 @@ extension Overlay {
         [
             "polygons": polygons.map { ["port": $0.port, "color": $0.color, "points": $0.points] },
             "labels": labels.map { ["port": $0.port, "text": $0.text, "verdict": $0.verdict.rawValue] },
+            "touching": touching ?? 0,
         ]
     }
 }

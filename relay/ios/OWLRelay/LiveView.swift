@@ -23,9 +23,9 @@ struct LiveView: View {
                 }
                 .pickerStyle(.segmented)
                 if model.source == .phone {
-                    PhoneAim(scene: model.scene)
+                    PhoneAim(scene: model.scene, overlay: model.overlay)
                 } else {
-                    AimBanner(label: model.glassesAimed, hasTags: !model.overlay.labels.isEmpty, hint: "Look straight at a port")
+                    HandOrAim(overlay: model.overlay, aimed: model.glassesAimed, hasTags: !model.overlay.labels.isEmpty, hint: "Look straight at a port")
                 }
                 ForEach(model.source == .glasses || model.scene.reachyAt == nil ? model.toasts : []) { toast in
                     Text(toast.text)
@@ -62,14 +62,41 @@ struct LiveView: View {
 
 struct PhoneAim: View {
     @ObservedObject var scene: ARScene
+    let overlay: Overlay
 
     var body: some View {
-        AimBanner(label: scene.aimed, hasTags: !scene.labels.isEmpty, hint: "Aim the dot at a port")
+        HandOrAim(overlay: overlay, aimed: scene.aimed, hasTags: !scene.labels.isEmpty, hint: "Aim the dot at a port")
+    }
+}
+
+struct HandOrAim: View {
+    let overlay: Overlay
+    let aimed: OverlayLabel?
+    let hasTags: Bool
+    let hint: String
+
+    var body: some View {
+        if let hand = overlay.touching, let label = overlay.labels.first(where: { $0.port == hand }) {
+            AimBanner(label: label, title: "HAND ON PORT", hasTags: true, hint: hint)
+        } else {
+            VStack(spacing: 6) {
+                if hasTags {
+                    Label(overlay.labels.isEmpty ? "Couldn't read the hand · using the aim dot" : "No hand on a port · using the aim dot", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black.opacity(0.75), in: Capsule())
+                }
+                AimBanner(label: aimed, title: "PORT", hasTags: hasTags, hint: hint)
+            }
+        }
     }
 }
 
 struct AimBanner: View {
     let label: OverlayLabel?
+    let title: String
     let hasTags: Bool
     let hint: String
 
@@ -78,7 +105,7 @@ struct AimBanner: View {
             HStack(spacing: 10) {
                 Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("PORT \(label.port) · \(label.verdict.title.uppercased())").font(.headline)
+                    Text("\(title) \(label.port) · \(label.verdict.title.uppercased())").font(.headline)
                     let detail = label.text.hasPrefix("\(label.port) ") ? String(label.text.dropFirst("\(label.port) ".count)) : label.text
                     if detail != "\(label.port)" && !detail.isEmpty {
                         Text(detail).font(.subheadline).lineLimit(1)
