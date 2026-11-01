@@ -94,7 +94,7 @@ def add_spend(today: str) -> None:
         os.replace(tmp, SPEND_PATH)
 
 
-def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str], prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
+def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str]) -> dict[str, list[Instance]]:
     key = env.get("OWL_META_API_KEY", "").strip()
     if not key:
         raise RuntimeError("OWL_META_API_KEY missing from .env.local")
@@ -148,14 +148,14 @@ def meta_api(image_bytes: bytes, height: int, width: int, env: dict[str, str], p
         return text, True
 
     # Each prompt is its own API round trip, so asking them together cuts a pass to its slowest prompt.
-    with ThreadPoolExecutor(max_workers=len(prompts)) as pool:
-        fetched = dict(zip(prompts, pool.map(fetch, prompts)))
+    with ThreadPoolExecutor(max_workers=len(PROMPTS)) as pool:
+        fetched = dict(zip(PROMPTS, pool.map(fetch, PROMPTS)))
     raw = {prompt: text for prompt, (text, _) in fetched.items()}
     billed = sum(paid for _, paid in fetched.values())
-    print(f"billed {billed} images this run, {len(prompts) - billed} prompts from cache")
+    print(f"billed {billed} images this run, {len(PROMPTS) - billed} prompts from cache")
 
     results: dict[str, list[Instance]] = {}
-    for prompt in prompts:
+    for prompt in PROMPTS:
         parser = image_segmentation_format().create_parser()
         parser.push(raw[prompt])
         parsed = parser.finish(CompletedOutcome()).result
@@ -192,7 +192,7 @@ def local_model():
     return processor, model
 
 
-def local(rgb: np.ndarray, prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
+def local(rgb: np.ndarray) -> dict[str, list[Instance]]:
     import torch
 
     height, width = rgb.shape[:2]
@@ -200,7 +200,7 @@ def local(rgb: np.ndarray, prompts: tuple[str, ...] = PROMPTS) -> dict[str, list
     small = cv2.resize(rgb, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else rgb
     processor, model = local_model()
     results: dict[str, list[Instance]] = {}
-    for prompt in prompts:
+    for prompt in PROMPTS:
         inputs = processor(images=small, text=prompt, return_tensors="pt").to("cuda", torch.float16)
         with torch.inference_mode():
             outputs = model(**inputs)
@@ -305,16 +305,16 @@ def backend(env: dict[str, str]) -> str:
     return name
 
 
-def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str], prompts: tuple[str, ...] = PROMPTS) -> dict[str, list[Instance]]:
+def segment(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> dict[str, list[Instance]]:
     if backend(env) == "local":
-        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), prompts)
-    return meta_api(image_bytes, image.shape[0], image.shape[1], env, prompts)
+        return local(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    return meta_api(image_bytes, image.shape[0], image.shape[1], env)
 
 
 def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> list[int]:
     height, width = image.shape[:2]
     try:
-        full_row = port_row(segment(image_bytes, image, env, SOCKET_PROMPTS))
+        full_row = port_row(segment(image_bytes, image, env))
     except ValueError as error:
         raise ValueError(f"cannot place the port-row crop: {error}") from error
     # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
