@@ -7,15 +7,27 @@ struct LiveView: View {
 
     var body: some View {
         ZStack {
-            ARViewContainer(view: model.scene.view)
-                .ignoresSafeArea()
-                .onTapGesture(coordinateSpace: .local) { selected = model.scene.port(at: $0) }
-            PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [], speech: model.toasts.last?.text)
-                .ignoresSafeArea()
+            if model.source == .phone {
+                ARViewContainer(view: model.scene.view)
+                    .ignoresSafeArea()
+                    .onTapGesture(coordinateSpace: .local) { selected = model.scene.port(at: $0) }
+                PinnedTags(scene: model.scene, selected: selected, ports: model.ports?.ports ?? [], speech: model.toasts.last?.text)
+                    .ignoresSafeArea()
+            } else {
+                GlassesFeed(glasses: model.glasses, overlay: model.overlay)
+            }
             VStack(spacing: 10) {
-                LiveStatus(scene: model.scene)
-                AimBanner(scene: model.scene)
-                ForEach(model.scene.reachyAt == nil ? model.toasts : []) { toast in
+                LiveStatus(scene: model.scene, glasses: model.glasses)
+                Picker("Camera", selection: $model.source) {
+                    ForEach(Source.allCases) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                if model.source == .phone {
+                    PhoneAim(scene: model.scene)
+                } else {
+                    AimBanner(label: model.glassesAimed, hasTags: !model.overlay.labels.isEmpty, hint: "Look straight at a port")
+                }
+                ForEach(model.source == .glasses || model.scene.reachyAt == nil ? model.toasts : []) { toast in
                     Text(toast.text)
                         .font(.callout)
                         .padding(12)
@@ -48,11 +60,21 @@ struct LiveView: View {
     }
 }
 
-struct AimBanner: View {
+struct PhoneAim: View {
     @ObservedObject var scene: ARScene
 
     var body: some View {
-        if let label = scene.aimed {
+        AimBanner(label: scene.aimed, hasTags: !scene.labels.isEmpty, hint: "Aim the dot at a port")
+    }
+}
+
+struct AimBanner: View {
+    let label: OverlayLabel?
+    let hasTags: Bool
+    let hint: String
+
+    var body: some View {
+        if let label {
             HStack(spacing: 10) {
                 Image(systemName: label.verdict == .doNotTouch ? "hand.raised.fill" : "info.circle.fill")
                 VStack(alignment: .leading, spacing: 1) {
@@ -69,8 +91,8 @@ struct AimBanner: View {
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, minHeight: 48)
             .background(label.verdict.color, in: RoundedRectangle(cornerRadius: 14))
-        } else if !scene.labels.isEmpty {
-            Text("Aim the dot at a port")
+        } else if hasTags {
+            Text(hint)
                 .font(.subheadline.bold())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
@@ -83,6 +105,7 @@ struct AimBanner: View {
 struct LiveStatus: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var scene: ARScene
+    @ObservedObject var glasses: Glasses
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -121,7 +144,12 @@ struct LiveStatus: View {
 
     private func title(at now: Date) -> String {
         if !model.connected { return "Can't reach the OWL server" }
-        if !scene.tracking { return "Starting the camera…" }
+        if model.source == .glasses {
+            if !glasses.registered { return "Glasses not connected" }
+            if !glasses.streaming { return "Starting the glasses camera…" }
+        } else if !scene.tracking {
+            return "Starting the camera…"
+        }
         if let since = model.readingSince {
             return "Reading the switch… \(Int(now.timeIntervalSince(since))) s"
         }
@@ -130,13 +158,71 @@ struct LiveStatus: View {
 
     private var hint: String {
         if !model.connected { return "Join the closet Wi-Fi to reach \(model.active?.displayName ?? "the server")" }
-        if !scene.tracking { return "Move the phone slowly so AR can find its place" }
+        if model.source == .glasses {
+            if !glasses.registered { return glasses.problem ?? "Connect them in Settings, then come back here." }
+            if !glasses.streaming { return glasses.problem ?? "Put the glasses on and keep them connected in Meta AI." }
+        } else if !scene.tracking {
+            return "Move the phone slowly so AR can find its place"
+        }
         let trip = model.roundTrip.map { String(format: " in %.0f s", $0) } ?? ""
         switch model.lastPorts {
         case nil: return "Hold steady with all 8 ports in view. The first look takes about 20 s."
         case 0?: return "Last look found no ports\(trip). Hold steady, square on, all 8 ports in view."
-        case let n?: return "Last look found \(n) port\(n == 1 ? "" : "s")\(trip). Tap a port for its devices."
+        case let n?:
+            let next = model.source == .glasses ? "Look at a port to check it." : "Tap a port for its devices."
+            return "Last look found \(n) port\(n == 1 ? "" : "s")\(trip). \(next)"
         }
+    }
+}
+
+struct GlassesFeed: View {
+    @ObservedObject var glasses: Glasses
+    let overlay: Overlay
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            if let frame = glasses.frame {
+                Image(uiImage: frame)
+                    .resizable()
+                    .scaledToFit()
+                    .overlay { FlatTags(overlay: overlay) }
+            } else {
+                Image(systemName: "eyeglasses")
+                    .font(.system(size: 64))
+                    .foregroundStyle(.white.opacity(0.4))
+            }
+        }
+    }
+}
+
+struct FlatTags: View {
+    let overlay: Overlay
+
+    var body: some View {
+        Canvas { ctx, size in
+            var tagged = Set<Int>()
+            for polygon in overlay.polygons {
+                let pts = polygon.points.compactMap { $0.count == 2 ? CGPoint(x: $0[0] * size.width, y: $0[1] * size.height) : nil }
+                guard pts.count > 2 else { continue }
+                var path = Path()
+                path.addLines(pts)
+                path.closeSubpath()
+                let color = Color(hex: polygon.color)
+                ctx.fill(path, with: .color(color.opacity(0.25)))
+                ctx.stroke(path, with: .color(color), lineWidth: 2)
+                guard tagged.insert(polygon.port).inserted else { continue }
+                let resolved = ctx.resolve(Text("\(polygon.port)").font(.caption.bold()).foregroundStyle(.white))
+                let box = resolved.measure(in: size)
+                let top = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).min()!)
+                let rect = CGRect(x: top.x - box.width / 2 - 4, y: top.y - box.height - 8, width: box.width + 8, height: box.height + 4)
+                ctx.fill(Path(roundedRect: rect, cornerRadius: 4), with: .color(color))
+                ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.midY))
+            }
+            let dot = CGRect(x: size.width / 2 - 11, y: size.height / 2 - 11, width: 22, height: 22)
+            ctx.stroke(Path(ellipseIn: dot), with: .color(.white), lineWidth: 3)
+        }
+        .allowsHitTesting(false)
     }
 }
 

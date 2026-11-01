@@ -11,6 +11,7 @@ struct OWLRelayApp: App {
                 .tint(Theme.accent)
                 .preferredColorScheme(.dark)
                 .onAppear { model.start() }
+                .onOpenURL { url in Task { await model.glasses.handle(url) } }
         }
     }
 }

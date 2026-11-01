@@ -1,6 +1,13 @@
 import AVFoundation
 import SwiftUI
 
+enum Source: String, CaseIterable, Identifiable {
+    case phone = "Phone"
+    case glasses = "Glasses"
+
+    var id: String { rawValue }
+}
+
 struct Toast: Identifiable, Equatable {
     let id = UUID()
     let text: String
@@ -29,7 +36,20 @@ final class AppModel: ObservableObject {
     @Published var fps: Int {
         didSet {
             camera.fps = fps
+            glassesCamera.fps = fps
             UserDefaults.standard.set(camera.fps, forKey: "fps")
+        }
+    }
+    @Published var source = Source.phone {
+        didSet {
+            guard source != oldValue else { return }
+            (oldValue == .phone ? camera as FrameSource : glassesCamera).stop()
+            overlay = Overlay()
+            scene.clear()
+            lastPorts = nil
+            readingSince = nil
+            sent = nil
+            if live { startLive() }
         }
     }
     @Published var voice: Bool {
@@ -38,6 +58,8 @@ final class AppModel: ObservableObject {
 
     let camera = ARCamera()
     lazy var scene = ARScene(session: camera.session)
+    let glasses = Glasses()
+    lazy var glassesCamera = GlassesCamera(glasses: glasses)
     private let relay = RelayClient()
     private let speechIn: SpeechIn = AppleSpeechIn()
     private let speechOut: SpeechOut = AppleSpeechOut()
@@ -46,6 +68,27 @@ final class AppModel: ObservableObject {
     private var frameNumber = 0
     private let recorder = DebugRecorder()
     private var timeout: Task<Void, Never>?
+    private var live = false
+
+    private var activeSource: FrameSource {
+        source == .phone ? camera : glassesCamera
+    }
+
+    var glassesAimed: OverlayLabel? {
+        let center = CGPoint(x: 0.5, y: 0.5)
+        var best: (port: Int, distance: CGFloat)?
+        for polygon in overlay.polygons {
+            let pts = polygon.points.compactMap { $0.count == 2 ? CGPoint(x: $0[0], y: $0[1]) : nil }
+            guard pts.count > 2 else { continue }
+            var path = Path()
+            path.addLines(pts)
+            path.closeSubpath()
+            let mid = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).reduce(0, +) / Double(pts.count))
+            let distance = path.contains(center) ? 0 : hypot(mid.x - center.x, mid.y - center.y)
+            if distance < 0.08, distance < (best?.distance ?? .infinity) { best = (polygon.port, distance) }
+        }
+        return best.flatMap { b in overlay.labels.first { $0.port == b.port } }
+    }
 
     var active: Pairing? {
         pairings.first { $0.id == activeID }
@@ -66,7 +109,7 @@ final class AppModel: ObservableObject {
             Task { @MainActor in
                 self?.connected = up
                 self?.readingSince = nil
-                self?.camera.ready = true
+                self?.activeSource.ready = true
             }
         }
         relay.onMessage = { [weak self] msg in
@@ -74,6 +117,10 @@ final class AppModel: ObservableObject {
         }
         camera.onFrame = { [weak self] jpeg, geometry in
             Task { @MainActor in self?.send(jpeg, geometry) }
+        }
+        glassesCamera.fps = fps
+        glassesCamera.onFrame = { [weak self] jpeg, _ in
+            Task { @MainActor in self?.send(jpeg, nil) }
         }
     }
 
@@ -95,7 +142,7 @@ final class AppModel: ObservableObject {
         timeout?.cancel()
         timeout = Task { [weak self] in
             try? await Task.sleep(for: .seconds(60))
-            if !Task.isCancelled { self?.camera.ready = true }
+            if !Task.isCancelled { self?.activeSource.ready = true }
         }
     }
 
@@ -176,13 +223,20 @@ final class AppModel: ObservableObject {
     }
 
     func startLive() {
+        live = true
+        activeSource.ready = true
+        if source == .glasses {
+            glassesCamera.start()
+            return
+        }
         AVCaptureDevice.requestAccess(for: .video) { granted in
             if granted { Task { @MainActor in self.camera.start() } }
         }
     }
 
     func stopLive() {
-        camera.stop()
+        live = false
+        activeSource.stop()
     }
 
     func beginTalk() {
@@ -223,7 +277,11 @@ final class AppModel: ObservableObject {
     private func handle(_ msg: ServerMessage) {
         switch msg {
         case .overlay(let o):
+            let aimedBefore = glassesAimed
             overlay = o
+            if source == .glasses, let aimed = glassesAimed, aimed.verdict == .doNotTouch, aimed.port != aimedBefore?.port {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
             if let sent {
                 if let geometry = sent.geometry { scene.pin(o, from: geometry) }
                 roundTrip = Date().timeIntervalSince(sent.at)
@@ -235,7 +293,7 @@ final class AppModel: ObservableObject {
             let found = Set(o.polygons.map(\.port)).count
             let hadPorts = (lastPorts ?? 0) > 0
             lastPorts = found
-            camera.ready = true
+            activeSource.ready = true
             if !hadPorts && found > 0 {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
