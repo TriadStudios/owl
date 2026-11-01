@@ -1,0 +1,25 @@
+name: ios
+
+on:
+  push:
+    branches: [main]
+    paths: ['relay/ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version
+      # Unsigned: the owner signs and installs on their own Mac, so no certificates live in the repo or in CI.
+      - run: >
+          xcodebuild -project relay/ios/OWLRelay.xcodeproj -scheme OWLRelay -configuration Debug
+          -destination 'generic/platform=iOS' -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO build
+      - run: ditto -c -k --keepParent build/Build/Products/Debug-iphoneos/OWLRelay.app OWLRelay.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OWLRelay
+          path: OWLRelay.zip
+          retention-days: 3
