@@ -22,6 +22,9 @@ final class AppModel: ObservableObject {
     @Published var roundTrip: TimeInterval?
     @Published var readingSince: Date?
     @Published var lastPorts: Int?
+    @Published var recording = false {
+        didSet { recording ? recorder.start() : recorder.stop() }
+    }
     @Published var talking = false
     @Published var fps: Int {
         didSet {
@@ -39,7 +42,9 @@ final class AppModel: ObservableObject {
     private let speechIn: SpeechIn = AppleSpeechIn()
     private let speechOut: SpeechOut = AppleSpeechOut()
     private var started = false
-    private var sent: (geometry: FrameGeometry?, at: Date)?
+    private var sent: (geometry: FrameGeometry?, at: Date, number: Int)?
+    private var frameNumber = 0
+    private let recorder = DebugRecorder()
     private var timeout: Task<Void, Never>?
 
     var active: Pairing? {
@@ -87,7 +92,16 @@ final class AppModel: ObservableObject {
 
     // One frame in flight at a time, so each overlay is known to belong to the camera pose it was sent from.
     private func send(_ jpeg: Data, _ geometry: FrameGeometry?) {
-        sent = (geometry, Date())
+        frameNumber += 1
+        sent = (geometry, Date(), frameNumber)
+        if recorder.recording {
+            let n = String(format: "%04d", frameNumber)
+            recorder.write("\(n)-frame.jpg", jpeg)
+            if let geometry {
+                recorder.json("\(n)-geometry.json", geometry.debug)
+                recorder.write("\(n)-depth.f32", geometry.depthData)
+            }
+        }
         readingSince = sent?.at
         relay.sendFrame(jpeg)
         timeout?.cancel()
@@ -198,6 +212,21 @@ final class AppModel: ObservableObject {
         speechIn.stop()
     }
 
+    private func record(_ overlay: Overlay, _ number: Int) {
+        let n = String(format: "%04d", number)
+        recorder.json("\(n)-overlay.json", ["overlay": overlay.debug, "fit": scene.lastFit, "round_trip_s": roundTrip ?? 0])
+        for delay in [1, 4] {
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(delay))
+                guard let self, recorder.recording else { return }
+                scene.capture { [recorder] jpeg, info in
+                    if let jpeg { recorder.write("\(n)-view-\(delay)s.jpg", jpeg) }
+                    recorder.json("\(n)-view-\(delay)s.json", info)
+                }
+            }
+        }
+    }
+
     private func handle(_ msg: ServerMessage) {
         switch msg {
         case .overlay(let o):
@@ -206,6 +235,7 @@ final class AppModel: ObservableObject {
             if let sent {
                 if let geometry = sent.geometry { scene.pin(o, from: geometry) }
                 roundTrip = Date().timeIntervalSince(sent.at)
+                if recorder.recording { record(o, sent.number) }
                 self.sent = nil
             }
             timeout?.cancel()

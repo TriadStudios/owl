@@ -73,6 +73,13 @@ struct LiveStatus: View {
                     Text(hint).font(.caption).foregroundStyle(.white.opacity(0.75))
                 }
                 Spacer(minLength: 0)
+                Button { model.recording.toggle() } label: {
+                    Image(systemName: model.recording ? "record.circle.fill" : "record.circle")
+                        .font(.title2)
+                        .foregroundStyle(model.recording ? .red : .white)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel(model.recording ? "Stop debug recording" : "Start debug recording")
             }
             .foregroundStyle(.white)
             .padding(12)

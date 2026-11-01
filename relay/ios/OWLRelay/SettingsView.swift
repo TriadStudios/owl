@@ -42,6 +42,11 @@ struct SettingsView: View {
                     .frame(minHeight: 44)
                 Toggle("Speak replies", isOn: $model.voice)
                     .frame(minHeight: 44)
+                Button("Delete debug recordings", role: .destructive) {
+                    model.recording = false
+                    DebugRecorder.clear()
+                }
+                .frame(minHeight: 44)
             }
         }
         .navigationTitle("Settings")

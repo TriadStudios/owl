@@ -37,6 +37,7 @@ final class ARScene: ObservableObject {
         let point: SIMD3<Float>
     }
 
+    private(set) var lastFit: [String: Any] = [:]
     private var pins: [Pin] = []
     private var labelPins: [LabelPin] = []
     private var updates: Cancellable?
@@ -99,6 +100,12 @@ final class ARScene: ObservableObject {
             let top = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).min()!)
             return LabelPin(label: label, color: polygon.color, point: world(top))
         }
+        lastFit = [
+            "centers": centers.map { ["port": $0.port, "point": DebugRecorder.vector($0.point)] },
+            "anchor": DebugRecorder.vector(anchor),
+            "normal": DebugRecorder.vector(normal),
+            "pins": pins.map { ["port": $0.port, "points": $0.points.map(DebugRecorder.vector)] },
+        ]
         if let first = labelPins.min(by: { $0.label.port < $1.label.port }), let last = labelPins.max(by: { $0.label.port < $1.label.port }) {
             let along = last.point - first.point
             let side = simd_length(along) > 0.01 ? normalize(SIMD3(along.x, 0, along.z)) : SIMD3<Float>(1, 0, 0)
@@ -122,6 +129,16 @@ final class ARScene: ObservableObject {
         reachy.root.isEnabled = true
         reachy.animate(time: time, facing: camera, speaking: speaking)
         reachyAt = view.project(reachy.head)
+    }
+
+    func capture(_ done: @escaping (Data?, [String: Any]) -> Void) {
+        let info: [String: Any] = [
+            "camera": DebugRecorder.matrix(view.cameraTransform.matrix),
+            "view_size": [view.bounds.width, view.bounds.height],
+            "shapes": shapes.map { ["port": $0.port, "points": $0.points.map { [$0.x, $0.y] }] },
+            "labels": labels.map { ["port": $0.label.port, "at": [$0.at.x, $0.at.y]] },
+        ]
+        view.snapshot(saveToHDR: false) { image in done(image?.jpegData(compressionQuality: 0.7), info) }
     }
 
     func clear() {
