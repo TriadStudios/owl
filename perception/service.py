@@ -40,6 +40,7 @@ MIN_INLIERS = 40
 MIN_AGREE_IOU = 0.3
 MIN_AGREE_PORTS = 3
 MIN_AGREE_SHARE = 0.75
+MIN_REUSED_RECT_PX = 64
 ALIGN_CRITERIA = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1e-5)
 
 app = FastAPI()
@@ -48,30 +49,64 @@ camera_lock = threading.Lock()
 recording: dict[str, object] = {}
 reference: dict[str, np.ndarray] = {}
 last_full_row: dict[str, object] = {}
+last_rect: dict[str, object] = {}
 
 
-def to_frame(x: float, y: float, rect: list[int]) -> list[float]:
-    return [round(x / 2 + rect[0], 1), round(y / 2 + rect[1], 1)]
+def to_frame(x: float, y: float, rect: list[int], scale: float) -> list[float]:
+    return [round(x / scale + rect[0], 1), round(y / scale + rect[1], 1)]
 
 
 def describe(image_bytes: bytes, handheld: bool = False) -> dict[str, object]:
     with analyze_lock:
-        _, results, rect, _ = segment.analyze(image_bytes, segment.load_env(), handheld)
+        env = segment.load_env()
+        gray = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE) if handheld else None
+        reused = moved_row_rect(gray) if handheld else None
         try:
-            row = segment.ports(results)
+            return describe_in(image_bytes, env, handheld, gray, reused)
         except ValueError:
-            moved = from_last_full_row(image_bytes, results, rect) if handheld else None
-            if moved is None:
+            last_rect.clear()
+            if reused is None:
                 raise
-            return moved
-        result = numbered(image_bytes, results, rect, row)
-        if handheld:
-            result["touching"] = segment.touching(row, results[segment.HAND_PROMPT])
-            last_full_row.update(at=time.monotonic(), gray=cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE), result=result)
-        return result
+            # The moved crop missed the row; one fresh placement costs less than dropping the frame.
+            return describe_in(image_bytes, env, handheld, gray, None)
 
 
-def numbered(image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int], row: list[dict[str, object]]) -> dict[str, object]:
+def describe_in(image_bytes: bytes, env: dict[str, str], handheld: bool, gray: np.ndarray | None, rect: list[int] | None) -> dict[str, object]:
+    crop, results, rect, _ = segment.analyze(image_bytes, env, handheld, rect)
+    scale = crop.shape[1] / (rect[2] - rect[0])
+    try:
+        row = segment.ports(results)
+    except ValueError:
+        moved = from_last_full_row(gray, image_bytes, results, rect, scale) if handheld else None
+        if moved is None:
+            raise
+        last_rect.update(at=time.monotonic(), gray=gray, rect=rect)
+        return moved
+    result = numbered(image_bytes, results, rect, scale, row)
+    if handheld:
+        result["touching"] = segment.touching(row, results[segment.HAND_PROMPT])
+        last_full_row.update(at=time.monotonic(), gray=gray, result=result)
+        last_rect.update(at=time.monotonic(), gray=gray, rect=rect)
+    return result
+
+
+def moved_row_rect(gray: np.ndarray) -> list[int] | None:
+    # Finding the row costs a whole-frame SAM pass; while the phone is near where it was, the last crop moved by the camera's motion still holds the row.
+    if not last_rect or time.monotonic() - last_rect["at"] > HANDHELD_REUSE_S:
+        return None
+    to_now = homography(last_rect["gray"], gray)
+    if to_now is None:
+        return None
+    x0, y0, x1, y1 = last_rect["rect"]
+    corners = cv2.perspectiveTransform(np.float32([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]).reshape(-1, 1, 2), to_now).reshape(-1, 2)
+    height, width = gray.shape
+    rect = [max(int(corners[:, 0].min()), 0), max(int(corners[:, 1].min()), 0), min(int(corners[:, 0].max()), width), min(int(corners[:, 1].max()), height)]
+    if rect[2] - rect[0] < MIN_REUSED_RECT_PX or rect[3] - rect[1] < MIN_REUSED_RECT_PX:
+        return None
+    return rect
+
+
+def numbered(image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int], scale: float, row: list[dict[str, object]]) -> dict[str, object]:
     cables = results[segment.CABLE_PROMPT]
     ports = []
     for number, port in enumerate(row, start=1):
@@ -80,17 +115,17 @@ def numbered(image_bytes: bytes, results: dict[str, list[segment.Instance]], rec
         entry = {
             "num": number,
             "occupied": port["occupied"],
-            "box": to_frame(x0, y0, rect) + to_frame(x1, y1, rect),
+            "box": to_frame(x0, y0, rect, scale) + to_frame(x1, y1, rect, scale),
             "color": "#{2:02x}{1:02x}{0:02x}".format(*bgr),
             "confidence": port["score"],
         }
         if port["cable"] is not None:
             contours, _ = cv2.findContours(segment.decode_rle(cables[port["cable"]]["mask_rle"]), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             outline = cv2.approxPolyDP(max(contours, key=cv2.contourArea), POLYGON_EPSILON_PX, True)
-            entry["cable_polygon"] = [to_frame(float(x), float(y), rect) for x, y in outline.reshape(-1, 2)]
+            entry["cable_polygon"] = [to_frame(float(x), float(y), rect, scale) for x, y in outline.reshape(-1, 2)]
         ports.append(entry)
     row_top, row_bottom = row[0]["row_band"]
-    return {"ports": ports, "row": [row_top / 2 + rect[1], row_bottom / 2 + rect[1]], "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
+    return {"ports": ports, "row": [row_top / scale + rect[1], row_bottom / scale + rect[1]], "frame_hash": hashlib.sha256(image_bytes).hexdigest()}
 
 
 def homography(reference: np.ndarray, gray: np.ndarray) -> np.ndarray | None:
@@ -111,11 +146,10 @@ def homography(reference: np.ndarray, gray: np.ndarray) -> np.ndarray | None:
     return to_now
 
 
-def from_last_full_row(image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int]) -> dict[str, object] | None:
+def from_last_full_row(gray: np.ndarray, image_bytes: bytes, results: dict[str, list[segment.Instance]], rect: list[int], scale: float) -> dict[str, object] | None:
     # A hand on the ports hides some of them, so place the row from the last frame that showed all eight, moved to where this frame sees it.
     if not last_full_row or time.monotonic() - last_full_row["at"] > HANDHELD_REUSE_S:
         return None
-    gray = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
     to_now = homography(last_full_row["gray"], gray)
     if to_now is None:
         return None
@@ -132,7 +166,7 @@ def from_last_full_row(image_bytes: bytes, results: dict[str, list[segment.Insta
         if "cable_polygon" in port:
             entry["cable_polygon"] = [[round(float(x), 1), round(float(y), 1)] for x, y in move(port["cable_polygon"])]
         ports.append(entry)
-    in_crop = [{"box": [(b[0] - rect[0]) * 2, (b[1] - rect[1]) * 2, (b[2] - rect[0]) * 2, (b[3] - rect[1]) * 2]} for b in (p["box"] for p in ports)]
+    in_crop = [{"box": [(b[0] - rect[0]) * scale, (b[1] - rect[1]) * scale, (b[2] - rect[0]) * scale, (b[3] - rect[1]) * scale]} for b in (p["box"] for p in ports)]
     # A homography fitted to the wrong features moves the whole row; only trust it where the ports this frame does show sit on the moved boxes.
     try:
         seen = segment.port_row(results)

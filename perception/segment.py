@@ -36,6 +36,7 @@ TIP_ABOVE = 0.5
 TIP_BELOW = 1.5
 TIP_BAND = 0.5
 REACH_STEP = 4
+HANDHELD_CROP_WIDTH = 800
 COPPER_PORTS = 8
 PORT_PALETTE = (
     (75, 25, 230), (75, 180, 60), (25, 225, 255), (200, 130, 0), (48, 130, 245), (180, 30, 145),
@@ -382,7 +383,7 @@ def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> lis
     ]
 
 
-def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
+def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False, rect: list[int] | None = None) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise ValueError("cannot decode image")
@@ -390,7 +391,7 @@ def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> 
 
     if handheld:
         # A handheld camera never sees the ports in the same place twice, so the stored crop of the fixed camera does not apply.
-        rect = place_row(image_bytes, image, env)
+        rect = rect or place_row(image_bytes, image, env)
     else:
         if not ROI_PATH.exists():
             rect = place_row(image_bytes, image, env)
@@ -402,8 +403,10 @@ def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False) -> 
             raise ValueError(f"{ROI_PATH.name} was made for {roi['frame_size']} frames, this one is {[height, width]}; delete it to recompute")
         rect = roi["rect"]
     x0, y0, x1, y1 = rect
-    crop = cv2.resize(image[y0:y1, x0:x1], None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    # Handheld frames go to the API every few seconds, and a JPEG of the 2x crop uploads in a fraction of the PNG's time.
+    # The API's time grows with the image, and a handheld crop of a near switch is already sharp at a fraction of 2x.
+    scale = min(2.0, HANDHELD_CROP_WIDTH / (x1 - x0)) if handheld else 2.0
+    crop = cv2.resize(image[y0:y1, x0:x1], None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC if scale > 1 else cv2.INTER_AREA)
+    # Handheld frames go to the API every few seconds, and a JPEG of the crop uploads in a fraction of the PNG's time.
     ok, encoded = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 92]) if handheld else cv2.imencode(".png", crop)
     if not ok:
         raise ValueError("failed to encode the port-row crop")
