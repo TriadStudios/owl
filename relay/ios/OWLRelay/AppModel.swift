@@ -242,10 +242,18 @@ final class AppModel: ObservableObject {
     func beginTalk() {
         guard !talking else { return }
         talking = true
-        let relay = relay
-        speechIn.start { text in
-            relay.sendUtterance(text)
+        let failure = speechIn.start { [weak self] text in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let text {
+                    self.relay.sendUtterance(text)
+                    self.show("You: \(text)")
+                } else {
+                    self.show("Didn't catch that")
+                }
+            }
         }
+        if let failure { show("Can't listen: \(failure)") }
     }
 
     func endTalk() {
@@ -302,16 +310,20 @@ final class AppModel: ObservableObject {
             }
         case .say(let text):
             if voice { speechOut.say(text) }
-            let toast = Toast(text: text)
-            toasts.append(toast)
-            scene.speaking = true
-            Task {
-                try? await Task.sleep(for: .seconds(5))
-                toasts.removeAll { $0.id == toast.id }
-                scene.speaking = !toasts.isEmpty
-            }
+            show(text)
         case .unknown:
             break
+        }
+    }
+
+    private func show(_ text: String) {
+        let toast = Toast(text: text)
+        toasts.append(toast)
+        scene.speaking = true
+        Task {
+            try? await Task.sleep(for: .seconds(5))
+            toasts.removeAll { $0.id == toast.id }
+            scene.speaking = !toasts.isEmpty
         }
     }
 }

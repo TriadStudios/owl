@@ -2,7 +2,7 @@ import AVFoundation
 import Speech
 
 protocol SpeechIn: AnyObject {
-    func start(onFinal: @escaping (String) -> Void)
+    func start(onFinal: @escaping (String?) -> Void) -> String?
     func stop()
 }
 
@@ -21,29 +21,36 @@ final class AppleSpeechIn: SpeechIn {
         AVAudioApplication.requestRecordPermission { _ in }
     }
 
-    func start(onFinal: @escaping (String) -> Void) {
-        guard task == nil, let recognizer, recognizer.isAvailable else { return }
-        let request = SFSpeechAudioBufferRecognitionRequest()
+    func start(onFinal: @escaping (String?) -> Void) -> String? {
+        guard task == nil else { return "still finishing the last question" }
+        guard SFSpeechRecognizer.authorizationStatus() == .authorized else { return "speech recognition is off for OWL Relay in Settings" }
+        guard AVAudioApplication.shared.recordPermission == .granted else { return "the microphone is off for OWL Relay in Settings" }
+        guard let recognizer, recognizer.isAvailable else { return "speech recognition is unavailable right now" }
         let input = engine.inputNode
-        input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { buffer, _ in
+        let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0 else { return "no microphone input" }
+        let request = SFSpeechAudioBufferRecognitionRequest()
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
         }
         engine.prepare()
-        guard (try? engine.start()) != nil else {
+        do {
+            try engine.start()
+        } catch {
             input.removeTap(onBus: 0)
-            return
+            return "the microphone didn't start: \(error.localizedDescription)"
         }
         self.request = request
         task = recognizer.recognitionTask(with: request) { [weak self] result, error in
-            guard let self else { return }
-            if let result, result.isFinal {
-                let text = result.bestTranscription.formattedString
-                if !text.isEmpty { onFinal(text) }
-            }
-            if error != nil || result?.isFinal == true {
-                DispatchQueue.main.async { self.task = nil }
+            guard let self, error != nil || result?.isFinal == true else { return }
+            let text = result?.bestTranscription.formattedString ?? ""
+            DispatchQueue.main.async {
+                guard self.task != nil else { return }
+                self.task = nil
+                onFinal(text.isEmpty ? nil : text)
             }
         }
+        return nil
     }
 
     func stop() {
