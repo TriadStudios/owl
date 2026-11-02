@@ -372,6 +372,10 @@ def place_row(image_bytes: bytes, image: np.ndarray, env: dict[str, str]) -> lis
     # From far away SAM misses some plugged ports at full frame; the crop is padded wide enough that a partial row still places it.
     if len(full_row) < ROI_MIN_BOXES:
         raise ValueError(f"cannot place the port-row crop: {len(full_row)} aligned boxes, need at least {ROI_MIN_BOXES}")
+    return row_rect(full_row, width, height)
+
+
+def row_rect(full_row: list[dict[str, object]], width: int, height: int) -> list[int]:
     box_width = float(np.median([p["box"][2] - p["box"][0] for p in full_row]))
     box_height = float(np.median([p["box"][3] - p["box"][1] for p in full_row]))
     pad_x = ROI_PAD_X + ROI_PITCH * max(0, COPPER_PORTS - len(full_row))

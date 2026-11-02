@@ -80,13 +80,14 @@ def describe_in(image_bytes: bytes, env: dict[str, str], handheld: bool, gray: n
         moved = from_last_full_row(gray, image_bytes, results, rect, scale) if handheld else None
         if moved is None:
             raise
-        last_rect.update(at=time.monotonic(), gray=gray, rect=rect)
+        last_rect.update(at=time.monotonic(), gray=gray, rect=segment.row_rect(moved["ports"], gray.shape[1], gray.shape[0]))
         return moved
     result = numbered(image_bytes, results, rect, scale, row)
     if handheld:
         result["touching"] = segment.touching(row, results[segment.HAND_PROMPT])
         last_full_row.update(at=time.monotonic(), gray=gray, result=result)
-        last_rect.update(at=time.monotonic(), gray=gray, rect=rect)
+        # The next crop is placed around the ports this frame found, so an off motion estimate never carries into the frame after.
+        last_rect.update(at=time.monotonic(), gray=gray, rect=segment.row_rect(result["ports"], gray.shape[1], gray.shape[0]))
     return result
 
 
