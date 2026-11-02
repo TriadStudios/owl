@@ -197,10 +197,16 @@ func TestPortsTableOnFixtures(t *testing.T) {
 	}
 }
 
-type fakeNarrator narrate.Reply
+type fakeNarrator struct {
+	reply narrate.Reply
+	hand  int
+}
 
-func (f *fakeNarrator) Reply(context.Context, narrate.Request) (narrate.Reply, error) {
-	return narrate.Reply(*f), nil
+func (f *fakeNarrator) Reply(_ context.Context, req narrate.Request) (narrate.Reply, error) {
+	if req.Scene != nil {
+		f.hand = req.Scene.HandPort
+	}
+	return f.reply, nil
 }
 
 func TestRelayAnswerNeverContradictsPolicy(t *testing.T) {
@@ -210,22 +216,28 @@ func TestRelayAnswerNeverContradictsPolicy(t *testing.T) {
 	cases := []struct {
 		name  string
 		heard string
+		hand  int
 		model *fakeNarrator
 		want  string
 	}{
-		{"model calls a do-not-touch port safe", "can I pull port 2", &fakeNarrator{Port: 2, Line: "Port 2 is safe, go ahead."}, template},
-		{"model agrees with policy", "what about port 3", &fakeNarrator{Port: 3, Line: "Port 3 is safe, go ahead."}, "Port 3 is safe, go ahead."},
-		{"model talks about another port than the one said", "pulling port 2", &fakeNarrator{Port: 3, Line: "Port 3 is safe."}, template},
-		{"no narrator", "pulling port 2", nil, template},
-		{"model stays quiet", "hmm let me think", &fakeNarrator{}, ""},
+		{"model calls a do-not-touch port safe", "can I pull port 2", 0, &fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is safe, go ahead."}}, template},
+		{"model agrees with policy", "what about port 3", 0, &fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe, go ahead."}}, "Port 3 is safe, go ahead."},
+		{"model talks about another port than the one said", "pulling port 2", 0, &fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe."}}, template},
+		{"no narrator", "pulling port 2", 0, nil, template},
+		{"model stays quiet", "hmm let me think", 0, &fakeNarrator{}, ""},
+		{"this one is the port under the hand", "can I pull this one", 2, nil, template},
+		{"model calls the port under the hand safe", "can I pull this one", 2, &fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is safe."}}, template},
 	}
 	for _, c := range cases {
 		s.Narrator = nil
 		if c.model != nil {
 			s.Narrator = c.model
 		}
-		if got := s.answer(context.Background(), "phone", c.heard, nil, map[int]bool{}); got != c.want {
+		if got := s.answer(context.Background(), "phone", c.heard, c.hand, nil, map[int]bool{}); got != c.want {
 			t.Errorf("%s: said %q, want %q", c.name, got, c.want)
+		}
+		if c.model != nil && c.model.hand != c.hand {
+			t.Errorf("%s: narrator saw hand on port %d, want %d", c.name, c.model.hand, c.hand)
 		}
 	}
 }
