@@ -35,6 +35,7 @@ HAND_MIN_SCORE = 0.4
 TIP_ABOVE = 0.5
 TIP_BELOW = 1.5
 TIP_BAND = 0.5
+REACH_STEP = 4
 COPPER_PORTS = 8
 PORT_PALETTE = (
     (75, 25, 230), (75, 180, 60), (25, 225, 255), (200, 130, 0), (48, 130, 245), (180, 30, 145),
@@ -239,20 +240,39 @@ def touching(row: list[dict[str, object]], hands: list[Instance]) -> int | None:
     for hand in hands:
         if (hand["score"] or 0.0) < HAND_MIN_SCORE:
             continue
-        ys, xs = np.nonzero(decode_rle(hand["mask_rle"]))
-        if not len(xs):
+        mask = decode_rle(hand["mask_rle"]) > 0
+        if not mask.any():
             continue
-        tip_y = float(ys.max())
+        # A pinch holds the plug between the fingertips, the parts of the hand farthest from where it enters the picture; the knuckles and palm beside them cover the neighbours. The hand can come in from above or from the side, so the lowest point is not always a fingertip.
+        reach = reach_from_edge(mask[::REACH_STEP, ::REACH_STEP])
+        ys, xs = np.nonzero(reach > reach.max() - TIP_BAND * height / REACH_STEP)
+        ys, xs = ys * REACH_STEP, xs * REACH_STEP
+        tip_y = float(ys.mean())
         if not top - TIP_ABOVE * height <= tip_y <= bottom + TIP_BELOW * height:
             continue
-        # A pinch holds the plug between the two lowest fingertips; the thumb and knuckles beside them cover the neighbours, so only the bottom of the hand places it.
-        low = ys >= tip_y - TIP_BAND * height
-        tip_x = float(xs[low].min() + xs[low].max()) / 2
+        tip_x = float(xs.min() + xs.max()) / 2
         nearest = min(range(len(row)), key=lambda i: abs(centers[i] - tip_x))
         gap = abs(tip_y - (top + bottom) / 2)
         if abs(centers[nearest] - tip_x) <= pitch / 2 and gap < best_gap:
             best, best_gap = nearest + 1, gap
     return best
+
+
+def reach_from_edge(mask: np.ndarray) -> np.ndarray:
+    inside = mask.astype(np.uint8)
+    front = np.zeros_like(inside)
+    for edge in (np.s_[0, :], np.s_[-1, :], np.s_[:, 0], np.s_[:, -1]):
+        front[edge] |= inside[edge]
+    if not front.any():
+        first = np.nonzero(inside)[0].min()
+        front[first] = inside[first]
+    reach = np.where(front > 0, 0, -1).astype(np.int32)
+    step, kernel = 0, np.ones((3, 3), np.uint8)
+    while front.any():
+        step += 1
+        front = cv2.dilate(front, kernel) & inside & (reach < 0)
+        reach[front > 0] = step
+    return reach
 
 
 def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:

@@ -38,6 +38,15 @@ class FixtureFrame(unittest.TestCase):
         self.assertEqual([led["link_on"] for led in leds.leds([frame], boxes)], [True] * 3 + [False] * 5)
 
 
+    def test_hand_from_the_side_is_placed_by_its_fingertips_not_by_the_wrist_below_them(self) -> None:
+        x0, y0, x1, y1 = (int(v) for v in self.row[2]["box"])
+        width = 2 * int(self.row[-1]["box"][2])
+        hand = np.zeros((4 * y1, width), np.uint8)
+        hand[y0 - 20 :, int(self.row[5]["box"][0]) :] = 1
+        hand[y0 - 20 : y0, x0:width] = 1
+        hand[y1 : y1 + 6, x1 - 6 : width] = 1
+        self.assertEqual(segment.touching(self.row, [{"score": 0.9, "mask_rle": segment.encode_rle(hand)}]), 3)
+
     def test_pinch_is_placed_between_the_lowest_fingertips_not_by_the_knuckles_beside_them(self) -> None:
         x0, y0, x1, y1 = (int(v) for v in self.row[4]["box"])
         n1 = int(self.row[5]["box"][2])
