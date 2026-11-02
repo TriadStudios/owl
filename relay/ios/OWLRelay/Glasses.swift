@@ -200,6 +200,19 @@ final class GlassesCamera: FrameSource {
                 }
                 return
             }
+            let later = session.stateStream()
+            Task { @MainActor [weak self] in
+                for await state in later {
+                    guard let self, self.session != nil else { return }
+                    self.glasses.trace.session = "\(state)"
+                    guard state == .stopped else { continue }
+                    try? await Task.sleep(for: .milliseconds(500))
+                    let reason = failure.map { "\($0.localizedDescription) (\($0))" } ?? "no reason given"
+                    self.glasses.problem = "The glasses session stopped after it started: \(reason). Camera stream was \(self.glasses.trace.stream), \(self.glasses.trace.framesIn) frames in."
+                    self.stop()
+                    return
+                }
+            }
             guard let camera = try session.addCamera(config: StreamConfiguration(videoCodec: .raw, resolution: .high, frameRate: 15)) else {
                 glasses.problem = "The glasses camera is not available."
                 return
@@ -217,7 +230,7 @@ final class GlassesCamera: FrameSource {
             }.store(in: tokens)
             camera.stream.errorPublisher.listen { [weak self] error in
                 guard let self else { return }
-                Task { @MainActor in self.glasses.problem = error.localizedDescription }
+                Task { @MainActor in self.glasses.problem = "The glasses camera reported \(error): \(error.localizedDescription)" }
             }.store(in: tokens)
             camera.stream.start()
         } catch {
