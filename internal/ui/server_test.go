@@ -241,3 +241,28 @@ func TestRelayAnswerNeverContradictsPolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestRelayHandLineAlwaysSaysThePortAndItsVerdict(t *testing.T) {
+	s, _ := fixtureServer(t)
+	loadFixtureTable(t, s)
+	template := guardian.Line(2, s.ports, "")
+	cases := []struct {
+		name  string
+		model *fakeNarrator
+		want  string
+	}{
+		{"model says the port and its verdict", &fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 is do not touch, that's the uplink."}}, "Port 2 is do not touch, that's the uplink."},
+		{"model talks about another port", &fakeNarrator{reply: narrate.Reply{Port: 3, Line: "Port 3 is safe."}}, template},
+		{"model leaves out the verdict", &fakeNarrator{reply: narrate.Reply{Port: 2, Line: "Port 2 has the uplink on it."}}, template},
+		{"no narrator", nil, template},
+	}
+	for _, c := range cases {
+		s.Narrator = nil
+		if c.model != nil {
+			s.Narrator = c.model
+		}
+		if got := s.handLine(context.Background(), "phone", 2, nil, map[int]bool{}); got != c.want {
+			t.Errorf("%s: said %q, want %q", c.name, got, c.want)
+		}
+	}
+}

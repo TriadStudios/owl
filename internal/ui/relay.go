@@ -39,6 +39,7 @@ const (
 	narrateBudget   = 6 * time.Second
 	maxHistory      = 8
 	handFresh       = 15 * time.Second
+	handSettle      = 2
 )
 
 var verdictColor = map[string]string{
@@ -137,10 +138,11 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	frames := make(chan []byte, 1)
 	utterances := make(chan string, 1)
+	settled := make(chan int, 1)
 	hand := &handState{}
 	var wg sync.WaitGroup
-	wg.Go(func() { s.overlays(ctx, c, device, frames, hand) })
-	wg.Go(func() { s.answers(ctx, c, device, utterances, hand) })
+	wg.Go(func() { s.overlays(ctx, c, device, frames, settled, hand) })
+	wg.Go(func() { s.answers(ctx, c, device, utterances, settled, hand) })
 	wg.Go(func() {
 		t := time.NewTicker(pingEvery)
 		defer t.Stop()
@@ -230,12 +232,21 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utteran
 	}
 }
 
-func (s *Server) answers(ctx context.Context, c *wsConn, device string, utterances <-chan string, hand *handState) {
+func (s *Server) answers(ctx context.Context, c *wsConn, device string, utterances <-chan string, settled <-chan int, hand *handState) {
 	var history []narrate.Turn
 	told := map[int]bool{}
-	for heard := range utterances {
-		history = append(history, narrate.Turn{Who: "tech", Text: heard})
-		line := s.answer(ctx, device, heard, hand.get(), history, told)
+	for {
+		var line string
+		select {
+		case heard, ok := <-utterances:
+			if !ok {
+				return
+			}
+			history = append(history, narrate.Turn{Who: "tech", Text: heard})
+			line = s.answer(ctx, device, heard, hand.get(), history, told)
+		case port := <-settled:
+			line = s.handLine(ctx, device, port, history, told)
+		}
 		if ctx.Err() != nil {
 			return
 		}
@@ -251,6 +262,21 @@ func (s *Server) answers(ctx context.Context, c *wsConn, device string, utteranc
 	}
 }
 
+func (s *Server) narrate(ctx context.Context, kind, heard string, hand int, ports []reconcile.Port, history []narrate.Turn) (narrate.Reply, int64, error) {
+	if s.Narrator == nil {
+		return narrate.Reply{}, 0, errors.New("no narrator")
+	}
+	start := time.Now()
+	nctx, cancel := context.WithTimeout(ctx, narrateBudget)
+	defer cancel()
+	req := narrate.Request{Kind: kind, Utterance: heard, Ports: guardian.NarratePorts(ports, nil), History: history}
+	if hand != 0 {
+		req.Scene = &narrate.Scene{HandPort: hand}
+	}
+	r, err := s.Narrator.Reply(nctx, req)
+	return r, time.Since(start).Milliseconds(), err
+}
+
 func (s *Server) answer(ctx context.Context, device, heard string, hand int, history []narrate.Turn, told map[int]bool) string {
 	s.mu.Lock()
 	ports := s.ports
@@ -260,19 +286,7 @@ func (s *Server) answer(ctx context.Context, device, heard string, hand int, his
 	if guardian.SpokenPort(heard) == 0 && hand != 0 {
 		parsed = hand
 	}
-	start := time.Now()
-	err := errors.New("no narrator")
-	var r narrate.Reply
-	if s.Narrator != nil {
-		nctx, cancel := context.WithTimeout(ctx, narrateBudget)
-		req := narrate.Request{Kind: "reply", Utterance: heard, Ports: guardian.NarratePorts(ports, nil), History: history}
-		if hand != 0 {
-			req.Scene = &narrate.Scene{HandPort: hand}
-		}
-		r, err = s.Narrator.Reply(nctx, req)
-		cancel()
-	}
-	took := time.Since(start).Milliseconds()
+	r, took, err := s.narrate(ctx, "reply", heard, hand, ports, history)
 	switch {
 	case err != nil:
 	case guardian.SpokenPort(heard) != 0 && r.Port != parsed:
@@ -296,8 +310,30 @@ func (s *Server) answer(ctx context.Context, device, heard string, hand int, his
 	return line
 }
 
-func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames <-chan []byte, hand *handState) {
+func (s *Server) handLine(ctx context.Context, device string, port int, history []narrate.Turn, told map[int]bool) string {
+	s.mu.Lock()
+	ports := s.ports
+	s.mu.Unlock()
+	verdicts := guardian.Verdicts(ports, nil)
+	r, took, err := s.narrate(ctx, "hand", "", port, ports, history)
+	if err == nil && r.Port != port {
+		err = fmt.Errorf("model talked about port %d, the hand is on port %d", r.Port, port)
+	}
+	if err == nil {
+		err = narrate.Check(r.Line, port, verdicts, true)
+	}
+	line, source, reason := r.Line, "model", ""
+	if err != nil {
+		line, source, reason = guardian.Line(port, ports, ""), "template", err.Error()
+	}
+	told[port] = true
+	s.Log.Info("relay safety line", "device", device, "port", port, "verdict", verdicts[port], "source", source, "text", line, "hand", true, "fallback_reason", reason, "narrate_ms", took)
+	return line
+}
+
+func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames <-chan []byte, settled chan int, hand *handState) {
 	var lastCall time.Time
+	var streakPort, streak, announced int
 	var lastHash uint64
 	var lastMsg *overlayMsg
 	processed, skipped := 0, 0
@@ -337,6 +373,21 @@ func (s *Server) overlays(ctx context.Context, c *wsConn, device string, frames 
 			if err == nil {
 				lastHash, lastMsg = hash, &msg
 				hand.set(msg.Touching)
+				if msg.Touching != streakPort {
+					streakPort, streak = msg.Touching, 0
+				}
+				streak++
+				// One reading can catch a hand passing over a port; speak once it has stayed for two.
+				if streak == handSettle && streakPort != announced {
+					announced = streakPort
+					if streakPort != 0 {
+						select {
+						case <-settled:
+						default:
+						}
+						settled <- streakPort
+					}
+				}
 				s.Log.Info("frame", "device", device, "bytes", len(frame), "ports", len(msg.Labels), "touching", msg.Touching, "took_ms", time.Since(start).Milliseconds(), "processed", processed, "skipped", skipped)
 			}
 		}
