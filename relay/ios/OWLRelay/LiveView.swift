@@ -36,7 +36,7 @@ struct LiveView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer()
-                Text(model.talking ? "Listening…" : "Hold to talk")
+                Text(model.talking ? "Listening…" : model.hearing ? "Just talk, or hold to talk" : "Hold to talk")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, minHeight: 64)

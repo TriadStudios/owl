@@ -33,6 +33,18 @@ final class AppModel: ObservableObject {
         didSet { recording ? recorder.start() : recorder.stop() }
     }
     @Published var talking = false
+    @Published var hearing = false
+    @Published var handsFree: Bool {
+        didSet {
+            UserDefaults.standard.set(handsFree, forKey: "handsFree")
+            if handsFree {
+                listen()
+            } else if hearing {
+                speechIn.cancel()
+                hearing = false
+            }
+        }
+    }
     @Published var fps: Int {
         didSet {
             camera.fps = fps
@@ -69,6 +81,9 @@ final class AppModel: ObservableObject {
     private let recorder = DebugRecorder()
     private var timeout: Task<Void, Never>?
     private var live = false
+    private var speaking = 0
+    private var awaitingPush = false
+    private var lastListenFailure: String?
 
     private var activeSource: FrameSource {
         source == .phone ? camera : glassesCamera
@@ -103,6 +118,7 @@ final class AppModel: ObservableObject {
         let savedFPS = UserDefaults.standard.integer(forKey: "fps")
         fps = savedFPS == 0 ? 5 : savedFPS
         voice = UserDefaults.standard.object(forKey: "voice") as? Bool ?? true
+        handsFree = UserDefaults.standard.object(forKey: "handsFree") as? Bool ?? true
         camera.fps = fps
 
         relay.onConnected = { [weak self] up in
@@ -224,6 +240,7 @@ final class AppModel: ObservableObject {
 
     func startLive() {
         live = true
+        listen()
         activeSource.ready = true
         if source == .glasses {
             glassesCamera.start()
@@ -237,29 +254,67 @@ final class AppModel: ObservableObject {
     func stopLive() {
         live = false
         activeSource.stop()
+        speechIn.cancel()
+        hearing = false
+        awaitingPush = false
+    }
+
+    // Hands-free listening sends what was said after a pause and stops while OWL speaks, so the phone never answers its own voice.
+    private func listen() {
+        guard live, handsFree, !talking, !awaitingPush, speaking == 0, !hearing else { return }
+        hearing = true
+        let failure = speechIn.start(endAfterPause: true) { [weak self] text in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.hearing = false
+                if let text { self.heard(text) }
+                self.listen()
+            }
+        }
+        guard let failure else {
+            lastListenFailure = nil
+            return
+        }
+        hearing = false
+        if failure != lastListenFailure { show("Can't listen: \(failure)") }
+        lastListenFailure = failure
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            self?.listen()
+        }
+    }
+
+    private func heard(_ text: String) {
+        relay.sendUtterance(text)
+        show("You: \(text)")
     }
 
     func beginTalk() {
         guard !talking else { return }
+        speechIn.cancel()
+        hearing = false
+        awaitingPush = false
         talking = true
-        let failure = speechIn.start { [weak self] text in
+        let failure = speechIn.start(endAfterPause: false) { [weak self] text in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                if let text {
-                    self.relay.sendUtterance(text)
-                    self.show("You: \(text)")
-                } else {
-                    self.show("Didn't catch that")
-                }
+                self.awaitingPush = false
+                if let text { self.heard(text) } else { self.show("Didn't catch that") }
+                self.listen()
             }
         }
-        if let failure { show("Can't listen: \(failure)") }
+        if let failure {
+            show("Can't listen: \(failure)")
+        } else {
+            awaitingPush = true
+        }
     }
 
     func endTalk() {
         guard talking else { return }
         talking = false
         speechIn.stop()
+        listen()
     }
 
     private func record(_ overlay: Overlay, _ sent: (geometry: FrameGeometry?, at: Date, number: Int, jpeg: Data)) {
@@ -309,7 +364,20 @@ final class AppModel: ObservableObject {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         case .say(let text):
-            if voice { speechOut.say(text) }
+            if voice {
+                if hearing {
+                    speechIn.cancel()
+                    hearing = false
+                }
+                speaking += 1
+                speechOut.say(text) { [weak self] in
+                    MainActor.assumeIsolated {
+                        guard let self else { return }
+                        self.speaking -= 1
+                        self.listen()
+                    }
+                }
+            }
             show(text)
         case .unknown:
             break

@@ -42,6 +42,7 @@ struct SettingsView: View {
                 Stepper("\(model.fps) fps", value: $model.fps, in: 1...ARCamera.maxFPS)
                     .frame(minHeight: 44)
                 Toggle("Speak replies", isOn: $model.voice)
+                Toggle("Listen without holding", isOn: $model.handsFree)
                     .frame(minHeight: 44)
                 Button("Delete debug recordings", role: .destructive) {
                     model.recording = false
