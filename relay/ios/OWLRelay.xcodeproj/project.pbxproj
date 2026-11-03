@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000010 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000012 /* MWDATCore */; };
 		A10000000000000000000011 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000013 /* MWDATCamera */; };
+		A10000000000000000000030 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000032 /* MWDATDisplay */; };
+		A10000000000000000000031 /* MWDATSpeech in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000033 /* MWDATSpeech */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,8 @@
 			files = (
 				A10000000000000000000010 /* MWDATCore in Frameworks */,
 				A10000000000000000000011 /* MWDATCamera in Frameworks */,
+				A10000000000000000000030 /* MWDATDisplay in Frameworks */,
+				A10000000000000000000031 /* MWDATSpeech in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +78,8 @@
 			packageProductDependencies = (
 				A10000000000000000000012 /* MWDATCore */,
 				A10000000000000000000013 /* MWDATCamera */,
+				A10000000000000000000032 /* MWDATDisplay */,
+				A10000000000000000000033 /* MWDATSpeech */,
 			);
 			productName = OWLRelay;
 			productReference = A10000000000000000000001 /* OWLRelay.app */;
@@ -282,6 +288,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000014 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATCamera;
+		};
+		A10000000000000000000032 /* MWDATDisplay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000014 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATDisplay;
+		};
+		A10000000000000000000033 /* MWDATSpeech */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000014 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATSpeech;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

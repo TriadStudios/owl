@@ -88,6 +88,7 @@ final class AppModel: ObservableObject {
     private var speaking = 0
     private var awaitingPush = false
     private var lastListenFailure: String?
+    private var lastSaid: String?
 
     private var activeSource: FrameSource {
         source == .phone ? camera : glassesCamera
@@ -143,6 +144,20 @@ final class AppModel: ObservableObject {
         glassesCamera.onFrame = { [weak self] jpeg, _ in
             Task { @MainActor in self?.send(jpeg, nil) }
         }
+        // While the glasses' own mic transcribes, the phone stops listening so one sentence is never sent twice.
+        glasses.onListening = { [weak self] on in
+            guard let self else { return }
+            if on {
+                speechIn.cancel()
+                hearing = false
+            } else {
+                listen()
+            }
+        }
+        glasses.onHeard = { [weak self] text in
+            guard let self, live, source == .glasses, speaking == 0 else { return }
+            heard(text)
+        }
     }
 
     func start() {
@@ -194,7 +209,10 @@ final class AppModel: ObservableObject {
         case .success(let v): findings = v.findings
         case .failure(let e): errors.append(e.localizedDescription)
         }
-        if case .success(let v) = wr { orders = v.work_orders.filter(\.live) }
+        if case .success(let v) = wr {
+            orders = v.work_orders.filter(\.live)
+            updateHUD()
+        }
         var seen = Set<String>()
         loadError = errors.isEmpty ? nil : errors.filter { seen.insert($0).inserted }.joined(separator: "\n")
     }
@@ -268,7 +286,7 @@ final class AppModel: ObservableObject {
 
     // Hands-free listening sends what was said after a pause and stops while OWL speaks, so the phone never answers its own voice.
     private func listen() {
-        guard live, handsFree, !talking, !awaitingPush, speaking == 0, !hearing else { return }
+        guard live, handsFree, !talking, !awaitingPush, speaking == 0, !hearing, !(source == .glasses && glasses.listening) else { return }
         hearing = true
         let failure = speechIn.start(endAfterPause: true) { [weak self] text in
             MainActor.assumeIsolated {
@@ -373,6 +391,7 @@ final class AppModel: ObservableObject {
             let aimedBefore = glassesAimed
             let handBefore = overlay.touching
             overlay = o
+            updateHUD()
             if let hand = o.touching, hand != handBefore, o.labels.first(where: { $0.port == hand })?.verdict == .doNotTouch {
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
             } else if o.touching == nil, source == .glasses, let aimed = glassesAimed, aimed.verdict == .doNotTouch, aimed.port != aimedBefore?.port {
@@ -411,9 +430,29 @@ final class AppModel: ObservableObject {
                 }
             }
             show(text)
+            lastSaid = text
+            updateHUD()
         case .unknown:
             break
         }
+    }
+
+    // The glasses screen shows the same three things as Live: the job, the port under the hand, and what OWL just said.
+    private func updateHUD() {
+        var hud = HUD()
+        if let order {
+            hud.order = "\(order.name) · PORT \(order.port)" + (order.mismatch ? " (not \(order.claimed_port ?? 0))" : "")
+            hud.orderNote = order.note ?? order.device
+            hud.orderWrong = order.mismatch
+        }
+        if let hand = overlay.touching, let label = overlay.labels.first(where: { $0.port == hand }) {
+            hud.hand = "HAND ON PORT \(hand) · \(label.verdict.title.uppercased())"
+            let detail = label.text.hasPrefix("\(hand) ") ? String(label.text.dropFirst("\(hand) ".count)) : ""
+            hud.handDetail = detail.isEmpty ? nil : detail
+            hud.handDanger = label.verdict == .doNotTouch
+        }
+        hud.said = lastSaid
+        glasses.show(hud)
     }
 
     private func show(_ text: String) {

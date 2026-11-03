@@ -2,6 +2,8 @@ import CoreImage
 import CoreMedia
 import MWDATCamera
 import MWDATCore
+import MWDATDisplay
+import MWDATSpeech
 import UIKit
 
 @MainActor
@@ -12,17 +14,58 @@ final class Glasses: ObservableObject {
     @Published private(set) var frame: UIImage?
     @Published var problem: String?
     @Published fileprivate(set) var trace = Trace()
+    @Published private(set) var listening = false
+    var onHeard: ((String) -> Void)?
+    var onListening: ((Bool) -> Void)?
+    private var display: Display?
+    private var shown: HUD?
 
     struct Trace: Equatable {
         var session = "none"
         var stream = "none"
+        var display = "none"
+        var speech = "none"
         var framesIn = 0
         var framesSent = 0
         var lastSentKB = 0
 
         var line: String {
-            "session \(session) · stream \(stream) · in \(framesIn) · sent \(framesSent)\(lastSentKB > 0 ? " (\(lastSentKB) KB)" : "")"
+            "session \(session) · stream \(stream) · display \(display) · mic \(speech) · in \(framesIn) · sent \(framesSent)\(lastSentKB > 0 ? " (\(lastSentKB) KB)" : "")"
         }
+    }
+
+    func show(_ hud: HUD) {
+        guard let display, hud != shown else { return }
+        shown = hud
+        Task {
+            do {
+                if hud.isEmpty {
+                    try await display.clearDisplay()
+                } else {
+                    try await display.send(hud.view())
+                }
+            } catch {
+                trace.display = "send failed: \(error)"
+            }
+        }
+    }
+
+    fileprivate func attach(_ display: Display?) {
+        self.display = display
+        shown = nil
+        trace.display = display == nil ? "none" : "on"
+    }
+
+    fileprivate func heard(_ text: String) {
+        onHeard?(text)
+    }
+
+    fileprivate func speech(_ state: SpeechState) {
+        trace.speech = "\(state)"
+        let on = state == .started
+        guard on != listening else { return }
+        listening = on
+        onListening?(on)
     }
 
     let wearables: WearablesInterface?
@@ -124,6 +167,7 @@ final class GlassesCamera: FrameSource {
     private let context = CIContext()
     private var session: DeviceSession?
     private var camera: Camera?
+    private var speech: Speech?
     private var tokens = ListenerTokenBag()
 
     init(glasses: Glasses) {
@@ -135,10 +179,16 @@ final class GlassesCamera: FrameSource {
     }
 
     func stop() {
+        speech?.stop()
         camera?.stop()
         session?.stop()
+        speech = nil
         camera = nil
         session = nil
+        Task { @MainActor in
+            self.glasses.attach(nil)
+            self.glasses.speech(.stopped)
+        }
         let old = tokens
         tokens = ListenerTokenBag()
         Task { await old.cancelAll() }
@@ -233,10 +283,51 @@ final class GlassesCamera: FrameSource {
                 Task { @MainActor in self.glasses.problem = "The glasses camera reported \(error): \(error.localizedDescription)" }
             }.store(in: tokens)
             camera.stream.start()
+            await extras(session, wearables, device)
         } catch {
             glasses.problem = error.localizedDescription
             self.session?.stop()
             self.session = nil
+        }
+    }
+
+    // The screen and the glasses' own mic are extras: either can be missing or refused and the camera still streams.
+    @MainActor private func extras(_ session: DeviceSession, _ wearables: WearablesInterface, _ device: DeviceIdentifier) async {
+        if wearables.deviceForIdentifier(device)?.supportsDisplay() == true {
+            do {
+                let display = try session.addDisplay()
+                display.start()
+                glasses.attach(display)
+            } catch {
+                glasses.trace.display = "failed: \(error)"
+            }
+        } else {
+            glasses.trace.display = "no screen"
+        }
+        do {
+            if try await wearables.checkPermissionStatus(.microphone) != .granted,
+               try await wearables.requestPermission(.microphone) != .granted {
+                glasses.trace.speech = "no permission"
+                return
+            }
+            guard let speech = try session.addSpeech() else {
+                glasses.trace.speech = "unavailable"
+                return
+            }
+            speech.transcriptionPublisher.listen { [weak self] result in
+                guard result.isFinal, !result.text.isEmpty else { return }
+                Task { @MainActor in self?.glasses.heard(result.text) }
+            }.store(in: tokens)
+            speech.statePublisher.listen { [weak self] state in
+                Task { @MainActor in self?.glasses.speech(state) }
+            }.store(in: tokens)
+            speech.errorPublisher.listen { [weak self] error in
+                Task { @MainActor in self?.glasses.trace.speech = "error \(error)" }
+            }.store(in: tokens)
+            speech.start()
+            self.speech = speech
+        } catch {
+            glasses.trace.speech = "failed: \(error)"
         }
     }
 
