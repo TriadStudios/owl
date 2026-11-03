@@ -55,6 +55,9 @@ func TestStraightReachForAnUplinkPortStopsOnceWithinTwoWidths(t *testing.T) {
 	for i := range 10 {
 		steps = append(steps, step{center(a, 2), 600 - float64(i)*40})
 	}
+	for range 6 {
+		steps = append(steps, steps[9])
+	}
 	events, _ := run(a, steps)
 	var stops []ApproachEvent
 	for i, e := range events {
@@ -111,7 +114,7 @@ func TestReachForASafePortLocksWithoutWarning(t *testing.T) {
 func TestUnstableProjectionNeverWarns(t *testing.T) {
 	a := rack()
 	var steps []step
-	for i := range 12 {
+	for i := range 16 {
 		port := 2
 		if i%2 == 1 {
 			port = 3
@@ -161,6 +164,9 @@ func TestJobsMakeTheirPortExpectedAndOthersDeviations(t *testing.T) {
 		for i := range 10 {
 			steps = append(steps, step{center(a, c.port), 600 - float64(i)*40})
 		}
+		for range 6 {
+			steps = append(steps, steps[9])
+		}
 		events, _ := run(a, steps)
 		var got EventKind
 		var ev ApproachEvent
@@ -184,8 +190,11 @@ func TestWithdrawnAfterASecondWithoutAHandAndANewReachCanWarnAgain(t *testing.T)
 	for i := range 10 {
 		steps = append(steps, step{center(a, 2), 600 - float64(i)*40})
 	}
+	for range 12 {
+		steps = append(steps, steps[9])
+	}
 	run(a, steps)
-	t0 := time.Date(2026, 10, 28, 12, 0, 0, 900_000_000, time.UTC)
+	t0 := time.Date(2026, 10, 28, 12, 0, 2, 100_000_000, time.UTC)
 	if e := a.Update(nil, t0.Add(500*time.Millisecond)); len(e) != 0 {
 		t.Fatalf("withdrawn after 0.5 s: %v", kinds(e))
 	}
@@ -208,12 +217,51 @@ func TestADownwardReachIsPlacedByTheFingertipsNotTheBoxCenter(t *testing.T) {
 	a := rack()
 	t0 := time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
 	var events []ApproachEvent
-	for i := range 4 {
+	for i := range 16 {
 		t := t0.Add(time.Duration(i) * 100 * time.Millisecond)
 		obs := HandObs{T: t, Box: [4]float64{a.Ports[1].X0, 0, a.Ports[5].X1, 240}, Tip: center(a, 2)}
 		events = append(events, a.Update(&obs, t)...)
 	}
 	if len(events) < 3 || events[1].Kind != TargetLocked || events[1].Port != 2 || events[2].Kind != Stop {
 		t.Fatalf("events %+v, want port 2 locked under the fingertips and a stop", events)
+	}
+}
+
+func TestAHandSweepingAcrossAPopulatedPortDoesNotWarn(t *testing.T) {
+	a := rack()
+	a.JobPorts = map[int]int{5: 1}
+	var steps []step
+	for range 9 {
+		steps = append(steps, step{center(a, 3), 130})
+	}
+	for range 15 {
+		steps = append(steps, step{center(a, 5), 130})
+	}
+	events, _ := run(a, steps)
+	for _, e := range events {
+		if e.Kind == Deviation {
+			t.Fatalf("events %+v, want no warning for port 3 passed on the way to port 5", events)
+		}
+	}
+}
+
+func TestOnlyOneWarningPerReachUnlessTheNextPortIsDoNotTouch(t *testing.T) {
+	a := rack()
+	a.JobPorts = map[int]int{5: 1}
+	var steps []step
+	for _, port := range []int{7, 3, 2} {
+		for range 15 {
+			steps = append(steps, step{center(a, port), 130})
+		}
+	}
+	events, _ := run(a, steps)
+	var warned []int
+	for _, e := range events {
+		if e.Kind == Deviation {
+			warned = append(warned, e.Port)
+		}
+	}
+	if len(warned) != 2 || warned[0] != 7 || warned[1] != 2 {
+		t.Fatalf("warned for ports %v, want 7 then the do-not-touch 2, not the populated 3 in between", warned)
 	}
 }

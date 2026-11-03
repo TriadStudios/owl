@@ -130,8 +130,11 @@ func (g *Guardian) Step(now time.Time) {
 		g.state = Ask
 	default:
 		hand := 0
+		// The reach watcher already spoke for this port (a warning, or the job's own port), so a second line would talk over it.
 		if g.Scene != nil {
-			hand = g.Scene().HandPort
+			if s := g.Scene(); !s.Handled {
+				hand = s.HandPort
+			}
 		}
 		switch {
 		case now.Sub(g.lastMotion) >= sleepAfter:

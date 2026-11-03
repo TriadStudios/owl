@@ -19,9 +19,10 @@ type Reach struct {
 	Clip  func() (string, error)
 	Log   *slog.Logger
 
-	mu     sync.Mutex
-	hand   int
-	warned []string
+	mu      sync.Mutex
+	hand    int
+	warned  []string
+	handled map[int]bool
 }
 
 const maxWarnings = 3
@@ -29,7 +30,16 @@ const maxWarnings = 3
 func (r *Reach) Scene() narrate.Scene {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return narrate.Scene{HandPort: r.hand, Warnings: slices.Clone(r.warned)}
+	return narrate.Scene{HandPort: r.hand, Warnings: slices.Clone(r.warned), Handled: r.handled[r.hand]}
+}
+
+func (r *Reach) handle(port int) {
+	r.mu.Lock()
+	if r.handled == nil {
+		r.handled = map[int]bool{}
+	}
+	r.handled[port] = true
+	r.mu.Unlock()
 }
 
 func (r *Reach) see(port int) {
@@ -40,7 +50,7 @@ func (r *Reach) see(port int) {
 
 func (r *Reach) reset() {
 	r.mu.Lock()
-	r.hand, r.warned = 0, nil
+	r.hand, r.warned, r.handled = 0, nil, nil
 	r.mu.Unlock()
 }
 
@@ -112,6 +122,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 				r.see(e.Port)
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "box", obs.Box, "tip", obs.Tip)
 			case Expected:
+				r.handle(e.Port)
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID)
 			case Withdrawn:
 				r.see(0)
@@ -122,6 +133,7 @@ func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
 					text = DeviationLine(e.Port, e.JobPort, a.DoNotTouch[e.Port])
 				}
 				r.Log.Info("reach", "event", e.Kind, "at", f.T, "port", e.Port, "job", e.JobID, "confidence", round2(e.Confidence), "distance_px", int(e.Distance), "text", text)
+				r.handle(e.Port)
 				go r.warn(e, text, f.T, seenAt, lockedAt)
 			}
 		}

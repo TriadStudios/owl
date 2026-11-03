@@ -78,6 +78,7 @@ type Request struct {
 type Scene struct {
 	HandPort int      `json:"hand_port,omitempty"`
 	Warnings []string `json:"warnings_spoken,omitempty"`
+	Handled  bool     `json:"-"`
 }
 
 type Reply struct {

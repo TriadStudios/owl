@@ -14,6 +14,7 @@ const (
 	lookahead        = 700 * time.Millisecond
 	minApproachSpeed = 0.5
 	withdrawAfter    = time.Second
+	dwell            = time.Second
 )
 
 type EventKind string
@@ -60,13 +61,15 @@ type Approach struct {
 	present  bool
 	lastSeen time.Time
 	locked   int
+	lockedAt time.Time
 	decided  map[int]bool
+	warned   bool
 }
 
 func (a *Approach) Update(o *HandObs, now time.Time) []ApproachEvent {
 	if o == nil {
 		if a.present && now.Sub(a.lastSeen) >= withdrawAfter {
-			a.present, a.history, a.targets, a.locked, a.decided = false, nil, nil, 0, nil
+			a.present, a.history, a.targets, a.locked, a.decided, a.warned = false, nil, nil, 0, nil, false
 			return []ApproachEvent{{Kind: Withdrawn}}
 		}
 		return nil
@@ -99,10 +102,14 @@ func (a *Approach) Update(o *HandObs, now time.Time) []ApproachEvent {
 		return events
 	}
 	if target != a.locked {
-		a.locked = target
+		a.locked, a.lockedAt = target, o.T
 		events = append(events, ApproachEvent{Kind: TargetLocked, Port: target, Confidence: confidence, Distance: dist})
 	}
-	if dist > warnWidths*width || a.decided[target] {
+	// A hand sweeping in or out crosses ports for a few frames; only a port it stays on is being touched.
+	if dist > warnWidths*width || a.decided[target] || o.T.Sub(a.lockedAt) < dwell {
+		return events
+	}
+	if a.warned && !a.DoNotTouch[target] {
 		return events
 	}
 	a.decided[target] = true
@@ -124,6 +131,7 @@ func (a *Approach) Update(o *HandObs, now time.Time) []ApproachEvent {
 	default:
 		return events
 	}
+	a.warned = true
 	return append(events, e)
 }
 

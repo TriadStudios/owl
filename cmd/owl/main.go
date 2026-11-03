@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"text/tabwriter"
 	"time"
 
@@ -63,6 +64,7 @@ const (
 	tlsDir            = "data/tls"
 	evidenceDir       = "data/evidence"
 	trackFPS          = 10
+	rowRefresh        = 90 * time.Second
 	benchCaptureTries = 3
 )
 
@@ -1210,6 +1212,33 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 			stopReach()
 		}
 	}()
+	// The robot gets nudged and the head never comes home to exactly the same pose, so the row is re-read while
+	// nobody is there; reading it when a visit starts takes several seconds and the tech's arm spoils the frames.
+	var latest atomic.Pointer[perception.Result]
+	var idle atomic.Bool
+	latest.Store(frame)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(rowRefresh):
+			}
+			if !idle.Load() {
+				continue
+			}
+			fresh, err := cam.SegmentCamera(ctx, time.Second)
+			if err != nil {
+				log.Warn("camera", "err", err)
+				continue
+			}
+			if len(fresh.Ports) < len(frame.Ports) || !idle.Load() {
+				continue
+			}
+			latest.Store(fresh)
+			log.Info("camera", "frame_hash", fresh.FrameHash, "ports", len(fresh.Ports), "row", fresh.Row)
+		}
+	}()
 	g.Scene = reach.Scene
 	g.Watch = func(cur []reconcile.Port) {
 		if stopReach != nil {
@@ -1219,7 +1248,7 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		stopReach = cancel
 		go func() {
 			bridge.Home()
-			a := approachFor(frame, cur, log)
+			a := approachFor(latest.Load(), cur, log)
 			log.Info("reach watch", "do_not_touch", a.DoNotTouch, "populated", a.Populated, "jobs", a.JobPorts)
 			go reach.Run(rctx, a, cur)
 			go pulls.Run(rctx, cur)
@@ -1229,11 +1258,13 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 		}()
 	}
 	state := g.State()
+	idle.Store(state == guardian.Idle)
 	for ctx.Err() == nil {
 		g.Step(time.Now())
 		if g.State() != state {
 			log.Info("guardian", "from", state, "to", g.State())
 			state = g.State()
+			idle.Store(state == guardian.Idle)
 			if (state == guardian.Sleep || state == guardian.Idle) && stopReach != nil {
 				stopReach()
 				stopReach = nil
