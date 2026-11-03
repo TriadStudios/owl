@@ -46,6 +46,7 @@ ALIGN_CRITERIA = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1e-5)
 app = FastAPI()
 analyze_lock = threading.Lock()
 camera_lock = threading.Lock()
+track_wants_camera = threading.Event()
 recording: dict[str, object] = {}
 reference: dict[str, np.ndarray] = {}
 last_full_row: dict[str, object] = {}
@@ -278,6 +279,9 @@ def describe_camera(burst: float) -> dict[str, object]:
             if attempt > 1:
                 # The WebRTC stream degrades into codec blocks for several seconds at a time, so retry on a later frame.
                 time.sleep(CAMERA_RETRY_S)
+            # A visit started while the row was being re-read; the tech's arm spoils these frames anyway and the reach watch needs the camera now.
+            if track_wants_camera.is_set():
+                raise ValueError("a reach watch needs the camera")
             frame = next(capture.bridged(0))
             ok, encoded = cv2.imencode(".png", frame)
             if not ok:
@@ -417,6 +421,7 @@ def track_stream(row: str, fps: float = 10) -> StreamingResponse:
         raise HTTPException(400, f"want row=y0,y1 in frame pixels and fps in 1..{MAX_TRACK_FPS}")
     lines: queue.Queue = queue.Queue(maxsize=TRACK_BACKLOG)
     stop = threading.Event()
+    track_wants_camera.set()
     threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock, shift_from_reference), daemon=True).start()
 
     def stream():
@@ -425,6 +430,7 @@ def track_stream(row: str, fps: float = 10) -> StreamingResponse:
                 yield line
         finally:
             stop.set()
+            track_wants_camera.clear()
 
     return StreamingResponse(stream(), media_type="application/x-ndjson")
 
