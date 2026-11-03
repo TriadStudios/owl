@@ -41,6 +41,7 @@ final class ARScene: ObservableObject {
     private(set) var lastFit: [String: Any] = [:]
     private var pins: [Pin] = []
     private var labelPins: [LabelPin] = []
+    private static let jackWidth: Float = 0.016
     private var updates: Cancellable?
     private let reachy = Reachy()
     private let reachyAnchor = AnchorEntity(world: .zero)
@@ -64,39 +65,40 @@ final class ARScene: ObservableObject {
     }
 
     func pin(_ overlay: Overlay, from geometry: FrameGeometry) {
-        // Depth at polygon corners lands in port holes, on cables or on the table behind, so measure only near
-        // each port box's middle and put everything on the switch face: a vertical plane through the port row.
-        var centers: [(port: Int, point: SIMD3<Float>)] = []
-        for polygon in overlay.polygons where !centers.contains(where: { $0.port == polygon.port }) {
+        // The depth sensor misreads a dark, glossy switch face by up to 3x up close, but every RJ45 jack is about 16 mm wide,
+        // so the jacks' size in the picture gives the distance; everything then goes on the switch face, a vertical plane through the row.
+        func pixel(_ p: CGPoint) -> SIMD2<Float> {
+            let q = p.applying(geometry.toImage)
+            return SIMD2(Float(q.x * geometry.imageSize.width), Float(q.y * geometry.imageSize.height))
+        }
+        var boxes: [(port: Int, mid: CGPoint, pixels: [SIMD2<Float>])] = []
+        for polygon in overlay.polygons where !boxes.contains(where: { $0.port == polygon.port }) {
             let pts = polygon.points.compactMap(Self.point)
             guard !pts.isEmpty else { continue }
             let mid = CGPoint(x: pts.map(\.x).reduce(0, +) / Double(pts.count), y: pts.map(\.y).reduce(0, +) / Double(pts.count))
-            let depths = ([mid] + pts.map { CGPoint(x: (mid.x + $0.x) / 2, y: (mid.y + $0.y) / 2) }).compactMap(geometry.depthAt).sorted()
-            guard !depths.isEmpty else { continue }
-            let (origin, direction) = geometry.ray(mid)
-            centers.append((polygon.port, origin + direction * depths[depths.count / 2]))
+            boxes.append((polygon.port, mid, pts.map(pixel)))
         }
-        centers.sort { $0.port < $1.port }
+        boxes.sort { $0.port < $1.port }
+        var along = SIMD2<Float>(1, 0)
+        if let first = boxes.first, let last = boxes.last, simd_length(pixel(last.mid) - pixel(first.mid)) > 1 {
+            along = normalize(pixel(last.mid) - pixel(first.mid))
+        }
+        let widths = boxes.map { box -> Float in
+            let d = box.pixels.map { simd_dot($0, along) }
+            return d.max()! - d.min()!
+        }.filter { $0 > 1 }.sorted()
+        let away = widths.isEmpty ? 0.5 : geometry.intrinsics[0][0] * Self.jackWidth / widths[widths.count / 2]
+        let centers: [(port: Int, point: SIMD3<Float>)] = boxes.map { box in
+            let (origin, direction) = geometry.ray(box.mid)
+            return (box.port, origin + direction * away)
+        }
         let eye = geometry.ray(CGPoint(x: 0.5, y: 0.5))
-        // A plug sticking out toward the camera reads several cm closer than the face, so take the vertical
-        // plane through the pair of port centers that the most other centers lie within 2 cm of.
-        var inliers = centers.map(\.point)
-        var best: SIMD3<Float>?
-        for i in centers.indices {
-            for j in centers.indices where j > i {
-                let row = centers[j].point - centers[i].point
-                guard simd_length(SIMD2(row.x, row.z)) > 0.03 else { continue }
-                let n = normalize(simd_cross(SIMD3(row.x, 0, row.z), [0, 1, 0]))
-                let near = centers.map(\.point).filter { abs(simd_dot(n, $0 - centers[i].point)) < 0.02 }
-                if best == nil || near.count > inliers.count {
-                    best = n
-                    inliers = near
-                }
-            }
-        }
-        let anchor = inliers.isEmpty ? eye.0 + eye.1 * 0.5 : inliers.reduce(.zero, +) / Float(inliers.count)
+        let anchor = centers.isEmpty ? eye.0 + eye.1 * 0.5 : centers.map(\.point).reduce(.zero, +) / Float(centers.count)
+        let row = (centers.last?.point ?? .zero) - (centers.first?.point ?? .zero)
         let toEye = eye.0 - anchor
-        let normal = best ?? normalize(SIMD3(toEye.x, 0, toEye.z))
+        let normal = simd_length(SIMD2(row.x, row.z)) > 0.03
+            ? normalize(simd_cross(SIMD3(row.x, 0, row.z), [0, 1, 0]))
+            : normalize(SIMD3(toEye.x, 0, toEye.z))
         func world(_ p: CGPoint) -> SIMD3<Float> {
             let (origin, direction) = geometry.ray(p)
             let facing = simd_dot(normal, direction)

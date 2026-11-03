@@ -27,15 +27,6 @@ struct FrameGeometry {
         let origin = transform.columns.3
         return (SIMD3(origin.x, origin.y, origin.z), SIMD3(world.x, world.y, world.z))
     }
-
-    func depthAt(_ p: CGPoint) -> Float? {
-        guard depthWidth > 0 else { return nil }
-        let q = p.applying(toImage)
-        let x = min(max(Int(q.x * Double(depthWidth)), 0), depthWidth - 1)
-        let y = min(max(Int(q.y * Double(depthHeight)), 0), depthHeight - 1)
-        let d = depth[y * depthWidth + x]
-        return d.isFinite && d > 0 ? d : nil
-    }
 }
 
 final class ARCamera: NSObject, FrameSource, ARSessionDelegate {
