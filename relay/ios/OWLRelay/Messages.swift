@@ -51,4 +51,5 @@ struct FrameMessage: Encodable {
 struct UtteranceMessage: Encodable {
     let type = "utterance"
     let text: String
+    let tech: String
 }

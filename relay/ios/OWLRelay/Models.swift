@@ -139,6 +139,16 @@ struct WorkOrder: Decodable, Equatable, Identifiable {
     let status: String
     let mismatch: Bool
     let tech: String
+    let note: String?
+    let end: Date
+    let accepted: Date?
+
+    var name: String { ticket ?? "Work order \(id)" }
+    var live: Bool { ["open", "assigned", "accepted"].contains(status) }
+
+    func isMine(_ me: String) -> Bool {
+        !me.isEmpty && tech.caseInsensitiveCompare(me) == .orderedSame
+    }
 }
 
 struct WorkOrdersResponse: Decodable {

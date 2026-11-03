@@ -17,9 +17,10 @@ Every call carries `Authorization: Bearer <token>` and goes to OWL over TLS, pin
 
 | Call | What it does |
 | - | - |
-| `POST /api/workorders` | File an order: `{"ticket", "device", "claimed_port", "tech", "note", "minutes"}`. OWL finds the device on the live switch and returns the order with `port` (where the device really is), `mismatch` and `check`, its finding in words. |
-| `GET /api/workorders` | All orders, newest first, with `status` (open, closed or expired). |
+| `POST /api/workorders` | File an order: `{"ticket", "device", "claimed_port", "tech", "note", "minutes"}`; leave `tech` empty to let any tech accept it. OWL finds the device on the live switch and returns the order with `port` (where the device really is), `mismatch` and `check`, its finding in words. |
+| `GET /api/workorders` | All orders, newest first, with `status`: open (waiting for a tech), assigned, accepted, closed or expired. |
 | `GET /api/workorders/{id}` | One order with `device_port_now`, `device_online_now` and `events`: what OWL told the tech and what the switch confirmed, with clips under `/api/evidence/{hash}`. |
+| `POST /api/workorders/{id}/accept` | A tech takes the order: `{"tech"}`, or the paired device's name when empty. An order assigned to someone else, or already accepted, answers 409. Techs in glasses can also say "accept work order 1042". |
 | `POST /api/workorders/{id}/close` | Close it. |
 
 While an order is open, the robot, the phone and the glasses all know its device and its real port, so a tech

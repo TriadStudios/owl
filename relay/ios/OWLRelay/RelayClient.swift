@@ -36,10 +36,10 @@ final class RelayClient: NSObject, URLSessionWebSocketDelegate {
         }
     }
 
-    func sendUtterance(_ text: String) {
+    func sendUtterance(_ text: String, tech: String) {
         queue.async {
             guard let task = self.task,
-                  let data = try? JSONEncoder().encode(UtteranceMessage(text: text)),
+                  let data = try? JSONEncoder().encode(UtteranceMessage(text: text, tech: tech)),
                   let text = String(data: data, encoding: .utf8) else { return }
             task.send(.string(text)) { _ in }
         }

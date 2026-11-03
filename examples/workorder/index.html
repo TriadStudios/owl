@@ -36,7 +36,8 @@ button.secondary { background: transparent; color: var(--ink); border: 1px solid
 .order .t { font-weight: 600; }
 .order .m { color: var(--muted); font-size: 13px; }
 .chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
-.chip.open { background: var(--safe-bg); color: var(--safe); }
+.chip.open, .chip.assigned { background: var(--line); color: var(--accent); }
+.chip.accepted { background: var(--safe-bg); color: var(--safe); }
 .chip.closed, .chip.expired { background: var(--line); color: var(--muted); }
 .chip.bad { background: var(--danger-bg); color: var(--danger); }
 .check { padding: 14px 16px; border-radius: 8px; margin: 4px 0 16px; font-size: 16px; }
@@ -76,8 +77,8 @@ a { color: var(--accent); }
         <div><label for="port">Port on the ticket</label><input id="port" type="number" min="1" value="7"></div>
         <div><label for="minutes">Window (min)</label><input id="minutes" type="number" min="5" value="60"></div>
       </div>
-      <label for="tech">Technician</label>
-      <input id="tech" value="Dillon">
+      <label for="tech">Assign to</label>
+      <input id="tech" placeholder="Leave empty to let any tech accept it">
       <label for="note">Note</label>
       <input id="note" value="Take wanheda offline for a disk swap">
       <button type="submit">File work order</button>
@@ -113,6 +114,7 @@ $("new").addEventListener("submit", async (e) => {
   } catch (err) { $("formErr").textContent = err.message; }
 });
 
+const statusText = { open: "waiting for a tech", assigned: "assigned", accepted: "in progress", closed: "closed", expired: "expired" };
 const labels = { warning: "OWL warned", guidance: "OWL guided", pull: "Switch confirmed the pull", "wrong-pull": "Wrong port pulled", replug: "Plugged back in", drift: "Cable moved" };
 
 function renderDetail(o) {
@@ -123,13 +125,13 @@ function renderDetail(o) {
       ${e.heard ? `<div class="ev-q">“${esc(e.heard)}”</div>` : ""}<div class="ev-t">${esc(e.text || e.diff || "")}</div></li>`).join("")}</ol>`
     : `<p class="empty">Nothing yet. OWL adds what it tells the tech and what the switch confirms here as the work happens.</p>`;
   $("detail").innerHTML = `
-    <h2>${esc(o.ticket || "Work order " + o.id)} <span class="chip ${o.status}">${o.status}</span></h2>
+    <h2>${esc(o.ticket || "Work order " + o.id)} <span class="chip ${o.status}">${statusText[o.status] || o.status}</span></h2>
     <p class="target">Port ${o.port}${bad ? `<s>ticket said ${o.claimed_port}</s>` : ""}</p>
     <div class="check ${bad ? "bad" : "good"}">${esc(o.check)}</div>
-    <div class="facts"><span>Tech <b>${esc(o.tech)}</b></span><span>Until <b>${time(o.end)}</b></span>${device ? `<span>Now <b>${device}</b></span>` : ""}</div>
+    <div class="facts"><span>Tech <b>${esc(o.tech || "waiting for a tech to accept")}</b>${o.accepted ? ` · accepted ${time(o.accepted)}` : ""}</span><span>Until <b>${time(o.end)}</b></span>${device ? `<span>Now <b>${device}</b></span>` : ""}</div>
     ${o.note ? `<p>${esc(o.note)}</p>` : ""}
     <h2>Evidence</h2>${events}
-    ${o.status === "open" ? `<button class="secondary" id="close">Close work order</button>` : ""}`;
+    ${["open", "assigned", "accepted"].includes(o.status) ? `<button class="secondary" id="close">Close work order</button>` : ""}`;
   const close = $("close");
   if (close) close.onclick = async () => { await api("POST", `/api/workorders/${o.id}/close`); refresh(); };
 }
@@ -139,8 +141,8 @@ async function refresh() {
     const { work_orders } = await api("GET", "/api/workorders");
     $("orders").innerHTML = work_orders.map((o) => `
       <div class="order ${o.id === selected ? "sel" : ""}" data-id="${o.id}">
-        <div class="t">${esc(o.ticket || "#" + o.id)} <span class="chip ${o.status}">${o.status}</span>${o.mismatch ? `<span class="chip bad">ticket port wrong</span>` : ""}</div>
-        <div class="m">${esc(o.device || "port " + o.claimed_port)} · port ${o.port} · ${esc(o.tech)}</div>
+        <div class="t">${esc(o.ticket || "#" + o.id)} <span class="chip ${o.status}">${statusText[o.status] || o.status}</span>${o.mismatch ? `<span class="chip bad">ticket port wrong</span>` : ""}</div>
+        <div class="m">${esc(o.device || "port " + o.claimed_port)} · port ${o.port} · ${esc(o.tech || "unassigned")}</div>
       </div>`).join("");
     document.querySelectorAll(".order").forEach((el) => el.onclick = () => { selected = Number(el.dataset.id); refresh(); });
     if (selected) renderDetail(await api("GET", `/api/workorders/${selected}`));

@@ -37,6 +37,12 @@ struct SettingsView: View {
                         .frame(minHeight: 44)
                 }
             }
+            Section("You") {
+                TextField("Your name, as work orders assign it", text: $model.techName)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+                    .frame(minHeight: 44)
+            }
             GlassesSection(glasses: model.glasses)
             Section("Live") {
                 Stepper("\(model.fps) fps", value: $model.fps, in: 1...ARCamera.maxFPS)

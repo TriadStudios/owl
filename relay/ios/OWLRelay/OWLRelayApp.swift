@@ -26,6 +26,9 @@ struct RootView: View {
             TabView {
                 NavigationStack { DashboardView() }
                     .tabItem { Label("Closet", systemImage: "square.grid.3x2") }
+                NavigationStack { WorkOrdersView() }
+                    .tabItem { Label("Orders", systemImage: "list.clipboard") }
+                    .badge(model.orders.filter { $0.status == "open" || $0.status == "assigned" && $0.isMine(model.techName) }.count)
                 LiveView()
                     .tabItem { Label("Live", systemImage: "camera.viewfinder") }
                 NavigationStack { SettingsView() }

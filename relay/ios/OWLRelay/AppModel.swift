@@ -22,7 +22,10 @@ final class AppModel: ObservableObject {
     @Published var healthAt = Date()
     @Published var ports: PortsResponse?
     @Published var findings: [Finding] = []
-    @Published var order: WorkOrder?
+    @Published var orders: [WorkOrder] = []
+    @Published var techName: String {
+        didSet { UserDefaults.standard.set(techName, forKey: "techName") }
+    }
     @Published var loadError: String?
     @Published var connected = false
     @Published var overlay = Overlay()
@@ -120,6 +123,7 @@ final class AppModel: ObservableObject {
         fps = savedFPS == 0 ? 5 : savedFPS
         voice = UserDefaults.standard.object(forKey: "voice") as? Bool ?? true
         handsFree = UserDefaults.standard.object(forKey: "handsFree") as? Bool ?? true
+        techName = UserDefaults.standard.string(forKey: "techName") ?? ""
         camera.fps = fps
 
         relay.onConnected = { [weak self] up in
@@ -190,7 +194,7 @@ final class AppModel: ObservableObject {
         case .success(let v): findings = v.findings
         case .failure(let e): errors.append(e.localizedDescription)
         }
-        if case .success(let v) = wr { order = v.work_orders.first { $0.status == "open" } }
+        if case .success(let v) = wr { orders = v.work_orders.filter(\.live) }
         var seen = Set<String>()
         loadError = errors.isEmpty ? nil : errors.filter { seen.insert($0).inserted }.joined(separator: "\n")
     }
@@ -288,8 +292,31 @@ final class AppModel: ObservableObject {
     }
 
     private func heard(_ text: String) {
-        relay.sendUtterance(text)
+        relay.sendUtterance(text, tech: techName)
         show("You: \(text)")
+    }
+
+    // The order this tech is working now; with no name set, whichever order is in progress.
+    var order: WorkOrder? {
+        orders.first { $0.status == "accepted" && (techName.isEmpty || $0.isMine(techName)) }
+    }
+
+    func accept(_ order: WorkOrder) async {
+        do {
+            let _: WorkOrder = try await API.post("/api/workorders/\(order.id)/accept", ["tech": techName], to: active)
+        } catch {
+            show("Couldn't accept \(order.name): \(error.localizedDescription)")
+        }
+        await refresh()
+    }
+
+    func finish(_ order: WorkOrder) async {
+        do {
+            _ = try await API.data("/api/workorders/\(order.id)/close", from: active, body: Data())
+        } catch {
+            show("Couldn't close \(order.name): \(error.localizedDescription)")
+        }
+        await refresh()
     }
 
     func beginTalk() {
@@ -367,6 +394,8 @@ final class AppModel: ObservableObject {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         case .say(let text):
+            // A spoken reply can be OWL accepting a work order by voice, so the list catches up right away.
+            Task { await refresh() }
             if voice {
                 if hearing {
                     speechIn.cancel()

@@ -84,11 +84,20 @@ enum API {
         try decoder.decode(T.self, from: try await data(path, from: pairing))
     }
 
-    static func data(_ path: String, from pairing: Pairing?) async throws -> Data {
+    static func post<T: Decodable>(_ path: String, _ body: [String: String], to pairing: Pairing?) async throws -> T {
+        try decoder.decode(T.self, from: try await data(path, from: pairing, body: try JSONEncoder().encode(body)))
+    }
+
+    static func data(_ path: String, from pairing: Pairing?, body: Data? = nil) async throws -> Data {
         guard let pairing else { throw APIError.notPaired }
         guard let base = pairing.apiBase, let url = URL(string: path, relativeTo: base) else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(pairing.token)", forHTTPHeaderField: "Authorization")
+        if let body {
+            request.httpMethod = "POST"
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         let data: Data
         let response: URLResponse
         do {
