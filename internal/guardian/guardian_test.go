@@ -108,9 +108,9 @@ func TestAskSpeaksTheBlastCard(t *testing.T) {
 		heard string
 		want  []string
 	}{
-		{"I'm pulling port 2", []string{"Port 2, 2nd from the left, blue cable", "Do not touch: uplink, GS-BE18000", "23 devices behind it"}},
+		{"I'm pulling port 2", []string{"Port 2, 2nd from the left, blue cable", "Do not touch: that's GS-BE18000, the uplink", "23 devices depend on it"}},
 		{"unplugging the nas 01", []string{"Port 3, 3rd from the left", "NAS-01", "Safe"}},
-		{"port 4", []string{"Port 4: unknown. I can't tell", "confidence 0.40"}},
+		{"port 4", []string{"Port 4: unknown. I can't tell yet", "confidence 0.40"}},
 		{"port 9", []string{"Port 9: unknown. I can't tell", "camera cannot see port 9"}},
 		{"port 12", []string{"Port 12: unknown. I can't tell", "not on the switch"}},
 	}

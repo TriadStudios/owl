@@ -33,14 +33,14 @@ const (
 	quietBeforeIdle = 10 * time.Second
 	maxUnclear      = 3
 	narrateBudget   = 4 * time.Second
-	MissLine        = "Sorry, which port?"
-	closing         = "Okay. I'll keep watching."
+	MissLine        = "Sorry, which port was that?"
+	closing         = "Okay, I'm here if you need me."
 )
 
 var greetings = []string{
-	"Hi, I'm watching this switch. What are you here for?",
-	"Hey there. What are you working on today?",
-	"Hello. Which cable are you after?",
+	"Hi! What are you working on today?",
+	"Hey. What's the job today?",
+	"Hello. Which cable are we working on?",
 }
 
 type Point struct{ X, Y float64 }
@@ -258,10 +258,10 @@ func distance(a, b string) int {
 }
 
 var lines = template.Must(template.New("").Parse(`
-{{- define "do-not-touch"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Do not touch: {{.Reason}}. {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
-{{- define "caution"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{.Downstream}}. Caution: {{.Liveness}}, {{.Behind}} {{if eq .Behind 1}}device{{else}}devices{{end}} behind it.{{end}}
-{{- define "safe"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. {{if .Downstream}}{{.Downstream}}, {{.Liveness}}{{else}}Nothing plugged in{{end}}. Safe.{{end}}
-{{- define "unknown"}}Port {{.Num}}: unknown. I can't tell, {{.Reason}}.{{end}}`))
+{{- define "do-not-touch"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Do not touch: {{.Reason}}.{{if gt .Behind 1}} {{.Behind}} devices depend on it.{{end}}{{end}}
+{{- define "caution"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Caution: {{if .Downstream}}that's {{.Downstream}}, and it's {{.Liveness}}{{else}}it's {{.Liveness}}{{end}}.{{if gt .Behind 1}} Unplugging it drops {{.Behind}} devices.{{end}}{{end}}
+{{- define "safe"}}Port {{.Num}}, {{.Position}} from the left{{if .Color}}, {{.Color}} cable{{end}}. Safe: {{if .Downstream}}that's {{.Downstream}}, and it's {{.Liveness}}{{else}}nothing's plugged in{{end}}.{{end}}
+{{- define "unknown"}}Port {{.Num}}: unknown. I can't tell yet, {{.Reason}}.{{end}}`))
 
 type lineData struct {
 	Num        int
@@ -307,14 +307,40 @@ func facts(num int, ports []reconcile.Port, color string) (string, lineData) {
 			if who == "" {
 				who = d.Downstream
 			}
-			d.Reason = strings.Join(c.Criticality, " and ")
-			if who != "" {
-				d.Reason += ", " + who
-			}
+			d.Reason = plainReason(who, c.Criticality)
 		}
 	}
 	d.Position = ordinal(position)
 	return verdict, d
+}
+
+var spoken = map[string]string{
+	"uplink":      "the uplink to the rest of the network",
+	"aggregation": "other devices connect through it",
+	"critical":    "it's marked critical",
+}
+
+func plainReason(who string, criticality []string) string {
+	var parts []string
+	for _, c := range criticality {
+		if s, ok := spoken[c]; ok {
+			parts = append(parts, s)
+		} else {
+			parts = append(parts, c)
+		}
+	}
+	what := strings.Join(parts, ", and ")
+	switch {
+	case who == "":
+		if strings.HasPrefix(what, "the ") {
+			return "it's " + what
+		}
+		return what
+	case what == "":
+		return "that's " + who
+	default:
+		return "that's " + who + ", " + what
+	}
 }
 
 func ordinal(n int) string {

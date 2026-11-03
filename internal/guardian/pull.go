@@ -59,9 +59,9 @@ func (p *Pulls) changed(num int, up bool, ports []reconcile.Port, now time.Time)
 	case up:
 		f.Type, text = "replug", fmt.Sprintf("Port %d is back up on the switch.", num)
 	case verdict == "do-not-touch" && f.JobID == 0:
-		f.Type, text = "wrong-pull", fmt.Sprintf("Port %d just went down on the switch, and it's do not touch: %s.", num, d.Reason)
+		f.Type, text = "wrong-pull", fmt.Sprintf("Heads up: port %d just went down, and it's do not touch: %s.", num, d.Reason)
 	case open && f.JobID == 0:
-		f.Type, text = "wrong-pull", fmt.Sprintf("Port %d just went down on the switch, and it isn't part of the open job.", num)
+		f.Type, text = "wrong-pull", fmt.Sprintf("Heads up: port %d just went down, and it isn't part of your job.", num)
 	}
 	p.Log.Info("link change", "port", num, "up", up, "kind", f.Type, "verdict", verdict, "job", f.JobID, "text", text)
 	if err := p.Alert(text); err != nil {

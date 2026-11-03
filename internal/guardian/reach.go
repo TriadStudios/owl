@@ -61,9 +61,9 @@ func StopLine(port int, ports []reconcile.Port) string {
 
 func DeviationLine(port, jobPort int, doNotTouch bool) string {
 	if doNotTouch {
-		return fmt.Sprintf("Stop! Port %d isn't your job, and it's do not touch. Your job is port %d.", port, jobPort)
+		return fmt.Sprintf("Stop! That's port %d, and it's do not touch. Your job is on port %d.", port, jobPort)
 	}
-	return fmt.Sprintf("Careful, port %d isn't your job. Your job is port %d.", port, jobPort)
+	return fmt.Sprintf("Careful, that's port %d. Your job is on port %d.", port, jobPort)
 }
 
 func WarningLines(a *Approach, ports []reconcile.Port) []string {

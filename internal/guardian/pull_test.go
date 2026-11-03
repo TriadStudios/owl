@@ -52,7 +52,7 @@ func TestALinkChangeIsConfirmedAndLogged(t *testing.T) {
 	if !slices.Equal(kinds, []string{"pull", "wrong-pull", "replug"}) || len(said) != 3 {
 		t.Fatalf("findings %v said %q, want pull, wrong-pull, replug", kinds, said)
 	}
-	if said[0] != "Confirmed on the switch, port 3 is down." || !strings.Contains(said[1], "do not touch: uplink, GS-BE18000") || said[2] != "Port 3 is back up on the switch." {
+	if said[0] != "Confirmed on the switch, port 3 is down." || !strings.Contains(said[1], "do not touch: that's GS-BE18000, the uplink") || said[2] != "Port 3 is back up on the switch." {
 		t.Errorf("said %q", said)
 	}
 }
