@@ -333,6 +333,9 @@ $("new").addEventListener("submit", async (e) => {
   } catch (err) { $("formErr").textContent = err.message; }
 });
 
+// Deep links: #new opens the form, #o<id> opens that work order.
+if (location.hash === "#new") $("modal").classList.add("on");
+else if (location.hash.startsWith("#o")) selected = location.hash.slice(1);
 refresh();
 setInterval(refresh, 3000);
 </script>
