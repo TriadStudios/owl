@@ -75,5 +75,17 @@ class AdjacentPlugsFrame(unittest.TestCase):
         self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "XXX...X.")
 
 
+class CrossingCableFrame(unittest.TestCase):
+    def test_flat_cable_crossing_the_row_from_port_3_is_not_read_as_plugs_in_ports_1_and_2(self) -> None:
+        sam = json.loads((TESTDATA / "sam-phone-crossing-cable.json").read_text())
+        row = segment.ports(sam["results"])
+        self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "X.X.X.X.")
+
+    def test_socket_half_hidden_by_a_crossing_cable_is_one_port_not_two(self) -> None:
+        sam = json.loads((TESTDATA / "sam-phone-crossing-cable-2.json").read_text())
+        row = segment.ports(sam["results"])
+        self.assertEqual("".join("X" if port["occupied"] else "." for port in row), "X.X.X.X.")
+
+
 if __name__ == "__main__":
     unittest.main()

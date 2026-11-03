@@ -36,6 +36,7 @@ TIP_ABOVE = 0.5
 TIP_BELOW = 1.5
 TIP_BAND = 0.5
 REACH_STEP = 4
+PLUG_TOP_SLACK = 0.25
 HANDHELD_CROP_WIDTH = 800
 HANDHELD_PLACE_SCALE = 0.5
 COPPER_PORTS = 8
@@ -277,6 +278,10 @@ def reach_from_edge(mask: np.ndarray) -> np.ndarray:
     return reach
 
 
+def same_port(a: list[float], b: list[float]) -> bool:
+    return min(a[2], b[2]) - max(a[0], b[0]) >= 0.5 * min(a[2] - a[0], b[2] - b[0])
+
+
 def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     sockets: list[Instance] = []
     for instance in sorted(
@@ -296,11 +301,11 @@ def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
     row_y = float(np.median(centers_y[max(aligned, key=np.count_nonzero)]))
     top, bottom = int(round(row_y - socket_height / 2)), int(round(row_y + socket_height / 2))
 
-    candidates = [
-        {"box": s["box"], "occupied": False, "cable": None, "score": s["score"]}
-        for s, y in zip(sockets, centers_y)
-        if abs(y - row_y) <= socket_height / 2
-    ]
+    candidates: list[dict[str, object]] = []
+    for s, y in zip(sockets, centers_y):
+        # A cable over part of a socket can give it a second, smaller box beside the whole one; sockets come by score, so the better box wins.
+        if abs(y - row_y) <= socket_height / 2 and not any(same_port(s["box"], c["box"]) for c in candidates):
+            candidates.append({"box": s["box"], "occupied": False, "cable": None, "score": s["score"]})
     # Small boxes off the row (the SFP cages' LEDs) pull the all-socket median down and the console port and merged double boxes in the row push it up; the row's lower quartile tracks the real sockets.
     socket_width = float(np.percentile([c["box"][2] - c["box"][0] for c in candidates], 25))
     for cable_index, cable in enumerate(results[CABLE_PROMPT]):
@@ -311,18 +316,19 @@ def port_row(results: dict[str, list[Instance]]) -> list[dict[str, object]]:
         # SAM's cable mask often stops short of the plug (a black plug on the black face can end over a socket height below the row), so read the plug end from where the mask starts, not only inside the row band.
         plug_top = max(int(rows[0]), top, 0)
         strip = mask[plug_top:plug_top + bottom - top]
-        count, _, stats, _ = cv2.connectedComponentsWithStats(strip)
-        for x, y, w, h, area in stats[1:count]:
+        count, labels, stats, _ = cv2.connectedComponentsWithStats(strip)
+        for label, (x, y, w, h, area) in enumerate(stats[1:count], start=1):
             if area < 0.15 * socket_height * socket_width:
                 continue
+            if round(w / socket_width) > 1:
+                # A cable leaving its plug sideways crosses the face of the row and reads as more plugs; plug ends start at the top of the strip, the crossing cable enters it lower down.
+                tops = (labels[:, x:x + w] == label).argmax(axis=0)
+                high = np.flatnonzero(tops <= tops.min() + PLUG_TOP_SLACK * socket_height)
+                x, w = x + int(high[0]), int(high[-1] - high[0]) + 1
             plugs = max(1, round(w / socket_width))
             for i in range(plugs):
                 box = [x + i * w / plugs, plug_top + y, x + (i + 1) * w / plugs, plug_top + y + h]
-                candidates = [
-                    c for c in candidates
-                    if min(c["box"][2], box[2]) - max(c["box"][0], box[0])
-                    < 0.5 * min(c["box"][2] - c["box"][0], box[2] - box[0])
-                ]
+                candidates = [c for c in candidates if not same_port(c["box"], box)]
                 candidates.append({"box": box, "occupied": True, "cable": cable_index, "score": cable["score"]})
 
     # The gap between two neighbouring plugs can read as a socket that overlaps neither plug by half; no port fits between neighbours.
