@@ -18,6 +18,7 @@ final class AppleSpeechIn: SpeechIn {
     private var task: SFSpeechRecognitionTask?
     private var pause: DispatchWorkItem?
     private let pauseAfter: TimeInterval = 1.2
+    private static let portPhrases = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"].map { "port \($0)" } + ["this port", "this one"]
     private var onFinal: ((String?) -> Void)?
     private var listening = 0
 
@@ -43,6 +44,8 @@ final class AppleSpeechIn: SpeechIn {
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0 else { return "no microphone input" }
         let request = SFSpeechAudioBufferRecognitionRequest()
+        // Without these the recognizer hears "port five" as "part one" or "for one", and a wrong port number is the one mistake that matters here.
+        request.contextualStrings = Self.portPhrases
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
         }
