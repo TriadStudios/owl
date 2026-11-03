@@ -273,6 +273,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/workorders", s.createWorkOrder)
 	mux.HandleFunc("GET /api/workorders", s.listWorkOrders)
 	mux.HandleFunc("GET /api/workorders/{id}", s.workOrder)
+	mux.HandleFunc("POST /api/workorders/{id}/accept", s.acceptWorkOrder)
 	mux.HandleFunc("POST /api/workorders/{id}/close", s.closeWorkOrder)
 	mux.HandleFunc("GET /relay", s.relay)
 	return s.auth(mux)

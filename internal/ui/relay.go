@@ -54,6 +54,11 @@ type relayMsg struct {
 	TS   int64  `json:"ts"`
 	JPEG string `json:"jpeg_b64"`
 	Text string `json:"text"`
+	Tech string `json:"tech"`
+}
+
+type utterance struct {
+	text, tech string
 }
 
 type sayMsg struct {
@@ -137,7 +142,7 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithCancel(r.Context())
 	frames := make(chan []byte, 1)
-	utterances := make(chan string, 1)
+	utterances := make(chan utterance, 1)
 	settled := make(chan int, 1)
 	hand := &handState{}
 	var wg sync.WaitGroup
@@ -171,7 +176,7 @@ func (s *Server) relay(w http.ResponseWriter, r *http.Request) {
 	s.Log.Info("relay disconnected", "device", device, "code", code, "reason", reason, "frames_dropped_rate", dropped)
 }
 
-func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utterances chan string) (uint16, string, int) {
+func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utterances chan utterance) (uint16, string, int) {
 	dropped := 0
 	for {
 		op, data, err := c.read(maxMessage, relayIdle)
@@ -220,7 +225,7 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utteran
 			case <-utterances:
 			default:
 			}
-			utterances <- text
+			utterances <- utterance{text, strings.TrimSpace(m.Tech)}
 		default:
 			t := m.Type
 			if len(t) > 32 {
@@ -232,18 +237,26 @@ func (s *Server) readRelay(c *wsConn, device string, frames chan []byte, utteran
 	}
 }
 
-func (s *Server) answers(ctx context.Context, c *wsConn, device string, utterances <-chan string, settled <-chan int, hand *handState) {
+func (s *Server) answers(ctx context.Context, c *wsConn, device string, utterances <-chan utterance, settled <-chan int, hand *handState) {
 	var history []narrate.Turn
 	told := map[int]bool{}
 	for {
 		var line string
 		select {
-		case heard, ok := <-utterances:
+		case u, ok := <-utterances:
 			if !ok {
 				return
 			}
-			history = append(history, narrate.Turn{Who: "tech", Text: heard})
-			line = s.answer(ctx, device, heard, hand.get(), history, told)
+			history = append(history, narrate.Turn{Who: "tech", Text: u.text})
+			tech := u.tech
+			if tech == "" {
+				tech = device
+			}
+			if accepted, ok := s.acceptByVoice(tech, u.text); ok {
+				line = accepted
+			} else {
+				line = s.answer(ctx, device, u.text, hand.get(), history, told)
+			}
 		case port := <-settled:
 			line = s.handLine(ctx, device, port, history, told)
 		}

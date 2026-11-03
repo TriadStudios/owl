@@ -322,3 +322,53 @@ func TestWorkOrderIsCheckedAgainstTheLiveSwitch(t *testing.T) {
 		t.Errorf("second close: status %d, want 409", code)
 	}
 }
+
+func TestWorkOrderIsAcceptedOnceByApiOrVoice(t *testing.T) {
+	s, token := fixtureServer(t)
+	s.JobsPath = filepath.Join(t.TempDir(), "jobs.json")
+	loadFixtureTable(t, s)
+	call := func(method, path, body string) (int, map[string]any) {
+		req := httptest.NewRequest(method, path, strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		s.Handler().ServeHTTP(rec, req)
+		var out map[string]any
+		json.Unmarshal(rec.Body.Bytes(), &out)
+		return rec.Code, out
+	}
+	for _, body := range []string{
+		`{"ticket":"WO-1042","device":"closet-box","claimed_port":1}`,
+		`{"ticket":"WO-1043","device":"Home-AP"}`,
+		`{"ticket":"WO-1044","device":"closet-box","tech":"sam"}`,
+	} {
+		if code, out := call(http.MethodPost, "/api/workorders", body); code != http.StatusCreated {
+			t.Fatalf("%s: %d %v", body, code, out)
+		}
+	}
+	if _, out := call(http.MethodGet, "/api/workorders/1", ""); out["status"] != "open" {
+		t.Errorf("unassigned order status %v, want open", out["status"])
+	}
+
+	if line, ok := s.acceptByVoice("dillon", "can I pull port five"); ok {
+		t.Errorf("a port question was taken as accepting: %q", line)
+	}
+	if line, _ := s.acceptByVoice("dillon", "accept the work order"); !strings.Contains(line, "WO-1042, WO-1043") {
+		t.Errorf("two free orders, none named: %q", line)
+	}
+	line, _ := s.acceptByVoice("dillon", "I'll take work order 1042")
+	if !strings.HasPrefix(line, "Accepted WO-1042.") || !strings.Contains(line, "closet-box on port 3") {
+		t.Errorf("accept by voice: %q", line)
+	}
+	if code, out := call(http.MethodPost, "/api/workorders/1/accept", `{"tech":"sam"}`); code != http.StatusConflict {
+		t.Errorf("second tech accepting: %d %v", code, out)
+	}
+	if code, out := call(http.MethodPost, "/api/workorders/3/accept", `{"tech":"dillon"}`); code != http.StatusConflict {
+		t.Errorf("accepting an order assigned to someone else: %d %v", code, out)
+	}
+	if code, out := call(http.MethodPost, "/api/workorders/3/accept", `{"tech":"Sam"}`); code != http.StatusOK || out["status"] != "accepted" {
+		t.Errorf("assigned tech accepting: %d %v", code, out)
+	}
+	if code, out := call(http.MethodPost, "/api/workorders/2/accept", ""); code != http.StatusOK || out["tech"] != "phone" {
+		t.Errorf("accepting with no name falls back to the paired device: %d %v", code, out)
+	}
+}

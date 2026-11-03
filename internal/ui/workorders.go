@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +16,11 @@ import (
 )
 
 const defaultOrderMinutes = 60
+
+var (
+	acceptWords = regexp.MustCompile(`(?i)\b(accept|take|claim)\b.*\b(work order|ticket|job|order)\b`)
+	numbers     = regexp.MustCompile(`\d+`)
+)
 
 type workOrderIn struct {
 	Ticket  string `json:"ticket"`
@@ -45,6 +51,10 @@ func newWorkOrder(j job.Job, now time.Time) workOrderJSON {
 		status = "closed"
 	case now.After(j.End):
 		status = "expired"
+	case !j.Accepted.IsZero():
+		status = "accepted"
+	case j.Tech != "":
+		status = "assigned"
 	}
 	return workOrderJSON{Job: j, Status: status, Mismatch: j.Claimed != 0 && j.Claimed != j.Port}
 }
@@ -107,8 +117,8 @@ func (s *Server) createWorkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in.Device, in.Tech = strings.TrimSpace(in.Device), strings.TrimSpace(in.Tech)
-	if in.Tech == "" || (in.Device == "" && in.Claimed < 1) {
-		s.fail(w, http.StatusBadRequest, "a work order needs a tech and a device or a port")
+	if in.Device == "" && in.Claimed < 1 {
+		s.fail(w, http.StatusBadRequest, "a work order needs a device or a port")
 		return
 	}
 	s.mu.Lock()
@@ -208,6 +218,84 @@ func (s *Server) closeWorkOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Log.Info("work order closed", "id", j.ID, "ticket", j.Ticket)
 	s.workOrder(w, r)
+}
+
+func (s *Server) acceptWorkOrder(w http.ResponseWriter, r *http.Request) {
+	j, ok := s.findJob(w, r)
+	if !ok {
+		return
+	}
+	var in struct {
+		Tech string `json:"tech"`
+	}
+	json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&in)
+	tech := strings.TrimSpace(in.Tech)
+	if tech == "" {
+		tech, _ = r.Context().Value(ctxKey{}).(string)
+	}
+	s.jobsMu.Lock()
+	j, err := job.Accept(s.JobsPath, j.ID, tech, time.Now())
+	s.jobsMu.Unlock()
+	if err != nil {
+		s.fail(w, http.StatusConflict, err.Error())
+		return
+	}
+	s.Log.Info("work order accepted", "id", j.ID, "ticket", j.Ticket, "tech", j.Tech)
+	s.writeJSON(w, http.StatusOK, newWorkOrder(j, time.Now()))
+}
+
+func orderName(j job.Job) string {
+	if j.Ticket != "" {
+		return j.Ticket
+	}
+	return fmt.Sprintf("work order %d", j.ID)
+}
+
+// acceptByVoice lets a tech wearing glasses take a work order without reaching for a screen.
+func (s *Server) acceptByVoice(tech, heard string) (string, bool) {
+	if !acceptWords.MatchString(heard) {
+		return "", false
+	}
+	var free, named []job.Job
+	said := numbers.FindAllString(heard, -1)
+	for _, j := range s.openOrders(time.Now()) {
+		if !j.Accepted.IsZero() || j.Tech != "" && !strings.EqualFold(j.Tech, tech) {
+			continue
+		}
+		free = append(free, j)
+		for _, n := range said {
+			if n == strconv.Itoa(j.ID) || strings.Join(numbers.FindAllString(j.Ticket, -1), "") == n {
+				named = append(named, j)
+				break
+			}
+		}
+	}
+	if len(named) > 0 {
+		free = named
+	}
+	switch len(free) {
+	case 0:
+		return "There's no open work order for you to accept.", true
+	case 1:
+	default:
+		var names []string
+		for _, j := range free {
+			names = append(names, orderName(j))
+		}
+		return fmt.Sprintf("There are %d open work orders: %s. Say which one.", len(free), strings.Join(names, ", ")), true
+	}
+	s.jobsMu.Lock()
+	j, err := job.Accept(s.JobsPath, free[0].ID, tech, time.Now())
+	s.jobsMu.Unlock()
+	if err != nil {
+		return fmt.Sprintf("I couldn't accept %s: %v.", orderName(free[0]), err), true
+	}
+	s.Log.Info("work order accepted", "id", j.ID, "ticket", j.Ticket, "tech", j.Tech, "by", "voice")
+	line := "Accepted " + orderName(j) + "."
+	if j.Note != "" {
+		line += " " + j.Note + "."
+	}
+	return line + " " + j.Check, true
 }
 
 func (s *Server) findJob(w http.ResponseWriter, r *http.Request) (job.Job, bool) {

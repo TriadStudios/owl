@@ -12,18 +12,19 @@ import (
 )
 
 type Job struct {
-	ID      int       `json:"id"`
-	Port    int       `json:"port"`
-	Tech    string    `json:"tech"`
-	Start   time.Time `json:"start"`
-	End     time.Time `json:"end"`
-	Note    string    `json:"note,omitempty"`
-	Created time.Time `json:"created"`
-	Closed  time.Time `json:"closed,omitzero"`
-	Ticket  string    `json:"ticket,omitempty"`
-	Device  string    `json:"device,omitempty"`
-	Claimed int       `json:"claimed_port,omitempty"`
-	Check   string    `json:"check,omitempty"`
+	ID       int       `json:"id"`
+	Port     int       `json:"port"`
+	Tech     string    `json:"tech"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	Note     string    `json:"note,omitempty"`
+	Created  time.Time `json:"created"`
+	Closed   time.Time `json:"closed,omitzero"`
+	Ticket   string    `json:"ticket,omitempty"`
+	Device   string    `json:"device,omitempty"`
+	Claimed  int       `json:"claimed_port,omitempty"`
+	Check    string    `json:"check,omitempty"`
+	Accepted time.Time `json:"accepted,omitzero"`
 }
 
 func ParseWindow(s string, now time.Time) (time.Time, time.Time, error) {
@@ -83,7 +84,8 @@ func Save(path string, jobs []Job) error {
 }
 
 func Add(path string, j Job) (Job, error) {
-	if j.Port < 1 || j.Tech == "" || !j.End.After(j.Start) {
+	// A work order can be filed before anyone takes it; a tech accepts it later.
+	if j.Port < 1 || j.Tech == "" && j.Ticket == "" && j.Device == "" || !j.End.After(j.Start) {
 		return Job{}, errors.New("a job needs a port, a tech and a window that ends after it starts")
 	}
 	jobs, err := Load(path)
@@ -113,6 +115,30 @@ func Close(path string, id int, now time.Time) error {
 		return Save(path, jobs)
 	}
 	return fmt.Errorf("no job %d", id)
+}
+
+func Accept(path string, id int, tech string, now time.Time) (Job, error) {
+	jobs, err := Load(path)
+	if err != nil {
+		return Job{}, err
+	}
+	for i := range jobs {
+		j := &jobs[i]
+		if j.ID != id {
+			continue
+		}
+		switch {
+		case !j.Closed.IsZero():
+			return Job{}, fmt.Errorf("job %d is closed", id)
+		case !j.Accepted.IsZero() && !strings.EqualFold(j.Tech, tech):
+			return Job{}, fmt.Errorf("job %d was already accepted by %s", id, j.Tech)
+		case j.Tech != "" && !strings.EqualFold(j.Tech, tech):
+			return Job{}, fmt.Errorf("job %d is assigned to %s", id, j.Tech)
+		}
+		j.Tech, j.Accepted = tech, now.UTC()
+		return *j, Save(path, jobs)
+	}
+	return Job{}, fmt.Errorf("no job %d", id)
 }
 
 func Covering(jobs []Job, port int, now time.Time) *Job {
