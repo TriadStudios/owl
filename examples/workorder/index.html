@@ -3,96 +3,215 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OWL Work Orders</title>
+<title>Acme IT Service Desk</title>
 <style>
 :root {
-  --bg: #f6f7f9; --card: #fff; --ink: #15181d; --muted: #646b75; --line: #e2e5ea;
-  --accent: #2d5bd7; --safe: #1f8a4c; --caution: #b7791f; --danger: #c53030;
-  --danger-bg: #fdecec; --safe-bg: #e8f6ee;
+  --bg: #f4f5f7; --panel: #fff; --side: #f9fafb; --ink: #16191e; --muted: #667080; --line: #e3e6eb; --hover: #f1f4fa;
+  --accent: #2d5bd7; --accent-ink: #fff; --accent-bg: #e9efff;
+  --safe: #1f8a4c; --safe-bg: #e7f6ec; --caution: #a86a12; --caution-bg: #fdf3e1; --danger: #c53030; --danger-bg: #fdecec;
+  --owl: #6b46c1; --owl-bg: #f1ebff;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #111317; --card: #1a1d23; --ink: #e9ecf1; --muted: #9aa3ae; --line: #2a2f37;
-    --accent: #7b9cff; --safe: #4cc985; --caution: #e5b45a; --danger: #ff7a7a;
-    --danger-bg: #3a1d1f; --safe-bg: #17301f; }
+  :root { --bg: #0f1115; --panel: #171a20; --side: #13161b; --ink: #e8ebf0; --muted: #949daa; --line: #262b33; --hover: #1d2129;
+    --accent: #7b9cff; --accent-ink: #0f1115; --accent-bg: #1d2640;
+    --safe: #4cc985; --safe-bg: #15281c; --caution: #e5b45a; --caution-bg: #2c2414; --danger: #ff7a7a; --danger-bg: #331b1d;
+    --owl: #b79cff; --owl-bg: #241d38; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; font: 15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background: var(--bg); color: var(--ink); }
-header { padding: 20px 24px 8px; }
-header h1 { margin: 0; font-size: 20px; }
-header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--line); padding: 1px 5px; border-radius: 4px; }
-main { display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px 24px 32px; }
-@media (max-width: 820px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
-h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 12px; }
-label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-button { margin-top: 14px; padding: 9px 14px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
-button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-.orders { margin-top: 16px; }
-.order { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
-.order.sel { border-color: var(--accent); }
-.order .t { font-weight: 600; }
-.order .m { color: var(--muted); font-size: 13px; }
-.chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
-.chip.open, .chip.assigned { background: var(--line); color: var(--accent); }
-.chip.accepted { background: var(--safe-bg); color: var(--safe); }
-.chip.closed, .chip.expired { background: var(--line); color: var(--muted); }
+html, body { height: 100%; }
+body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); display: grid; grid-template-rows: 52px 1fr; }
+button { font: inherit; cursor: pointer; }
+a { color: var(--accent); }
+
+.top { display: flex; align-items: center; gap: 16px; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+.logo { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+.search { flex: 1; max-width: 520px; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--muted); }
+.search input { border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; width: 100%; }
+.top .spacer { flex: 1; }
+.btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 600; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--owl-bg); color: var(--owl); display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+
+.app { display: grid; grid-template-columns: 220px minmax(380px, 1fr) minmax(420px, 1.15fr); min-height: 0; }
+.side { background: var(--side); border-right: 1px solid var(--line); padding: 14px 10px; overflow: auto; }
+.side h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 8px 6px; }
+.side h3:first-child { margin-top: 0; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+.nav:hover { background: var(--hover); }
+.nav.on { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.nav .n { font-size: 12px; color: var(--muted); }
+.side .note { margin: 18px 8px 0; padding: 10px; border-radius: 8px; background: var(--owl-bg); color: var(--owl); font-size: 12px; }
+
+.list { border-right: 1px solid var(--line); background: var(--panel); overflow: auto; }
+.list-head { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
+.list-head h2 { margin: 0; font-size: 16px; }
+.list-head .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.filters { display: flex; gap: 6px; margin-top: 10px; }
+.pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.pill.on { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.tk { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 11px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.tk:hover { background: var(--hover); }
+.tk.sel { background: var(--accent-bg); box-shadow: inset 3px 0 0 var(--accent); }
+.tk .id { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tk .title { font-weight: 600; grid-column: 1 / -1; }
+.tk .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tk .when { font-size: 12px; color: var(--muted); text-align: right; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--line); color: var(--muted); white-space: nowrap; }
+.chip.open, .chip.assigned, .chip.new { background: var(--accent-bg); color: var(--accent); }
+.chip.accepted, .chip.progress { background: var(--safe-bg); color: var(--safe); }
+.chip.pending { background: var(--caution-bg); color: var(--caution); }
 .chip.bad { background: var(--danger-bg); color: var(--danger); }
-.check { padding: 14px 16px; border-radius: 8px; margin: 4px 0 16px; font-size: 16px; }
-.check.bad { background: var(--danger-bg); border-left: 4px solid var(--danger); }
-.check.good { background: var(--safe-bg); border-left: 4px solid var(--safe); }
-.target { font-size: 28px; font-weight: 700; margin: 0 0 4px; }
-.target s { color: var(--danger); font-weight: 500; font-size: 20px; margin-left: 10px; }
-.facts { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+.chip.owl { background: var(--owl-bg); color: var(--owl); }
+.prio { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
+.prio.P1 { background: var(--danger); } .prio.P2 { background: var(--caution); } .prio.P3 { background: var(--accent); } .prio.P4 { background: var(--muted); }
+
+.detail { overflow: auto; padding: 20px 24px 40px; }
+.detail .empty { color: var(--muted); margin-top: 40px; text-align: center; }
+.d-id { color: var(--muted); font-size: 12px; display: flex; gap: 8px; align-items: center; }
+.d-title { font-size: 20px; font-weight: 700; margin: 4px 0 14px; }
+.fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 16px; }
+.fields .k { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.fields .v { font-weight: 600; margin-top: 1px; }
+.owlcheck { border-radius: 10px; border: 1px solid var(--line); background: var(--panel); margin-bottom: 16px; overflow: hidden; }
+.owlcheck .h { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--line); font-weight: 700; }
+.owlcheck .h span { font-size: 12px; color: var(--muted); font-weight: 500; }
+.owlcheck .b { padding: 14px 16px; }
+.target { font-size: 30px; font-weight: 800; margin: 0 0 8px; }
+.target s { color: var(--danger); font-weight: 500; font-size: 18px; margin-left: 10px; }
+.verdict { padding: 12px 14px; border-radius: 8px; font-size: 15px; }
+.verdict.bad { background: var(--danger-bg); border-left: 4px solid var(--danger); }
+.verdict.good { background: var(--safe-bg); border-left: 4px solid var(--safe); }
+.verdict.none { background: var(--bg); color: var(--muted); }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 13px; margin-top: 10px; }
 .facts b { color: var(--ink); }
-ol.events { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
-ol.events li { position: relative; padding: 0 0 14px 16px; }
-ol.events li::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.desc { padding: 0 2px 6px; margin-bottom: 14px; }
+.tabs { display: flex; gap: 18px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.tabs div { padding: 8px 0; color: var(--muted); font-weight: 600; }
+.tabs div.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+ol.events { list-style: none; padding: 0; margin: 0 0 0 6px; border-left: 2px solid var(--line); }
+ol.events li { position: relative; padding: 0 0 16px 18px; }
+ol.events li::before { content: ""; position: absolute; left: -7px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); border: 2px solid var(--bg); }
 ol.events li.warning::before, ol.events li.wrong-pull::before { background: var(--danger); }
-ol.events li.pull::before, ol.events li.guidance::before { background: var(--safe); }
+ol.events li.pull::before, ol.events li.guidance::before, ol.events li.accepted::before { background: var(--safe); }
+ol.events li.owl::before { background: var(--owl); }
 .ev-h { font-size: 12px; color: var(--muted); }
 .ev-t { margin-top: 2px; }
 .ev-q { color: var(--muted); font-style: italic; }
-.empty { color: var(--muted); }
+.actions { display: flex; gap: 8px; margin-top: 8px; }
+
+.modal { position: fixed; inset: 0; background: rgba(10, 12, 16, .55); display: none; place-items: center; z-index: 10; }
+.modal.on { display: grid; }
+.dialog { width: min(560px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.dialog .h { padding: 16px 20px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 16px; display: flex; justify-content: space-between; }
+.dialog .h .x { background: none; border: 0; color: var(--muted); font-size: 18px; }
+.dialog form { padding: 8px 20px 20px; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; font-weight: 600; }
+input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+textarea { min-height: 64px; resize: vertical; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.foot .hint { font-size: 12px; color: var(--owl); }
 .err { color: var(--danger); font-size: 13px; margin-top: 8px; }
-a { color: var(--accent); }
+
+@media (max-width: 1100px) { .app { grid-template-columns: 1fr 1.1fr; } .side { display: none; } }
+@media (max-width: 760px) { .app { grid-template-columns: 1fr; } .list { max-height: 45vh; } .search { display: none; } .fields { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>OWL Work Orders</h1>
-  <p>A sample ticketing app built on OWL's API: <code>POST /api/workorders</code>, <code>GET /api/workorders/{id}</code>, <code>POST /api/workorders/{id}/close</code></p>
+<header class="top">
+  <div class="brand"><div class="logo">A</div>Acme IT · Service Desk</div>
+  <div class="search">⌕ <input placeholder="Search tickets, assets, people"></div>
+  <div class="spacer"></div>
+  <button class="btn primary" id="newBtn">+ New ticket</button>
+  <div class="avatar" title="Dillon">DG</div>
 </header>
-<main>
-  <section>
-    <form class="card" id="new">
-      <h2>New work order</h2>
-      <label for="ticket">Ticket</label>
-      <input id="ticket" value="WO-1042">
-      <label for="device">Device to take offline</label>
-      <input id="device" value="wanheda" placeholder="hostname, IP or MAC">
+
+<div class="app">
+  <nav class="side">
+    <h3>Queues</h3>
+    <a class="nav on" href="#"><span>All open</span><span class="n" id="nAll">0</span></a>
+    <a class="nav" href="#"><span>Network changes</span><span class="n" id="nNet">0</span></a>
+    <a class="nav" href="#"><span>Hardware</span><span class="n">2</span></a>
+    <a class="nav" href="#"><span>Access requests</span><span class="n">1</span></a>
+    <a class="nav" href="#"><span>My tickets</span><span class="n" id="nMine">0</span></a>
+    <h3>Views</h3>
+    <a class="nav" href="#"><span>Change calendar</span></a>
+    <a class="nav" href="#"><span>Assets</span></a>
+    <a class="nav" href="#"><span>Reports</span></a>
+    <div class="note">Network changes are checked by <b>OWL</b> against the live switch the moment they're filed.</div>
+  </nav>
+
+  <section class="list">
+    <div class="list-head">
+      <h2>All open tickets</h2>
+      <div class="sub" id="listSub">Loading…</div>
+      <div class="filters"><span class="pill on">Open</span><span class="pill">Due today</span><span class="pill">Unassigned</span><span class="pill">P1–P2</span></div>
+    </div>
+    <div id="tickets"></div>
+  </section>
+
+  <section class="detail" id="detail"><p class="empty">Select a ticket.</p></section>
+</div>
+
+<div class="modal" id="modal">
+  <div class="dialog">
+    <div class="h">New ticket <button class="x" id="closeModal" type="button">✕</button></div>
+    <form id="new">
       <div class="row">
-        <div><label for="port">Port on the ticket</label><input id="port" type="number" min="1" value="7"></div>
+        <div><label for="type">Type</label><select id="type"><option>Change · Network</option><option>Incident</option><option>Request</option></select></div>
+        <div><label for="ticket">Ticket number</label><input id="ticket" value="WO-1042"></div>
+      </div>
+      <label for="title">Summary</label>
+      <input id="title" value="Take wanheda offline for a disk swap">
+      <div class="row3">
+        <div><label for="device">Device</label><input id="device" value="wanheda" placeholder="hostname, IP or MAC"></div>
+        <div><label for="port">Switch port</label><input id="port" type="number" min="1" value="7"></div>
         <div><label for="minutes">Window (min)</label><input id="minutes" type="number" min="5" value="60"></div>
       </div>
-      <label for="tech">Assign to</label>
-      <input id="tech" placeholder="Leave empty to let any tech accept it">
-      <label for="note">Note</label>
-      <input id="note" value="Take wanheda offline for a disk swap">
-      <button type="submit">File work order</button>
+      <div class="row">
+        <div><label for="prio">Priority</label><select id="prio"><option>P3 · Normal</option><option>P2 · High</option><option>P1 · Urgent</option><option>P4 · Low</option></select></div>
+        <div><label for="tech">Assign to</label><input id="tech" placeholder="Leave empty for the field queue"></div>
+      </div>
+      <label for="desc">Description</label>
+      <textarea id="desc">Unplug wanheda's network cable at the closet switch, swap the disk, plug it back in. Rack: closet A, switch 1.</textarea>
+      <div class="foot">
+        <span class="hint">OWL checks this against the live switch on submit</span>
+        <button class="btn primary" type="submit">Submit ticket</button>
+      </div>
       <div class="err" id="formErr"></div>
     </form>
-    <div class="orders" id="orders"></div>
-  </section>
-  <section class="card" id="detail"><p class="empty">File a work order or pick one to see what OWL found.</p></section>
-</main>
+  </div>
+</div>
+
 <script>
-let selected = null;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const time = (t) => new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const time = (t) => new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const ago = (t) => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`; };
+const minsAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
+
+// Sample tickets so the desk looks like a real one; only the work orders come from OWL.
+const samples = [
+  { key: "s1", id: "INC-2231", title: "Printer on 3rd floor shows offline", requester: "Priya N.", prio: "P3", status: "progress", statusText: "In progress", tech: "Marcus T.", category: "Hardware", updated: minsAgo(18),
+    desc: "Front-desk printer drops off the network a few times a day. Power-cycling fixes it for an hour.", events: [["Marcus T.", "Replaced the patch cable at the desk, monitoring."], ["Priya N.", "Still dropping after lunch."]] },
+  { key: "s2", id: "REQ-1187", title: "VPN access for new contractor", requester: "Jordan K.", prio: "P4", status: "pending", statusText: "Waiting on approval", tech: "—", category: "Access request", updated: minsAgo(52),
+    desc: "Contractor starts Monday, needs VPN and the shared drive.", events: [["Jordan K.", "Manager approval requested."]] },
+  { key: "s3", id: "INC-2229", title: "Slow Wi-Fi in conference room B", requester: "Sam R.", prio: "P2", status: "new", statusText: "New", tech: "—", category: "Network", updated: minsAgo(95),
+    desc: "Video calls freeze in room B since this morning. Other rooms are fine.", events: [] },
+  { key: "s4", id: "CHG-0915", title: "Firmware update on closet switch (Fri 22:00)", requester: "Dillon G.", prio: "P3", status: "pending", statusText: "Scheduled", tech: "Dillon G.", category: "Change · Network", updated: minsAgo(240),
+    desc: "Planned firmware update during the Friday maintenance window. Expect a 5 minute outage.", events: [["Dillon G.", "Change approved by CAB."]] },
+  { key: "s5", id: "INC-2224", title: "Laptop won't charge (dock 4)", requester: "Ana L.", prio: "P4", status: "progress", statusText: "In progress", tech: "Marcus T.", category: "Hardware", updated: minsAgo(310),
+    desc: "Laptop only charges with the original charger, not on the dock.", events: [] },
+];
+
+const owlStatus = { open: ["new", "Open · unassigned"], assigned: ["open", "Assigned"], accepted: ["progress", "In progress"], closed: ["", "Closed"], expired: ["", "Expired"] };
+const labels = { warning: "OWL warned the tech", guidance: "OWL guided the tech", pull: "Switch confirmed the pull", "wrong-pull": "Wrong port pulled", replug: "Plugged back in", drift: "Cable moved" };
+
+let orders = [];
+let selected = null;
 
 async function api(method, path, body) {
   const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: body && JSON.stringify(body) });
@@ -101,53 +220,119 @@ async function api(method, path, body) {
   return data;
 }
 
+function rows() {
+  const live = orders.filter((o) => o.status !== "closed" && o.status !== "expired").map((o) => ({
+    key: "o" + o.id, id: o.ticket || "WO-" + o.id, title: o.note || `Work on ${o.device || "port " + o.claimed_port}`, requester: "Dillon G.", prio: "P3",
+    status: owlStatus[o.status]?.[0] || "", statusText: owlStatus[o.status]?.[1] || o.status, tech: o.tech || "—", category: "Change · Network",
+    updated: o.accepted || o.created, owl: o,
+  }));
+  return [...live.reverse(), ...samples];
+}
+
+function renderList() {
+  const all = rows();
+  $("nAll").textContent = all.length;
+  $("nNet").textContent = all.filter((r) => r.category.startsWith("Change · Network") || r.category === "Network").length;
+  $("nMine").textContent = all.filter((r) => r.tech.startsWith("Dillon")).length;
+  $("listSub").textContent = `${all.length} tickets · sorted by last update`;
+  $("tickets").innerHTML = all.map((r) => `
+    <div class="tk ${r.key === selected ? "sel" : ""}" data-key="${r.key}">
+      <div class="id">${esc(r.id)} · ${esc(r.category)}</div><div class="when">${ago(r.updated)}</div>
+      <div class="title">${esc(r.title)}</div>
+      <div class="meta"><span class="prio ${r.prio}"></span>${r.prio} · ${esc(r.requester)} → ${esc(r.tech)}
+        <span class="chip ${r.status}">${esc(r.statusText)}</span>
+        ${r.owl ? (r.owl.mismatch ? `<span class="chip bad">OWL: wrong port</span>` : `<span class="chip owl">OWL checked</span>`) : ""}</div>
+    </div>`).join("");
+  document.querySelectorAll(".tk").forEach((el) => el.onclick = () => { selected = el.dataset.key; render(); });
+}
+
+function fields(r, extra) {
+  return `<div class="fields">
+    <div><div class="k">Requester</div><div class="v">${esc(r.requester)}</div></div>
+    <div><div class="k">Assignee</div><div class="v">${esc(r.tech)}</div></div>
+    <div><div class="k">Priority</div><div class="v"><span class="prio ${r.prio}"></span> ${r.prio}</div></div>
+    <div><div class="k">Category</div><div class="v">${esc(r.category)}</div></div>
+    <div><div class="k">Status</div><div class="v"><span class="chip ${r.status}">${esc(r.statusText)}</span></div></div>
+    ${extra}
+  </div>`;
+}
+
+function renderSample(r) {
+  const events = r.events.length
+    ? `<ol class="events">${r.events.map(([who, text], i) => `<li><div class="ev-h">${esc(who)} · ${ago(minsAgo(5 + i * 40))}</div><div class="ev-t">${esc(text)}</div></li>`).join("")}</ol>`
+    : `<p class="empty" style="text-align:left;margin:0">No activity yet.</p>`;
+  $("detail").innerHTML = `
+    <div class="d-id">${esc(r.id)}</div>
+    <div class="d-title">${esc(r.title)}</div>
+    ${fields(r, `<div><div class="k">Updated</div><div class="v">${ago(r.updated)}</div></div>`)}
+    <div class="desc">${esc(r.desc)}</div>
+    <div class="tabs"><div class="on">Activity</div><div>Linked assets</div><div>Approvals</div></div>
+    ${events}`;
+}
+
+async function renderOrder(r) {
+  const o = await api("GET", `/api/workorders/${r.owl.id}`);
+  const bad = o.mismatch;
+  const now = o.device ? (o.device_online_now ? `${esc(o.device)} online on port ${o.device_port_now}` : `${esc(o.device)} offline`) : "";
+  const events = [`<li><div class="ev-h">${time(o.created)} · Dillon G.</div><div class="ev-t">Ticket filed for port ${o.claimed_port}.</div></li>`,
+    `<li class="owl"><div class="ev-h">${time(o.created)} · OWL pre-check</div><div class="ev-t">${esc(o.check)}</div></li>`];
+  if (o.accepted) events.push(`<li class="accepted"><div class="ev-h">${time(o.accepted)} · ${esc(o.tech)}</div><div class="ev-t">Accepted the work order.</div></li>`);
+  for (const e of o.events) {
+    events.push(`<li class="${esc(e.type)}"><div class="ev-h">${time(e.ts)} · ${labels[e.type] || esc(e.type)} · port ${e.port}${e.evidence ? ` · <a href="/api/evidence/${esc(e.evidence)}" target="_blank">clip</a>` : ""}</div>
+      ${e.heard ? `<div class="ev-q">“${esc(e.heard)}”</div>` : ""}<div class="ev-t">${esc(e.text || e.diff || "")}</div></li>`);
+  }
+  if (o.closed) events.push(`<li><div class="ev-h">${time(o.closed)} · ${esc(o.tech || "Dillon G.")}</div><div class="ev-t">Closed.</div></li>`);
+  if (selected !== r.key) return;
+  $("detail").innerHTML = `
+    <div class="d-id">${esc(r.id)} <span class="chip owl">OWL</span></div>
+    <div class="d-title">${esc(r.title)}</div>
+    ${fields(r, `<div><div class="k">Window</div><div class="v">until ${time(o.end)}</div></div>`)}
+    <div class="owlcheck">
+      <div class="h">OWL pre-check <span>live switch · ${time(o.created)}</span></div>
+      <div class="b">
+        <p class="target">Port ${o.port}${bad ? `<s>ticket said ${o.claimed_port}</s>` : ""}</p>
+        <div class="verdict ${bad ? "bad" : "good"}">${esc(o.check)}</div>
+        <div class="facts"><span>Device <b>${esc(o.device || "—")}</b></span>${now ? `<span>Now <b>${now}</b></span>` : ""}<span>Tech <b>${esc(o.tech || "waiting for a tech to accept")}</b></span></div>
+      </div>
+    </div>
+    <div class="tabs"><div class="on">Activity &amp; evidence</div><div>Linked assets</div><div>Approvals</div></div>
+    <ol class="events">${events.join("")}</ol>
+    ${["open", "assigned", "accepted"].includes(o.status) ? `<div class="actions"><button class="btn" id="close">Close ticket</button></div>` : ""}`;
+  const close = $("close");
+  if (close) close.onclick = async () => { await api("POST", `/api/workorders/${o.id}/close`); refresh(); };
+}
+
+function render() {
+  renderList();
+  const r = rows().find((x) => x.key === selected);
+  if (!r) { $("detail").innerHTML = `<p class="empty">Select a ticket.</p>`; return; }
+  if (r.owl) renderOrder(r).catch((err) => { $("detail").innerHTML = `<p class="err">${esc(err.message)}</p>`; });
+  else renderSample(r);
+}
+
+async function refresh() {
+  try {
+    orders = (await api("GET", "/api/workorders")).work_orders;
+    render();
+  } catch (err) { $("listSub").textContent = err.message; }
+}
+
+$("newBtn").onclick = () => { $("formErr").textContent = ""; $("modal").classList.add("on"); };
+$("closeModal").onclick = () => $("modal").classList.remove("on");
 $("new").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("formErr").textContent = "";
   try {
     const order = await api("POST", "/api/workorders", {
       ticket: $("ticket").value, device: $("device").value, claimed_port: Number($("port").value) || 0,
-      tech: $("tech").value, note: $("note").value, minutes: Number($("minutes").value) || 60,
+      tech: $("tech").value, note: $("title").value, minutes: Number($("minutes").value) || 60,
     });
-    selected = order.id;
+    $("modal").classList.remove("on");
+    selected = "o" + order.id;
     refresh();
   } catch (err) { $("formErr").textContent = err.message; }
 });
 
-const statusText = { open: "waiting for a tech", assigned: "assigned", accepted: "in progress", closed: "closed", expired: "expired" };
-const labels = { warning: "OWL warned", guidance: "OWL guided", pull: "Switch confirmed the pull", "wrong-pull": "Wrong port pulled", replug: "Plugged back in", drift: "Cable moved" };
-
-function renderDetail(o) {
-  const bad = o.mismatch;
-  const device = o.device ? (o.device_online_now ? `${esc(o.device)} is still online on port ${o.device_port_now}` : `${esc(o.device)} is offline`) : "";
-  const events = o.events.length ? `<ol class="events">${o.events.map((e) => `
-      <li class="${esc(e.type)}"><div class="ev-h">${time(e.ts)} · ${labels[e.type] || esc(e.type)} · port ${e.port}${e.evidence ? ` · <a href="/api/evidence/${esc(e.evidence)}" target="_blank">clip</a>` : ""}</div>
-      ${e.heard ? `<div class="ev-q">“${esc(e.heard)}”</div>` : ""}<div class="ev-t">${esc(e.text || e.diff || "")}</div></li>`).join("")}</ol>`
-    : `<p class="empty">Nothing yet. OWL adds what it tells the tech and what the switch confirms here as the work happens.</p>`;
-  $("detail").innerHTML = `
-    <h2>${esc(o.ticket || "Work order " + o.id)} <span class="chip ${o.status}">${statusText[o.status] || o.status}</span></h2>
-    <p class="target">Port ${o.port}${bad ? `<s>ticket said ${o.claimed_port}</s>` : ""}</p>
-    <div class="check ${bad ? "bad" : "good"}">${esc(o.check)}</div>
-    <div class="facts"><span>Tech <b>${esc(o.tech || "waiting for a tech to accept")}</b>${o.accepted ? ` · accepted ${time(o.accepted)}` : ""}</span><span>Until <b>${time(o.end)}</b></span>${device ? `<span>Now <b>${device}</b></span>` : ""}</div>
-    ${o.note ? `<p>${esc(o.note)}</p>` : ""}
-    <h2>Evidence</h2>${events}
-    ${["open", "assigned", "accepted"].includes(o.status) ? `<button class="secondary" id="close">Close work order</button>` : ""}`;
-  const close = $("close");
-  if (close) close.onclick = async () => { await api("POST", `/api/workorders/${o.id}/close`); refresh(); };
-}
-
-async function refresh() {
-  try {
-    const { work_orders } = await api("GET", "/api/workorders");
-    $("orders").innerHTML = work_orders.map((o) => `
-      <div class="order ${o.id === selected ? "sel" : ""}" data-id="${o.id}">
-        <div class="t">${esc(o.ticket || "#" + o.id)} <span class="chip ${o.status}">${statusText[o.status] || o.status}</span>${o.mismatch ? `<span class="chip bad">ticket port wrong</span>` : ""}</div>
-        <div class="m">${esc(o.device || "port " + o.claimed_port)} · port ${o.port} · ${esc(o.tech || "unassigned")}</div>
-      </div>`).join("");
-    document.querySelectorAll(".order").forEach((el) => el.onclick = () => { selected = Number(el.dataset.id); refresh(); });
-    if (selected) renderDetail(await api("GET", `/api/workorders/${selected}`));
-  } catch (err) { $("formErr").textContent = err.message; }
-}
 refresh();
 setInterval(refresh, 3000);
 </script>
