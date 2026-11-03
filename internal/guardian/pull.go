@@ -71,7 +71,7 @@ func (p *Pulls) changed(num int, up bool, ports []reconcile.Port, now time.Time)
 	if err != nil {
 		p.Log.Warn("link change clip", "port", num, "err", err)
 	}
-	f.Evidence = hash
+	f.Evidence, f.Text = hash, text
 	if err := p.Record(f); err != nil {
 		p.Log.Error("link change record", "port", num, "err", err)
 	}

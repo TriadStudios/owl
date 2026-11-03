@@ -269,7 +269,7 @@ func (s *Server) narrate(ctx context.Context, kind, heard string, hand int, port
 	start := time.Now()
 	nctx, cancel := context.WithTimeout(ctx, narrateBudget)
 	defer cancel()
-	req := narrate.Request{Kind: kind, Utterance: heard, Ports: guardian.NarratePorts(ports, nil), History: history}
+	req := narrate.Request{Kind: kind, Utterance: heard, Ports: guardian.NarratePorts(ports, nil), Jobs: narrateJobs(s.openOrders(time.Now())), History: history}
 	if hand != 0 {
 		req.Scene = &narrate.Scene{HandPort: hand}
 	}
@@ -296,6 +296,7 @@ func (s *Server) answer(ctx context.Context, device, heard string, hand int, his
 			if r.Port != 0 {
 				told[r.Port] = true
 				s.Log.Info("relay safety line", "device", device, "port", r.Port, "verdict", verdicts[r.Port], "source", "model", "text", r.Line, "utterance", heard, "narrate_ms", took)
+				s.witness(r.Port, heard, r.Line)
 			}
 			return r.Line
 		}
@@ -307,6 +308,7 @@ func (s *Server) answer(ctx context.Context, device, heard string, hand int, his
 	line := guardian.Line(parsed, ports, "")
 	told[parsed] = true
 	s.Log.Info("relay safety line", "device", device, "port", parsed, "verdict", verdicts[parsed], "source", "template", "text", line, "utterance", heard, "fallback_reason", err.Error(), "narrate_ms", took)
+	s.witness(parsed, heard, line)
 	return line
 }
 
@@ -328,6 +330,7 @@ func (s *Server) handLine(ctx context.Context, device string, port int, history 
 	}
 	told[port] = true
 	s.Log.Info("relay safety line", "device", device, "port", port, "verdict", verdicts[port], "source", source, "text", line, "hand", true, "fallback_reason", reason, "narrate_ms", took)
+	s.witness(port, "", line)
 	return line
 }
 

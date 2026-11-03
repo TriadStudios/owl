@@ -830,6 +830,7 @@ func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPa
 		AggregationMin: in.AggregationMin,
 		EvidenceDir:    evidenceDir,
 		FindingsPath:   findingsPath,
+		JobsPath:       jobsPath,
 		Devices:        &ui.Registry{Path: devicesPath},
 		Log:            log,
 	}
@@ -1135,7 +1136,7 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 			var open []narrate.Job
 			for _, j := range jobs {
 				if j.Closed.IsZero() && !now.Before(j.Start) && !now.After(j.End) {
-					open = append(open, narrate.Job{ID: j.ID, Port: j.Port, Tech: j.Tech, Note: j.Note, Until: j.End.Local().Format("15:04")})
+					open = append(open, narrate.Job{ID: j.ID, Port: j.Port, Tech: j.Tech, Note: j.Note, Until: j.End.Local().Format("15:04"), Ticket: j.Ticket, Device: j.Device, Claimed: j.Claimed, Check: j.Check})
 				}
 			}
 			return open

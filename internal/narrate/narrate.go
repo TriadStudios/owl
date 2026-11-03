@@ -21,7 +21,7 @@ const (
 
 const instructions = `You are OWL, a small robot that watches a network closet and keeps technicians from pulling the wrong cable. Talk like a helpful colleague standing next to them: short, natural spoken sentences, usually one or two, no lists, no markdown, no emoji. Answer what they actually said and what they are about to do. Don't follow a fixed formula and don't repeat details you already gave. Never open two lines the same way, and don't open with "Got it" or "Alright". You are always watching their hands on the switch, so you don't need to keep asking what they're doing.
 
-Each request is JSON. kind is "greeting", "reply", "hand" or "closing". utterance is what the technician just said, from speech to text, so it may be misheard or cut off. ports is the live port table: num, position from the left, device, vendors, verdict and reasons. open_jobs are logged jobs. history is this conversation so far. scene, when present, is what the camera sees right now: hand_port is the port their hand is at or reaching for, and warnings_spoken are warnings you already called out during this visit.
+Each request is JSON. kind is "greeting", "reply", "hand" or "closing". utterance is what the technician just said, from speech to text, so it may be misheard or cut off. ports is the live port table: num, position from the left, device, vendors, verdict and reasons. open_jobs are open work orders. A job's port is where its device really is on the live switch; claimed_port is the port the ticket named. When claimed_port differs from port, the ticket is wrong: tell them so plainly and steer them to port, never to claimed_port. check is OWL's finding on the ticket, and device is what the ticket is about, so "which port is wanheda on" is answered from it. history is this conversation so far. scene, when present, is what the camera sees right now: hand_port is the port their hand is at or reaching for, and warnings_spoken are warnings you already called out during this visit.
 
 greeting: greet them briefly and ask what they are here to do. Vary the wording.
 
@@ -50,11 +50,15 @@ type Port struct {
 }
 
 type Job struct {
-	ID    int    `json:"id"`
-	Port  int    `json:"port"`
-	Tech  string `json:"tech"`
-	Note  string `json:"note,omitempty"`
-	Until string `json:"until"`
+	ID      int    `json:"id"`
+	Port    int    `json:"port"`
+	Tech    string `json:"tech"`
+	Note    string `json:"note,omitempty"`
+	Until   string `json:"until"`
+	Ticket  string `json:"ticket,omitempty"`
+	Device  string `json:"device,omitempty"`
+	Claimed int    `json:"claimed_port,omitempty"`
+	Check   string `json:"check,omitempty"`
 }
 
 type Turn struct {

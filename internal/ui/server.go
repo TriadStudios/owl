@@ -50,6 +50,7 @@ type Config struct {
 	AggregationMin int
 	EvidenceDir    string
 	FindingsPath   string
+	JobsPath       string
 	Devices        *Registry
 	Narrator       guardian.Narrator
 	Log            *slog.Logger
@@ -58,6 +59,8 @@ type Config struct {
 type Server struct {
 	Config
 	probe *http.Client
+
+	jobsMu sync.Mutex
 
 	mu        sync.Mutex
 	prev, cur *discovery.SwitchState
@@ -267,6 +270,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/blast/{port}", s.blastCard)
 	mux.HandleFunc("GET /api/findings", s.findings)
 	mux.HandleFunc("GET /api/evidence/{hash}", s.evidence)
+	mux.HandleFunc("POST /api/workorders", s.createWorkOrder)
+	mux.HandleFunc("GET /api/workorders", s.listWorkOrders)
+	mux.HandleFunc("GET /api/workorders/{id}", s.workOrder)
+	mux.HandleFunc("POST /api/workorders/{id}/close", s.closeWorkOrder)
 	mux.HandleFunc("GET /relay", s.relay)
 	return s.auth(mux)
 }

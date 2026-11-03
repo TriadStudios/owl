@@ -19,6 +19,8 @@ type Finding struct {
 	Diff        string    `json:"diff,omitempty"`
 	JobID       int       `json:"job_id,omitempty"`
 	Evidence    string    `json:"evidence,omitempty"`
+	Heard       string    `json:"heard,omitempty"`
+	Text        string    `json:"text,omitempty"`
 }
 
 func Load(path string) ([]Finding, error) {

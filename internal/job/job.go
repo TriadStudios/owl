@@ -20,6 +20,10 @@ type Job struct {
 	Note    string    `json:"note,omitempty"`
 	Created time.Time `json:"created"`
 	Closed  time.Time `json:"closed,omitzero"`
+	Ticket  string    `json:"ticket,omitempty"`
+	Device  string    `json:"device,omitempty"`
+	Claimed int       `json:"claimed_port,omitempty"`
+	Check   string    `json:"check,omitempty"`
 }
 
 func ParseWindow(s string, now time.Time) (time.Time, time.Time, error) {

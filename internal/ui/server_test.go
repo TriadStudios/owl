@@ -266,3 +266,59 @@ func TestRelayHandLineAlwaysSaysThePortAndItsVerdict(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkOrderIsCheckedAgainstTheLiveSwitch(t *testing.T) {
+	s, token := fixtureServer(t)
+	s.JobsPath = filepath.Join(t.TempDir(), "jobs.json")
+	loadFixtureTable(t, s)
+	call := func(method, path, body string) (int, map[string]any) {
+		req := httptest.NewRequest(method, path, strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		rec := httptest.NewRecorder()
+		s.Handler().ServeHTTP(rec, req)
+		var out map[string]any
+		json.Unmarshal(rec.Body.Bytes(), &out)
+		return rec.Code, out
+	}
+
+	cases := []struct {
+		body     string
+		port     float64
+		mismatch bool
+		check    []string
+	}{
+		{`{"ticket":"WO-1","device":"closet-box","claimed_port":1,"tech":"dillon"}`, 3, true, []string{"ticket says port 1", "closet-box on port 3", "Don't touch port 1", "do not touch"}},
+		{`{"ticket":"WO-2","device":"Closet-Box","claimed_port":3,"tech":"dillon"}`, 3, false, []string{"Closet-Box is on port 3", "safe"}},
+		{`{"ticket":"WO-3","device":"192.0.2.15","tech":"dillon"}`, 1, false, []string{"on port 1", "do not touch"}},
+		{`{"ticket":"WO-4","device":"nas-99","claimed_port":5,"tech":"dillon"}`, 5, false, []string{"can't find nas-99", "port 5"}},
+	}
+	for _, c := range cases {
+		code, out := call(http.MethodPost, "/api/workorders", c.body)
+		if code != http.StatusCreated {
+			t.Fatalf("%s: status %d %v", c.body, code, out)
+		}
+		if out["port"] != c.port || out["mismatch"] != c.mismatch {
+			t.Errorf("%s: port %v mismatch %v, want %v %v", c.body, out["port"], out["mismatch"], c.port, c.mismatch)
+		}
+		for _, want := range c.check {
+			if !strings.Contains(out["check"].(string), want) {
+				t.Errorf("%s: check %q lacks %q", c.body, out["check"], want)
+			}
+		}
+	}
+
+	if code, _ := call(http.MethodPost, "/api/workorders", `{"device":"nas-99","tech":"dillon"}`); code != http.StatusUnprocessableEntity {
+		t.Errorf("unknown device with no port: status %d, want 422", code)
+	}
+	s.witness(3, "can I pull port three", "Port 3 is safe.")
+	code, out := call(http.MethodGet, "/api/workorders/1", "")
+	if code != http.StatusOK || out["device_port_now"] != float64(3) || len(out["events"].([]any)) != 1 {
+		t.Errorf("detail: status %d %v", code, out)
+	}
+	if code, out := call(http.MethodPost, "/api/workorders/1/close", ""); code != http.StatusOK || out["status"] != "closed" {
+		t.Errorf("close: status %d %v", code, out)
+	}
+	if code, _ := call(http.MethodPost, "/api/workorders/1/close", ""); code != http.StatusConflict {
+		t.Errorf("second close: status %d, want 409", code)
+	}
+}
