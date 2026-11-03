@@ -4,7 +4,7 @@
 
 In September 2026 Google lost a zone for about four hours. A physical maintenance procedure unplugged every fiber path in 13 minutes. Nobody went rogue. A person correctly followed a procedure that was wrong, and nothing in the room told them what each cable carried. Almost every network closet has that same gap. OWL closes it for one switch and one rack face: it knows what is on every port, it checks the work order against that, and it warns before a hand pulls the wrong cable.
 
-Built for the Meta hackathon.
+Built for the Meta hackathon by Dillon Griffey (Triad Studios).
 
 ## The demo
 
