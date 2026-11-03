@@ -115,6 +115,7 @@ func run(args []string) error {
 	tech := fset.String("tech", "", "technician doing the job")
 	window := fset.String("window", "", "job window HH:MM-HH:MM, today local; an end before the start is tomorrow")
 	note := fset.String("note", "", "job note")
+	pairOut := fset.String("json", "", "write the pairing JSON to this file instead of showing a QR code, for an app built on OWL's API")
 	pairURL := fset.String("url", "", "relay URL in the pairing QR (default wss://<this box's address toward the switch>:<addr port>)")
 	if err := fset.Parse(args); err != nil {
 		return err
@@ -712,7 +713,7 @@ func run(args []string) error {
 	case "serve":
 		return serve(cfg, *addr, *image, *perceptionURL, *leases, *rulesPath, *robotURL)
 	case "pair":
-		return pair(cfg, *pairName, *pairURL, *addr)
+		return pair(cfg, *pairName, *pairURL, *addr, *pairOut)
 	case "pair list":
 		devices, err := ui.LoadDevices(devicesPath)
 		if err != nil {
@@ -892,7 +893,7 @@ func serve(cfg discovery.Config, addr, image, perceptionURL, leasesPath, rulesPa
 	return nil
 }
 
-func pair(cfg discovery.Config, name, relayURL, addr string) error {
+func pair(cfg discovery.Config, name, relayURL, addr, out string) error {
 	if relayURL == "" {
 		if cfg.Host == "" {
 			return errors.New("need -url or OWL_SWITCH_HOST to pick the address the phone should dial")
@@ -924,6 +925,13 @@ func pair(cfg discovery.Config, name, relayURL, addr string) error {
 	payload, err := json.Marshal(map[string]string{"url": relayURL, "token": token, "cert_sha256": fingerprint})
 	if err != nil {
 		return err
+	}
+	if out != "" {
+		if err := os.WriteFile(out, append(payload, '\n'), 0o600); err != nil {
+			return err
+		}
+		fmt.Printf("paired %s -> %s\ncert sha256 %s\npairing JSON in %s; it holds the token, so keep it private\n", name, relayURL, fingerprint, out)
+		return nil
 	}
 	code, err := qr.Encode(payload)
 	if err != nil {
