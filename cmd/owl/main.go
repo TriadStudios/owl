@@ -1180,8 +1180,8 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 	log.Info("guardian watching", "robot", robotURL, "narrator", narrator)
 	trackClient := &perception.Client{BaseURL: perceptionURL, HTTP: &http.Client{}}
 	reach := &guardian.Reach{
-		Track: func(ctx context.Context, row [2]float64) (<-chan perception.TrackFrame, error) {
-			return trackClient.Track(ctx, row, trackFPS)
+		Track: func(ctx context.Context, row [2]float64, ref string) (<-chan perception.TrackFrame, error) {
+			return trackClient.Track(ctx, row, ref, trackFPS)
 		},
 		Alert: bridge.Alert,
 		Clip:  func() (string, error) { return cam.Clip(ctx) },
@@ -1280,7 +1280,7 @@ func watch(cfg discovery.Config, perceptionURL, leasesPath, rulesPath, robotURL 
 }
 
 func approachFor(frame *perception.Result, ports []reconcile.Port, log *slog.Logger) *guardian.Approach {
-	a := &guardian.Approach{RowY0: frame.Row[0], RowY1: frame.Row[1], DoNotTouch: map[int]bool{}, Populated: map[int]bool{}, JobPorts: map[int]int{}}
+	a := &guardian.Approach{Ref: frame.FrameHash, RowY0: frame.Row[0], RowY1: frame.Row[1], DoNotTouch: map[int]bool{}, Populated: map[int]bool{}, JobPorts: map[int]int{}}
 	for _, c := range frame.Ports {
 		a.Ports = append(a.Ports, guardian.PortBox{Num: c.Num, X0: c.Box[0], X1: c.Box[2]})
 		if c.Occupied {

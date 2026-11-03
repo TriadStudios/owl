@@ -14,7 +14,7 @@ import (
 )
 
 type Reach struct {
-	Track func(ctx context.Context, row [2]float64) (<-chan perception.TrackFrame, error)
+	Track func(ctx context.Context, row [2]float64, ref string) (<-chan perception.TrackFrame, error)
 	Alert func(text string) error
 	Clip  func() (string, error)
 	Log   *slog.Logger
@@ -89,7 +89,7 @@ func WarningLines(a *Approach, ports []reconcile.Port) []string {
 }
 
 func (r *Reach) Run(ctx context.Context, a *Approach, ports []reconcile.Port) {
-	frames, err := r.Track(ctx, [2]float64{a.RowY0, a.RowY1})
+	frames, err := r.Track(ctx, [2]float64{a.RowY0, a.RowY1}, a.Ref)
 	if err != nil {
 		r.Log.Error("track", "err", err)
 		return

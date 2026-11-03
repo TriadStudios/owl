@@ -49,6 +49,7 @@ type ApproachEvent struct {
 }
 
 type Approach struct {
+	Ref        string
 	Ports      []PortBox
 	RowY0      float64
 	RowY1      float64

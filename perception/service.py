@@ -21,6 +21,7 @@ import track
 MAX_IMAGE_BYTES = 20 * 2**20
 MAX_BURST_S = 30
 MAX_RECORD_S = 300
+MAX_REFERENCES = 32
 RECORD_START_TIMEOUT_S = 20
 CAMERA_ATTEMPTS = 5
 CAMERA_RETRY_S = 2.0
@@ -49,6 +50,8 @@ camera_lock = threading.Lock()
 track_wants_camera = threading.Event()
 recording: dict[str, object] = {}
 reference: dict[str, np.ndarray] = {}
+# Keyed by frame hash: a row re-read the guardian throws away (a visit began mid-read) must not move the frame its port boxes came from.
+references: dict[str, np.ndarray] = {}
 last_full_row: dict[str, object] = {}
 last_rect: dict[str, object] = {}
 
@@ -204,11 +207,12 @@ def small_gray(frame: np.ndarray) -> np.ndarray:
     return cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), None, fx=ALIGN_SCALE, fy=ALIGN_SCALE, interpolation=cv2.INTER_AREA).astype(np.float32)
 
 
-def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
+def warp_from_reference(frame: np.ndarray, ref: str = "") -> np.ndarray | None:
     # The head lands a little differently every session, so measure how this frame sits against the segmented one.
-    if "gray" not in reference:
+    base = references.get(ref, reference.get("gray"))
+    if base is None:
         return None
-    ref, cur = reference["gray"], small_gray(frame)
+    ref, cur = base, small_gray(frame)
     # OpenCV 5.0 phaseCorrelate applies the window to its inputs in place, which would wear the stored reference away.
     (dx, dy), _ = cv2.phaseCorrelate(ref.copy(), cur.copy(), cv2.createHanningWindow(ref.shape[::-1], cv2.CV_32F))
     warp = np.array([[1, 0, dx], [0, 1, dy]], np.float32)
@@ -222,8 +226,8 @@ def warp_from_reference(frame: np.ndarray) -> np.ndarray | None:
     return warp
 
 
-def shift_from_reference(frame: np.ndarray) -> tuple[float, float]:
-    warp = warp_from_reference(frame)
+def shift_from_reference(frame: np.ndarray, ref: str = "") -> tuple[float, float]:
+    warp = warp_from_reference(frame, ref)
     return (0.0, 0.0) if warp is None else (float(warp[0, 2]), float(warp[1, 2]))
 
 
@@ -294,6 +298,9 @@ def describe_camera(burst: float) -> dict[str, object]:
                 if attempt == CAMERA_ATTEMPTS:
                     raise ValueError(f"{CAMERA_ATTEMPTS} camera frames rejected, last: {error}") from error
         reference["gray"] = small_gray(frame)
+        references[result["frame_hash"]] = reference["gray"]
+        while len(references) > MAX_REFERENCES:
+            references.pop(next(iter(references)))
         FRAMES.mkdir(parents=True, exist_ok=True)
         (FRAMES / f"{result['frame_hash']}.png").write_bytes(encoded.tobytes())
         result["leds"] = watch("segment-leds", capture.bridged(burst), led_boxes(result))
@@ -412,7 +419,7 @@ def refuse_while_frozen() -> None:
 
 
 @app.get("/track")
-def track_stream(row: str, fps: float = 10) -> StreamingResponse:
+def track_stream(row: str, fps: float = 10, ref: str = "") -> StreamingResponse:
     try:
         band = [float(v) for v in row.split(",")]
     except ValueError:
@@ -422,7 +429,7 @@ def track_stream(row: str, fps: float = 10) -> StreamingResponse:
     lines: queue.Queue = queue.Queue(maxsize=TRACK_BACKLOG)
     stop = threading.Event()
     track_wants_camera.set()
-    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock, shift_from_reference), daemon=True).start()
+    threading.Thread(target=track.run, args=(fps, band, lines, stop, camera_lock, lambda frame: shift_from_reference(frame, ref)), daemon=True).start()
 
     def stream():
         try:

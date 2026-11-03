@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 )
@@ -214,8 +215,8 @@ type TrackFrame struct {
 	Frozen bool
 }
 
-func (c *Client) Track(ctx context.Context, row [2]float64, fps float64) (<-chan TrackFrame, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/track?row=%g,%g&fps=%g", c.BaseURL, row[0], row[1], fps), nil)
+func (c *Client) Track(ctx context.Context, row [2]float64, ref string, fps float64) (<-chan TrackFrame, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/track?row=%g,%g&fps=%g&ref=%s", c.BaseURL, row[0], row[1], fps, url.QueryEscape(ref)), nil)
 	if err != nil {
 		return nil, err
 	}
