@@ -37,6 +37,7 @@ TIP_BELOW = 1.5
 TIP_BAND = 0.5
 REACH_STEP = 4
 HANDHELD_CROP_WIDTH = 800
+HANDHELD_PLACE_SCALE = 0.5
 COPPER_PORTS = 8
 PORT_PALETTE = (
     (75, 25, 230), (75, 180, 60), (25, 225, 255), (200, 130, 0), (48, 130, 245), (180, 30, 145),
@@ -387,6 +388,15 @@ def row_rect(full_row: list[dict[str, object]], width: int, height: int) -> list
     ]
 
 
+def place_row_small(image: np.ndarray, env: dict[str, str]) -> list[int]:
+    # The whole-frame pass only has to find the row, and a half-size frame uploads and runs in a third of the time.
+    small = cv2.resize(image, None, fx=HANDHELD_PLACE_SCALE, fy=HANDHELD_PLACE_SCALE, interpolation=cv2.INTER_AREA)
+    ok, encoded = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    if not ok:
+        raise ValueError("failed to encode the frame for placing the port row")
+    return [int(v / HANDHELD_PLACE_SCALE) for v in place_row(encoded.tobytes(), small, env)]
+
+
 def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False, rect: list[int] | None = None) -> tuple[np.ndarray, dict[str, list[Instance]], list[int], float]:
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
@@ -395,7 +405,7 @@ def analyze(image_bytes: bytes, env: dict[str, str], handheld: bool = False, rec
 
     if handheld:
         # A handheld camera never sees the ports in the same place twice, so the stored crop of the fixed camera does not apply.
-        rect = rect or place_row(image_bytes, image, env)
+        rect = rect or place_row_small(image, env)
     else:
         if not ROI_PATH.exists():
             rect = place_row(image_bytes, image, env)
