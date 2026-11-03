@@ -128,3 +128,19 @@ struct FindingsResponse: Decodable {
         findings = (try c.decodeIfPresent([Lenient].self, forKey: .findings) ?? []).compactMap(\.value)
     }
 }
+
+struct WorkOrder: Decodable, Equatable, Identifiable {
+    let id: Int
+    let ticket: String?
+    let device: String?
+    let claimed_port: Int?
+    let port: Int
+    let check: String?
+    let status: String
+    let mismatch: Bool
+    let tech: String
+}
+
+struct WorkOrdersResponse: Decodable {
+    let work_orders: [WorkOrder]
+}

@@ -22,6 +22,7 @@ final class AppModel: ObservableObject {
     @Published var healthAt = Date()
     @Published var ports: PortsResponse?
     @Published var findings: [Finding] = []
+    @Published var order: WorkOrder?
     @Published var loadError: String?
     @Published var connected = false
     @Published var overlay = Overlay()
@@ -171,7 +172,8 @@ final class AppModel: ObservableObject {
         async let h: Result<Health, Error> = fetch("/api/health", pairing)
         async let p: Result<PortsResponse, Error> = fetch("/api/ports", pairing)
         async let f: Result<FindingsResponse, Error> = fetch("/api/findings", pairing)
-        let (hr, pr, fr) = await (h, p, f)
+        async let w: Result<WorkOrdersResponse, Error> = fetch("/api/workorders", pairing)
+        let (hr, pr, fr, wr) = await (h, p, f, w)
         guard pairing.id == activeID else { return }
         var errors: [String] = []
         switch hr {
@@ -188,6 +190,7 @@ final class AppModel: ObservableObject {
         case .success(let v): findings = v.findings
         case .failure(let e): errors.append(e.localizedDescription)
         }
+        if case .success(let v) = wr { order = v.work_orders.first { $0.status == "open" } }
         var seen = Set<String>()
         loadError = errors.isEmpty ? nil : errors.filter { seen.insert($0).inserted }.joined(separator: "\n")
     }

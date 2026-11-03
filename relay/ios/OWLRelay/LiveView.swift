@@ -22,6 +22,9 @@ struct LiveView: View {
                     ForEach(Source.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                if let order = model.order {
+                    WorkOrderBanner(order: order)
+                }
                 if model.source == .phone {
                     PhoneAim(scene: model.scene, overlay: model.overlay)
                 } else {
@@ -57,6 +60,29 @@ struct LiveView: View {
                 try? await Task.sleep(for: .seconds(15))
             }
         }
+    }
+}
+
+struct WorkOrderBanner: View {
+    let order: WorkOrder
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Image(systemName: order.mismatch ? "exclamationmark.octagon.fill" : "wrench.and.screwdriver.fill")
+                Text("\(order.ticket ?? "Work order \(order.id)") · \(order.device ?? "port") → PORT \(order.port)").font(.headline)
+                if order.mismatch, let claimed = order.claimed_port {
+                    Text("not \(claimed)").font(.subheadline.bold()).strikethrough()
+                }
+            }
+            if let check = order.check {
+                Text(check).font(.caption).lineLimit(3)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background((order.mismatch ? Verdict.doNotTouch.color : Theme.accent).opacity(0.9), in: RoundedRectangle(cornerRadius: 14))
     }
 }
 
