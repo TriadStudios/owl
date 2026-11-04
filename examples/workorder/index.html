@@ -220,12 +220,16 @@ async function api(method, path, body) {
   return data;
 }
 
-function rows() {
-  const live = orders.filter((o) => o.status !== "closed" && o.status !== "expired").map((o) => ({
+function orderRow(o) {
+  return {
     key: "o" + o.id, id: o.ticket || "WO-" + o.id, title: o.note || `Work on ${o.device || "port " + o.claimed_port}`, requester: "Dillon G.", prio: "P3",
     status: owlStatus[o.status]?.[0] || "", statusText: owlStatus[o.status]?.[1] || o.status, tech: o.tech || "—", category: "Change · Network",
     updated: o.accepted || o.created, owl: o,
-  }));
+  };
+}
+
+function rows() {
+  const live = orders.filter((o) => o.status !== "closed" && o.status !== "expired").map(orderRow);
   return [...live.reverse(), ...samples];
 }
 
@@ -304,7 +308,8 @@ async function renderOrder(r) {
 
 function render() {
   renderList();
-  const r = rows().find((x) => x.key === selected);
+  // A closed ticket leaves the queue but still opens from a link.
+  const r = [...rows(), ...orders.map(orderRow)].find((x) => x.key === selected);
   if (!r) { $("detail").innerHTML = `<p class="empty">Select a ticket.</p>`; return; }
   if (r.owl) renderOrder(r).catch((err) => { $("detail").innerHTML = `<p class="err">${esc(err.message)}</p>`; });
   else renderSample(r);
