@@ -15,6 +15,7 @@ final class Glasses: ObservableObject {
     @Published var problem: String?
     @Published fileprivate(set) var trace = Trace()
     @Published private(set) var listening = false
+    @Published private(set) var sent: HUD?
     var onHeard: ((String) -> Void)?
     var onListening: ((Bool) -> Void)?
     private var display: Display?
@@ -44,6 +45,7 @@ final class Glasses: ObservableObject {
                 } else {
                     try await display.send(hud.view())
                 }
+                sent = hud.isEmpty ? nil : hud
             } catch {
                 trace.display = "send failed: \(error)"
             }
@@ -53,6 +55,7 @@ final class Glasses: ObservableObject {
     fileprivate func attach(_ display: Display?) {
         self.display = display
         shown = nil
+        sent = nil
         trace.display = display == nil ? "none" : "on"
     }
 

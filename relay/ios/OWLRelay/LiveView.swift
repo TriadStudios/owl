@@ -38,6 +38,7 @@ struct LiveView: View {
                         .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 12))
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
+                GlassesMirror(glasses: model.glasses)
                 Spacer()
                 Text(model.talking ? "Listening…" : model.hearing ? "Just talk, or hold to talk" : "Hold to talk")
                     .font(.headline)
