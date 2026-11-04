@@ -42,7 +42,7 @@ Built for the Meta hackathon by Dillon Griffey (Triad Studios).
 ```
 
 - **Server (`cmd/owl`, `internal/*`)**, Go. Polls the switch over SNMP, joins it with LLDP neighbors, the bridge forwarding table and DHCP leases, and works out what each port carries, whether it is live and what would break. Serves an HTTPS API and a WebSocket for the phone.
-- **Perception (`perception/`)**, Python. Segments the switch face with SAM 3.1 using the prompts `ethernet port`, `network port` and `ethernet cable`, numbers the ports left to right, reads link LEDs, and tracks the hand to tell which port it is on. Rejects any frame whose port count does not match the switch.
+- **Perception (`perception/`)**, Python. Segments the switch face with SAM 3.1 using the prompts `ethernet port`, `network port`, `cable` and `hand`, numbers the ports left to right, reads link LEDs, and tracks the hand to tell which port it is on. Drops any frame whose port count does not match the switch's 8 ports.
 - **Reachy Mini.** The fixed camera on the rack. Motion wakes it, it turns to the tech, talks, and listens. `owl-robot` owns its camera stream and serves frames to perception.
 - **iPhone app (`relay/ios`, "OWL Relay")**. Streams phone or glasses frames to the server, draws port tags over the live view, speaks OWL's lines, listens hands-free, and has an Orders tab to accept and finish work orders.
 - **Meta glasses.** Through the Meta Wearables Device Access Toolkit the app uses the glasses camera as its frame source, shows a card on the Ray-Ban Display (the work order, the port under the hand and its verdict, OWL's last line), and takes speech from the glasses mic.
@@ -51,7 +51,7 @@ Built for the Meta hackathon by Dillon Griffey (Triad Studios).
 ## Safety design
 
 - **Read-only against the switch.** OWL uses SNMP GET and walks only. No SNMP SET, no web portal automation, no config writes. A pull is confirmed by watching the port's oper status, never by changing it.
-- **Verdicts come from code, not from a model.** `internal/blast` and `internal/policy` decide safe, caution, do not touch or unknown from the switch facts and `policy/rules.yaml` (liveness window, traffic threshold, what counts as an uplink, critical names). `owl policy lint` checks the file.
+- **Verdicts come from code, not from a model.** `internal/blast` and `internal/policy` decide safe, caution, do not touch or unknown from the switch facts, using rules in code plus the plain rules file `policy/rules.yaml` (liveness window, traffic threshold, what counts as an uplink, critical names). `owl policy lint` checks the file.
 - **The language model only phrases.** The narrator gets the port table with its verdicts and returns a sentence. `narrate.Check` rejects any line where a verdict word does not match policy for the port it follows, or that talks about a different port. A rejected or late line falls back to a fixed template. An empty line means stay quiet.
 - **The client never holds switch credentials.** The phone, the glasses and API clients only send frames and words, and only receive overlays, cards and lines.
 - **Pinned TLS and per-device tokens.** `owl serve` makes a self-signed certificate. `owl pair` gives each device its own token and the certificate's SHA-256 fingerprint, and clients pin that fingerprint. The server stores only a hash of each token. `owl pair revoke` cuts a device off on a running server.
@@ -90,12 +90,17 @@ Other read endpoints: `/api/health`, `/api/ports`, `/api/blast/{port}`, `/api/fi
 - A DHCP client list exported from the router, as CSV.
 - A Reachy Mini, or another camera that can see the switch face.
 - A Meta API key for SAM 3.1 and Muse Spark. An ElevenLabs key for the robot's voice.
+- Linux or Windows for the perception service. It pulls CUDA PyTorch and has no Mac build.
 - Optional: an NVIDIA GPU for local SAM 3, Docker for NetBox (`deploy/netbox/docker-compose.yml`).
 - For the phone app: a Mac with Xcode, an iPhone, and Meta glasses registered with the Wearables Device Access Toolkit. Open `relay/ios/OWLRelay.xcodeproj` and set your own signing team.
 
 ### Configuration
 
-Put settings in `.env.local` at the repo root (gitignored). Both the Go server and the Python services read it.
+Copy `.env.example` to `.env.local` at the repo root (gitignored) and fill it in before running. Both the Go server and the Python services read it.
+
+```bash
+cp .env.example .env.local
+```
 
 | Variable | Used for |
 | - | - |
